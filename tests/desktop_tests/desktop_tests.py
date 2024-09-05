@@ -39,53 +39,37 @@ class DesktopTest:
         self.vm_memory = vm_memory
         self.data = test_data
         self.vm_name = vm_name
+        self.vm = VboxMachine(self.vm_name, cores=self.vm_cores, memory=self.vm_memory)
         self.vm_data = None
-        Dir.create(self.data.report_dir, stdout=False)
+        self.password_cache = None
 
-        self.report = DesktopReport(
-            join(self.data.report_dir, self.vm_name, f"{self.data.version}_{self.data.title}_report.csv")
-        )
-
-        self.run_script = RunScript(
-            version=self.data.version,
-            old_version=self.data.update_from,
-            telegram=self.data.telegram,
-            custom_config_path=self.data.custom_config_mode,
-            desktop_testing_url=self.data.desktop_testing_url,
-            branch=self.data.branch
-        )
-
-        self.linux_demon = LinuxScriptDemon(
-            exec_script_path=self.run_script.save_path,
-            user='root',
-            name=self.paths.remote.my_service_name
-        )
-
+        self._initialize_report()
+        self._initialize_run_script()
 
     @retry(max_attempts=2, exception_type=VirtualMachinException)
     def run(self, headless: bool = True):
-        vm = VboxMachine(self.vm_name, cores=self.vm_cores, memory=self.vm_memory)
         try:
-            vm.run(headless=headless)
-            self.vm_data = vm.data
-            self.linux_demon.name = self.vm_data.user
-            self.run_script_on_vm(self._get_password(vm.data.local_dir))
+            self.vm.run(headless=headless)
+            self.vm_data = self.vm.data
+            self._initialize_linux_demon()
+            password = self._get_password(self.vm.data.local_dir)
+            self.run_script_on_vm(password)
 
         except VirtualMachinException:
-            print(f"[bold red]|ERROR|{self.vm_name}| Failed to create  a virtual machine")
-            self.report.write(self.data.version, self.vm_name, "FAILED_CREATE_VM")
+            self._handle_vm_creation_failure()
 
         except KeyboardInterrupt:
             print("[bold red]|WARNING| Interruption by the user")
             raise
 
         finally:
-            vm.stop()
+            self.vm.stop()
 
     def run_script_on_vm(self, user_password: str = None):
-        self._clean_know_hosts(self.vm_data.ip)
-        _server = self._get_server()
-        with Ssh(_server) as ssh, Sftp(_server, ssh.connection) as sftp:
+        self._clean_known_hosts(self.vm_data.ip)
+        server = self._get_server()
+
+        with Ssh(server) as ssh, Sftp(server, ssh.connection) as sftp:
             connect = SSHConnection(ssh=ssh, sftp=sftp)
             connect.change_vm_service_dir_access(self.vm_data.user)
 
@@ -99,14 +83,18 @@ class DesktopTest:
             connect.start_my_service(self.linux_demon.start_demon_commands())
             connect.wait_execute_service()
 
-            if connect.download_report(self.data.title, self.data.version, self.report.dir):
-                if self.report.column_is_empty("Os"):
-                    raise FileNotFoundError
+            if self._download_and_check_report(connect):
                 self.report.insert_vm_name(self.vm_name)
-            else:
-                print(f"[red]|ERROR| Can't download report from {self.vm_data.name}.")
-                self.report.write(self.data.version, self.vm_data.name, "REPORT_NOT_EXISTS")
 
+    def _download_and_check_report(self, connect):
+        if connect.download_report(self.data.title, self.data.version, self.report.dir):
+            if self.report.column_is_empty("Os"):
+                raise FileNotFoundError
+            return True
+        else:
+            print(f"[red]|ERROR| Can't download report from {self.vm_data.name}.")
+            self.report.write(self.data.version, self.vm_data.name, "REPORT_NOT_EXISTS")
+            return False
 
     def _get_server(self) -> ServerData:
         return ServerData(
@@ -116,16 +104,47 @@ class DesktopTest:
             self.vm_data.name
         )
 
-    def _clean_know_hosts(self, ip: str):
+    def _initialize_report(self):
+        report_file = join(self.data.report_dir, self.vm_name, f"{self.data.version}_{self.data.title}_report.csv")
+        Dir.create(dirname(report_file), stdout=False)
+        self.report = DesktopReport(report_file)
+
+    def _initialize_run_script(self):
+        self.run_script = RunScript(
+            version=self.data.version,
+            old_version=self.data.update_from,
+            telegram=self.data.telegram,
+            custom_config_path=self.data.custom_config_mode,
+            desktop_testing_url=self.data.desktop_testing_url,
+            branch=self.data.branch
+        )
+
+    def _initialize_linux_demon(self):
+        self.linux_demon = LinuxScriptDemon(
+            exec_script_path=self.run_script.save_path,
+            user=self.vm_data.user,
+            name=self.paths.remote.my_service_name
+        )
+
+    def _clean_known_hosts(self, ip: str):
         with open(self.paths.local.know_hosts, 'r') as file:
-            filtered_lines = [line for line in file.readlines() if not line.startswith(ip)]
+            filtered_lines = [line for line in file if not line.startswith(ip)]
         with open(self.paths.local.know_hosts, 'w') as file:
             file.writelines(filtered_lines)
 
     def _get_password(self, vm_dir: str) -> Optional[str]:
+        if self.password_cache:
+            return self.password_cache
+
         try:
             password_file = join(dirname(vm_dir), 'password')
             password = File.read(password_file).strip() if isfile(password_file) else None
-            return password if password else self.data.config.get('password', None)
+            self.password_cache = password or self.data.config.get('password')
         except (TypeError, FileNotFoundError):
-            return self.data.config.get('password', None)
+            self.password_cache = self.data.config.get('password')
+
+        return self.password_cache
+
+    def _handle_vm_creation_failure(self):
+        print(f"[bold red]|ERROR|{self.vm_name}| Failed to create a virtual machine")
+        self.report.write(self.data.version, self.vm_name, "FAILED_CREATE_VM")
