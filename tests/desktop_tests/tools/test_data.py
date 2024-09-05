@@ -3,7 +3,7 @@ from os import getcwd
 from typing import Dict
 
 from dataclasses import dataclass
-from os.path import join, isfile, expanduser
+from os.path import join, isfile
 from host_tools import File
 
 from frameworks.console import MyConsole
@@ -27,7 +27,7 @@ class TestData:
         self.branch: str = self.config['branch']
         self.vm_names: list = self.config.get('hosts', [])
         self.title: str = self.config.get('title', 'Undefined_title')
-        self.report_dir: str = join(self.project_dir, 'reports', self.title, self.version)
+        self.report_dir: str = join(getcwd(), 'reports', self.title, self.version)
         self.report_path: str = join(self.report_dir, f"{self.version}_{self.title}_desktop_tests_report.csv")
         self.path = Paths()
 

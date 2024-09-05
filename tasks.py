@@ -7,7 +7,7 @@ from rich.prompt import Prompt
 from rich import print
 
 from VBoxWrapper import VirtualMachine, Vbox
-from tests.desktop_tests.data import TestData
+from tests.desktop_tests.tools.test_data import TestData
 from tests.desktop_tests import DesktopTest, DesktopReport
 import tests.multiprocessing as multiprocess
 from frameworks.console import MyConsole
@@ -50,7 +50,6 @@ def desktop_test(
     report.get_full(data.version)
     report.send_to_tg(data.version, data.title, data.tg_token, data.tg_chat_id, data.update_from) if not name else ...
 
-
 @task
 def run_vm(c, name: str = '', headless=False):
     vm = VirtualMachine(Vbox().check_vm_names(name))
@@ -58,7 +57,6 @@ def run_vm(c, name: str = '', headless=False):
     vm.network.wait_up(status_bar=True)
     vm.wait_logged_user(status_bar=True)
     return print(f"[green]ip: [red]{vm.network.get_ip()}[/]\nuser: [red]{vm.get_logged_user()}[/]")
-
 
 @task
 def stop_vm(c, name: str = None, group_name: str = None):
@@ -76,7 +74,6 @@ def stop_vm(c, name: str = None, group_name: str = None):
             if virtualmachine.power_status():
                 print(f"[green]|INFO| Shutting down the virtual machine: [red]{vm_info[0]}[/]")
                 virtualmachine.stop()
-
 
 @task
 def vm_list(c, group_name: str = None):
