@@ -2,7 +2,7 @@
 import time
 import concurrent.futures
 
-from tests.data import TestData
+from tests.desktop_tests.data import TestData
 from tests.desktop_tests import DesktopTest
 
 

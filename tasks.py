@@ -7,11 +7,10 @@ from rich.prompt import Prompt
 from rich import print
 
 from VBoxWrapper import VirtualMachine, Vbox
-from tests.data import TestData
-from tests.desktop_tests import DesktopTest
+from tests.desktop_tests.data import TestData
+from tests.desktop_tests import DesktopTest, DesktopReport
 import tests.multiprocessing as multiprocess
 from frameworks.console import MyConsole
-from tests.tools.desktop_report import DesktopReport
 from host_tools import Process, Service
 from elevate import elevate
 
