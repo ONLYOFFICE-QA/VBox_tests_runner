@@ -1,2 +1,4 @@
 # -*- coding: utf-8 -*-
-from .desktop_tests import DesktopTest, DesktopReport
+from .tools import DesktopReport
+from .desktop_tests import DesktopTest
+from . import multiprocessing

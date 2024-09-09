@@ -1,7 +1,19 @@
 # -*- coding: utf-8 -*-
-from VBoxWrapper import VirtualMachine, VirtualMachinException
+from functools import wraps
+
+from VBoxWrapper import VirtualMachine
 from .vm_data import VmData
 
+def vm_is_turn_on(method):
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+
+        if not self.vm.power_status():
+            return print("[red]|ERROR| Vm data has not been created, start the vm machine")
+
+        return method(self, *args, **kwargs)
+
+    return wrapper
 
 
 class VboxMachine:
@@ -13,6 +25,7 @@ class VboxMachine:
         self.name = name
         self.data = None
 
+    @vm_is_turn_on
     def create_data(self):
         self.data = VmData(
             ip=self.vm.network.get_ip(),

@@ -17,6 +17,18 @@ def singleton(class_):
 
     return getinstance
 
+def vm_data_created(method):
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+
+        if self.vm.data is None:
+            return print("[red]|ERROR| Vm data has not been created, start the vm machine")
+
+        return method(self, *args, **kwargs)
+
+    return wrapper
+
+
 
 def retry(
         max_attempts: int = 3,

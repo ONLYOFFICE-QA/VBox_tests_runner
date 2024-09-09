@@ -9,7 +9,7 @@ from rich import print
 from VBoxWrapper import VirtualMachine, Vbox
 from tests.desktop_tests.tools.test_data import TestData
 from tests.desktop_tests import DesktopTest, DesktopReport
-import tests.multiprocessing as multiprocess
+import tests.desktop_tests.multiprocessing as multiprocess
 from frameworks.console import MyConsole
 from host_tools import Process, Service
 from elevate import elevate
@@ -81,11 +81,9 @@ def vm_list(c, group_name: str = None):
     print(vm_names)
     return vm_names
 
-
 @task
 def out_info(c, name: str = '', full: bool = False):
     print(VirtualMachine(Vbox().check_vm_names(name)).get_info(full=full))
-
 
 @task
 def group_list(c):

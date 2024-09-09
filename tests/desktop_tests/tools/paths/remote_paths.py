@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-from dataclasses import dataclass
 from posixpath import join
 
-@dataclass
+
 class RemotePaths:
-    home_dir = join('/home')
+    home_dir = join('/home', "user")
     script_path = join(home_dir, 'script.sh')
     script_dir = join(home_dir, 'scripts')
     desktop_testing_path = join(script_dir, 'desktop_testing')

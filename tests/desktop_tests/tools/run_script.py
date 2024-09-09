@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
+import os
 from posixpath import join
-
 from host_tools import File
-from tempfile import gettempdir
 
-from tests.desktop_tests.tools.paths import Paths
+from .paths import Paths
 
 
 class RunScript:
@@ -16,13 +15,14 @@ class RunScript:
             custom_config_path: str,
             desktop_testing_url: str,
             branch: str,
+            paths: Paths
     ):
         self.version = version
         self.old_version = old_version
         self.telegram = telegram
         self.custom_config = custom_config_path
-        self.save_path = join(gettempdir(), 'script.sh')
-        self._path = Paths()
+        self.save_path = join(os.getcwd(), 'script.sh')
+        self._path = paths
         self.lic_file = self._path.remote.lic_file
         self.desktop_testing_url = desktop_testing_url
         self.branch = branch
