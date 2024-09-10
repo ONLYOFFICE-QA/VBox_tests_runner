@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 from os import getcwd
 from os.path import join, expanduser
-from host_tools import singleton
 
 
-@singleton
 class LocalPaths:
     project_dir: str = getcwd()
     tg_dir: str = join(expanduser('~'), '.telegram')
