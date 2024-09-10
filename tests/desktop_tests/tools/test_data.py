@@ -58,7 +58,8 @@ class TestData:
             raise FileNotFoundError(f"[red]|ERROR| Configuration file not found: {self.config_path}")
         return File.read_json(self.config_path)
 
-    def _read_file(self, file_path: str) -> str:
+    @staticmethod
+    def _read_file(file_path: str) -> str:
         if not isfile(file_path):
             raise FileNotFoundError(f"[red]|ERROR| File not found: {file_path}")
         return File.read(file_path)
