@@ -1,23 +1,28 @@
 # -*- coding: utf-8 -*-
 import contextlib
 import time
+from xmlrpc.client import Fault
 
 from rich import print
 from tempfile import gettempdir
 from ssh_wrapper import Ssh, Sftp, SshException
 
+from frameworks.console import MyConsole
 from . import TestData
 from .linux_script_demon import LinuxScriptDemon
+from .paths import Paths
 from .run_script import RunScript
 
+console = MyConsole().console
+print = console.print
 
 class SSHConnection:
 
-    def __init__(self, ssh: Ssh, sftp: Sftp, test_data: TestData):
+    def __init__(self, ssh: Ssh, sftp: Sftp, test_data: TestData, paths: Paths):
         self.ssh = ssh
         self.sftp = sftp
         self.data = test_data
-        self._paths = self.data.paths
+        self._paths = paths
         self.tmp_dir = gettempdir()
 
     def upload_test_files(self, service: LinuxScriptDemon, script: RunScript):
@@ -61,7 +66,7 @@ class SSHConnection:
             start_time = time.time()
             while self.exec_cmd(f'systemctl is-active {service_name}', stderr=True).stdout == 'active':
                 if status_bar:
-                    status.update(f"{msg}\n{self._get_my_service_log()}")
+                    status.update(f"{msg}\n{self._get_my_service_log(stdout=False)}")
 
                 time.sleep(0.5)
 

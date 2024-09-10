@@ -1,19 +1,21 @@
 # -*- coding: utf-8 -*-
+from dataclasses import dataclass
 from posixpath import join
 
-
 class RemotePaths:
-    home_dir = join('/home', "user")
-    script_path = join(home_dir, 'script.sh')
-    script_dir = join(home_dir, 'scripts')
-    desktop_testing_path = join(script_dir, 'desktop_testing')
-    report_dir = join(desktop_testing_path, 'reports')
-    custom_config_path = join(script_dir, 'custom_config.json')
-    tg_dir = join(home_dir, '.telegram')
-    tg_token_file = join(tg_dir, 'token')
-    tg_chat_id_file = join(tg_dir, 'chat')
-    proxy_config_file = join(tg_dir, 'proxy.json')
-    services_dir = join('/etc', 'systemd', 'system')
-    my_service_name = 'myscript.service'
-    my_service_path = join(services_dir, my_service_name)
-    lic_file = join(script_dir, 'test_lic.lickey')
+    def __init__(self, user_name: str):
+        self.user_name = user_name
+        self.home_dir = join("/home", user_name)
+        self.script_path = join(self.home_dir, 'script.sh')
+        self.script_dir = join(self.home_dir, 'scripts')
+        self.desktop_testing_path = join(self.script_dir, 'desktop_testing')
+        self.report_dir = join(self.desktop_testing_path, 'reports')
+        self.custom_config_path = join(self.script_dir, 'custom_config.json')
+        self.tg_dir = join(self.home_dir, '.telegram')
+        self.tg_token_file = join(self.tg_dir, 'token')
+        self.tg_chat_id_file = join(self.tg_dir, 'chat')
+        self.proxy_config_file = join(self.tg_dir, 'proxy.json')
+        self.services_dir = join('/etc', 'systemd', 'system')
+        self.my_service_name = 'myscript.service'
+        self.my_service_path = join(self.services_dir, self.my_service_name)
+        self.lic_file = join(self.script_dir, 'test_lic.lickey')

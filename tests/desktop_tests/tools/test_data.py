@@ -8,7 +8,7 @@ from host_tools import File
 
 from frameworks.console import MyConsole
 
-from .paths import Paths
+from .paths import LocalPaths
 
 console = MyConsole().console
 print = console.print
@@ -30,7 +30,7 @@ class TestData:
         self.title: str = self.config.get('title', 'Undefined_title')
         self.report_dir: str = join(getcwd(), 'reports', self.title, self.version)
         self.report_path: str = join(self.report_dir, f"{self.version}_{self.title}_desktop_tests_report.csv")
-        self.paths = Paths()
+        self.local_paths = LocalPaths()
 
     @property
     def tg_token(self) -> str:
@@ -40,11 +40,11 @@ class TestData:
     def token_file(self) -> str:
         token_filename = self.config.get('token_file').strip()
         if token_filename:
-            file_path = join(self.paths.local.tg_dir, token_filename)
+            file_path = join(self.local_paths.tg_dir, token_filename)
             if isfile(file_path):
                 return file_path
             print(f"[red]|WARNING| Telegram Token from config file not exists: {file_path}")
-        return join(self.paths.local.tg_dir, 'token')
+        return join(self.local_paths.tg_dir, 'token')
 
     @property
     def tg_chat_id(self) -> str:
@@ -54,11 +54,11 @@ class TestData:
     def chat_id_file(self) -> str:
         chat_id_filename = self.config.get('chat_id_file').strip()
         if chat_id_filename:
-            file_path = join(self.paths.local.tg_dir, chat_id_filename)
+            file_path = join(self.local_paths.tg_dir, chat_id_filename)
             if isfile(file_path):
                 return file_path
             print(f"[red]|WARNING| Telegram Chat id from config file not exists: {file_path}")
-        return join(self.paths.local.tg_dir, 'chat')
+        return join(self.local_paths.tg_dir, 'chat')
 
     def _read_config(self):
         if not isfile(self.config_path):

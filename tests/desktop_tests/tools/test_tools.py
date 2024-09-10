@@ -13,6 +13,7 @@ from ssh_wrapper import Ssh, Sftp, ServerData
 
 from .VboxMachine import VboxMachine
 from .desktop_report import DesktopReport
+from .paths import Paths
 from .ssh_connection import SSHConnection
 from .linux_script_demon import LinuxScriptDemon
 from .run_script import RunScript
@@ -35,17 +36,17 @@ class TestTools:
         self.vm_memory = vm_memory
         self.data = test_data
         self.vm_name = vm_name
-        self.paths = self.data.paths
         self.vm = VboxMachine(self.vm_name, cores=self.vm_cores, memory=self.vm_memory)
         self.password_cache = None
 
         self._initialize_report()
-        self._initialize_run_script()
 
     @retry(max_attempts=2, exception_type=VirtualMachinException)
     def run_vm(self, headless: bool = True):
         try:
-            self.vm.run(headless=headless)
+            self.vm.run(headless=headless, status_bar=self.data.status_bar)
+            self._initialize_paths()
+            self._initialize_run_script()
             self._initialize_linux_demon()
 
         except VirtualMachinException:
@@ -60,7 +61,7 @@ class TestTools:
         server = self._get_server()
 
         with Ssh(server) as ssh, Sftp(server, ssh.connection) as sftp:
-            connect = SSHConnection(ssh=ssh, sftp=sftp, test_data=self.data)
+            connect = SSHConnection(ssh=ssh, sftp=sftp, test_data=self.data, paths=self.paths)
             connect.change_vm_service_dir_access(self.vm.data.user)
             connect.upload_test_files(self.linux_demon, self.run_script)
             connect.start_my_service(self.linux_demon.start_demon_commands())
@@ -92,6 +93,7 @@ class TestTools:
         Dir.create(dirname(report_file), stdout=False)
         self.report = DesktopReport(report_file)
 
+    @vm_data_created
     def _initialize_run_script(self):
         self.run_script = RunScript(
             version=self.data.version,
@@ -110,6 +112,10 @@ class TestTools:
             user=self.vm.data.user,
             name=self.paths.remote.my_service_name
         )
+
+    @vm_data_created
+    def _initialize_paths(self):
+        self.paths = Paths(user_name=self.vm.data.user)
 
     def _clean_known_hosts(self, ip: str):
         with open(self.paths.local.know_hosts, 'r') as file:
