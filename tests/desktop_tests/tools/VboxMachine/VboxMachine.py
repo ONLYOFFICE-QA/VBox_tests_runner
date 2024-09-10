@@ -1,20 +1,8 @@
 # -*- coding: utf-8 -*-
-from functools import wraps
-
 from VBoxWrapper import VirtualMachine
+
+from frameworks.decorators import vm_is_turn_on
 from .vm_data import VmData
-
-def vm_is_turn_on(method):
-    @wraps(method)
-    def wrapper(self, *args, **kwargs):
-
-        if not self.vm.power_status():
-            return print("[red]|ERROR| Vm data has not been created, start the vm machine")
-
-        return method(self, *args, **kwargs)
-
-    return wrapper
-
 
 class VboxMachine:
 

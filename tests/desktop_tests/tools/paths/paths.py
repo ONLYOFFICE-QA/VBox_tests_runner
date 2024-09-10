@@ -5,6 +5,7 @@ from .remote_paths import RemotePaths
 
 class Paths:
 
-    def __init__(self, user_name: str):
+    def __init__(self, remote_user_name: str = None):
         self.local = LocalPaths()
-        self.remote = RemotePaths(user_name=user_name)
+        if remote_user_name:
+            self.remote = RemotePaths(user_name=remote_user_name)

@@ -115,7 +115,7 @@ class TestTools:
 
     @vm_data_created
     def _initialize_paths(self):
-        self.paths = Paths(user_name=self.vm.data.user)
+        self.paths = Paths(remote_user_name=self.vm.data.user)
 
     def _clean_known_hosts(self, ip: str):
         with open(self.paths.local.know_hosts, 'r') as file:
