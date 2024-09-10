@@ -3,12 +3,10 @@ import signal
 from os.path import join, dirname, isfile
 from typing import Optional
 
-from host_tools.utils import Dir
-
 from VBoxWrapper import VirtualMachinException
 from frameworks.console import MyConsole
 from frameworks.decorators import retry, vm_data_created
-from host_tools import File
+from host_tools import File, Dir
 from ssh_wrapper import Ssh, Sftp, ServerData
 
 from .VboxMachine import VboxMachine
