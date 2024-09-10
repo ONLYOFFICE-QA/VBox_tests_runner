@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from dataclasses import dataclass
 from posixpath import join
 
 class RemotePaths:
