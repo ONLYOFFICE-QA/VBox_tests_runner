@@ -69,9 +69,10 @@ class TestTools:
                 self.report.insert_vm_name(self.vm_name)
 
     def _download_and_check_report(self, connect):
-        if connect.download_report(self.data.title, self.data.version, self.report.dir):
-            if self.report.column_is_empty("Os"):
-                raise FileNotFoundError
+        if (
+                connect.download_report(self.data.title, self.data.version, self.report.dir)
+                and not self.report.column_is_empty("Os")
+        ):
             return True
 
         print(f"[red]|ERROR| Can't download report from {self.vm.data.name}.")
