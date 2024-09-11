@@ -10,12 +10,8 @@ from VBoxWrapper import VirtualMachine, Vbox
 from tests.desktop_tests.tools.test_data import TestData
 from tests.desktop_tests import DesktopTest, DesktopReport
 import tests.desktop_tests.multiprocessing as multiprocess
-from frameworks.console import MyConsole
 from host_tools import Process, Service
 from elevate import elevate
-
-console = MyConsole().console
-print = console.print
 
 
 @task

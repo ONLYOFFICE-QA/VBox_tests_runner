@@ -2,7 +2,6 @@
 import contextlib
 import time
 
-from rich import print
 from tempfile import gettempdir
 from ssh_wrapper import Ssh, Sftp, SshException
 
@@ -54,7 +53,7 @@ class SSHConnection:
             self.exec_cmd(cmd)
 
     def clean_log_journal(self):
-        self.exec_cmd(f"sudo rm /var/log/journal/*/*.journal")
+        self.exec_cmd("sudo rm /var/log/journal/*/*.journal")
 
     def wait_execute_service(self, timeout: int = None, status_bar: bool = False):
         service_name = self._paths.remote.my_service_name
