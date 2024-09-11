@@ -5,12 +5,12 @@
 
 version: 2
 updates:
-  - package-ecosystem: "pip"
+  - package-ecosystem: pip
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: daily
     commit-message:
-      prefix: "deps"
+      prefix: deps
 
   - package-ecosystem: pip # See documentation for possible values
     directory: "/" # Location of package manifests
