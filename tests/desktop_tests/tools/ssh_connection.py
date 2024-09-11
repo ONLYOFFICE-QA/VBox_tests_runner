@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import contextlib
 import time
-from xmlrpc.client import Fault
 
 from rich import print
 from tempfile import gettempdir
@@ -50,9 +49,12 @@ class SSHConnection:
             self.exec_cmd(cmd)
 
     def start_my_service(self, start_service_cmd: list):
-        self.exec_cmd(f"sudo rm /var/log/journal/*/*.journal")  # clean journal
+        self.clean_log_journal()
         for cmd in start_service_cmd:
             self.exec_cmd(cmd)
+
+    def clean_log_journal(self):
+        self.exec_cmd(f"sudo rm /var/log/journal/*/*.journal")
 
     def wait_execute_service(self, timeout: int = None, status_bar: bool = False):
         service_name = self._paths.remote.my_service_name
@@ -65,9 +67,7 @@ class SSHConnection:
             print(msg) if not status_bar else None
             start_time = time.time()
             while self.exec_cmd(f'systemctl is-active {service_name}', stderr=True).stdout == 'active':
-                if status_bar:
-                    status.update(f"{msg}\n{self._get_my_service_log(stdout=False)}")
-
+                status.update(f"{msg}\n{self._get_my_service_log(stdout=False)}") if status_bar else None
                 time.sleep(0.5)
 
                 if isinstance(timeout, int) and (time.time() - start_time) >= timeout:

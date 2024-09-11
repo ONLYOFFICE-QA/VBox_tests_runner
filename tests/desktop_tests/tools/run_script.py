@@ -52,7 +52,6 @@ class RunScript:
             f"{(' -l ' + self.lic_file) if self.custom_config else ''}"
         )
 
-
     def create(self) -> str:
         File.write(self.save_path, '\n'.join(line.strip() for line in self.generate().split('\n')), newline='')
         return self.save_path
