@@ -5,6 +5,13 @@
 
 version: 2
 updates:
+  - package-ecosystem: "poetry"
+    directory: "/"
+    schedule:
+      interval: "daily"  # Задаем частоту проверки на обновления (можно weekly или monthly)
+    commit-message:
+      prefix: "deps"  # Префикс для коммитов Dependabot
+
   - package-ecosystem: pip # See documentation for possible values
     directory: "/" # Location of package manifests
     schedule:
@@ -15,19 +22,3 @@ updates:
     allow:
       - dependency-type: direct
       - dependency-type: indirect
-      - dependency-name: "host-tools"
-        source:
-          type: "git"
-          url: "https://github.com/l8556/host_tools.git"
-      - dependency-name: "telegram"
-        source:
-          type: "git"
-          url: "https://github.com/l8556/TelegramApi.git"
-      - dependency-name: "VBoxWrapper"
-        source:
-          type: "git"
-          url: "https://github.com/l8556/VBoxWrapper.git"
-      - dependency-name: "ssh-wrapper"
-        source:
-          type: "git"
-          url: "https://github.com/l8556/SshWrapper.git"
