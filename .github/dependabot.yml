@@ -8,9 +8,9 @@ updates:
   - package-ecosystem: "poetry"
     directory: "/"
     schedule:
-      interval: "daily"  # Задаем частоту проверки на обновления (можно weekly или monthly)
+      interval: "daily"
     commit-message:
-      prefix: "deps"  # Префикс для коммитов Dependabot
+      prefix: "deps"
 
   - package-ecosystem: pip # See documentation for possible values
     directory: "/" # Location of package manifests
