@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
 from rich import print
-from os import getcwd
-from os.path import join
 from pydantic import BaseModel, conint
 from host_tools import singleton
 
