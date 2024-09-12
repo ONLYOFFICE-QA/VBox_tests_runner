@@ -34,7 +34,6 @@ class VboxMachine:
         self.vm.wait_logged_user(status_bar=status_bar, timeout=timeout)
         self.create_data()
 
-
     def configurate(self):
         self.vm.set_cpus(self.vm_config.cpus)
         self.vm.nested_virtualization(self.vm_config.nested_virtualization)
