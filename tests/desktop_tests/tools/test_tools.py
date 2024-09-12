@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 import signal
+from os import getcwd
 from os.path import join, dirname, isfile
 from typing import Optional
 
 from VBoxWrapper import VirtualMachinException
-from frameworks.console import MyConsole
-from frameworks.decorators import retry, vm_data_created
 from host_tools import File, Dir
 from ssh_wrapper import Ssh, Sftp, ServerData
 
-from .VboxMachine import VboxMachine
+from frameworks import VboxMachine, MyConsole, retry, vm_data_created
 from .desktop_report import DesktopReport
 from .paths import Paths
 from .ssh_connection import SSHConnection
@@ -28,11 +27,12 @@ signal.signal(signal.SIGINT, handle_interrupt)
 
 
 class TestTools:
+    vm_config_path = join(getcwd(), "vm_configs", "desktop_test_vm_config.json")
 
     def __init__(self, vm_name: str, test_data: TestData):
         self.data = test_data
         self.vm_name = vm_name
-        self.vm = VboxMachine(self.vm_name)
+        self.vm = VboxMachine(self.vm_name, config_path=self.vm_config_path)
         self.password_cache = None
 
         self._initialize_report()

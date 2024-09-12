@@ -3,13 +3,13 @@ from VBoxWrapper import VirtualMachine
 
 from frameworks.decorators import vm_is_turn_on
 from .vm_data import VmData
-from ..configs import VmConfig
+from tests.desktop_tests.tools.configs import VmConfig
 
 
 class VboxMachine:
 
-    def __init__(self, name: str):
-        self.vm_config = VmConfig()
+    def __init__(self, name: str, config_path: str = None):
+        self.vm_config = VmConfig(config_path=config_path)
         self.vm = VirtualMachine(name)
         self.name = name
         self.data = None
