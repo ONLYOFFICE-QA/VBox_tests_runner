@@ -35,7 +35,7 @@ class Report:
         merge_reports = [
             self.read(csv_, delimiter)
             for csv_ in reports
-            if isfile(csv_) and (report := self.read(csv_, delimiter)) is not None
+            if isfile(csv_) and self.read(csv_, delimiter) is not None
         ]
 
         if merge_reports:
