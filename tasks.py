@@ -18,7 +18,7 @@ from elevate import elevate
 def desktop_test(
         c,
         version=None,
-        update_from=None,
+        update_from_version=None,
         name=None,
         processes=None,
         detailed_telegram=False,
@@ -29,7 +29,7 @@ def desktop_test(
 
     data = TestData(
         version=version if version else Prompt.ask('[red]Please enter version'),
-        update_from=update_from,
+        update_from=update_from_version,
         telegram=detailed_telegram,
         config_path=join(getcwd(), 'custom_config.json') if custom_config else join(getcwd(), 'config.json'),
         custom_config_mode=custom_config

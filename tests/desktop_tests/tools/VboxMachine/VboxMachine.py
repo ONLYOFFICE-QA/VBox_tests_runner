@@ -3,13 +3,14 @@ from VBoxWrapper import VirtualMachine
 
 from frameworks.decorators import vm_is_turn_on
 from .vm_data import VmData
+from ..configs import VmConfig
+
 
 class VboxMachine:
 
-    def __init__(self, name: str, cores: int = 1, memory: int = 2096):
+    def __init__(self, name: str):
+        self.vm_config = VmConfig()
         self.vm = VirtualMachine(name)
-        self.cores = cores
-        self.memory = memory
         self.name = name
         self.data = None
 
@@ -35,11 +36,11 @@ class VboxMachine:
 
 
     def configurate(self):
-        self.vm.set_cpus(self.cores)
-        self.vm.nested_virtualization(True)
-        self.vm.set_memory(self.memory)
-        self.vm.audio(False)
-        self.vm.speculative_execution_control(True)
+        self.vm.set_cpus(self.vm_config.cpus)
+        self.vm.nested_virtualization(self.vm_config.nested_virtualization)
+        self.vm.set_memory(self.vm_config.memory)
+        self.vm.audio(self.vm_config.audio)
+        self.vm.speculative_execution_control(self.vm_config.speculative_execution_control)
 
     def stop(self):
         self.vm.stop()

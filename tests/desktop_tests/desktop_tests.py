@@ -19,7 +19,7 @@ class DesktopTest:
     def run(self, headless: bool = True):
         try:
             self.test_tools.run_vm(headless=headless)
-            self.test_tools.run_script_on_vm()
+            self.test_tools.run_test_on_vm()
 
         except KeyboardInterrupt:
             print("[bold red]|WARNING| Interruption by the user")

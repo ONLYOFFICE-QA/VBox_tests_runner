@@ -29,12 +29,10 @@ signal.signal(signal.SIGINT, handle_interrupt)
 
 class TestTools:
 
-    def __init__(self, vm_name: str, test_data: TestData, vm_cpus: int = 4, vm_memory: int = 4096):
-        self.vm_cores = vm_cpus
-        self.vm_memory = vm_memory
+    def __init__(self, vm_name: str, test_data: TestData):
         self.data = test_data
         self.vm_name = vm_name
-        self.vm = VboxMachine(self.vm_name, cores=self.vm_cores, memory=self.vm_memory)
+        self.vm = VboxMachine(self.vm_name)
         self.password_cache = None
 
         self._initialize_report()
@@ -54,7 +52,7 @@ class TestTools:
         self.vm.stop()
 
     @vm_data_created
-    def run_script_on_vm(self):
+    def run_test_on_vm(self):
         self._clean_known_hosts(self.vm.data.ip)
         server = self._get_server()
 
