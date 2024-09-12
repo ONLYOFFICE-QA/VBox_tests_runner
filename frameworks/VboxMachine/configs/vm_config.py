@@ -32,7 +32,7 @@ class VmConfig:
         cpus (int): The number of CPUs allocated for the system.
         memory (int): The amount of memory in MB.
     """
-    def __init__(self, config_path: str = join(getcwd(), 'vm_config.json')):
+    def __init__(self, config_path: str):
         self.config_path = config_path
         self._config = self._load_config(self.config_path)
         self.cpus = self._config.cpus

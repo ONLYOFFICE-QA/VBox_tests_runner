@@ -3,7 +3,7 @@ from VBoxWrapper import VirtualMachine
 
 from frameworks.decorators import vm_is_turn_on
 from .vm_data import VmData
-from tests.desktop_tests.tools.configs import VmConfig
+from frameworks.VboxMachine.configs import VmConfig
 
 
 class VboxMachine:
