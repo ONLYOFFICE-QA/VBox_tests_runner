@@ -8,12 +8,10 @@ print = console.print
 
 
 class DesktopTest:
-    def __init__(self, vm_name: str, test_data: TestData, vm_cpus: int = 4, vm_memory: int = 4096):
+    def __init__(self, vm_name: str, test_data: TestData):
         self.test_tools = TestTools(
             vm_name=vm_name,
-            test_data=test_data,
-            vm_cpus=vm_cpus,
-            vm_memory=vm_memory
+            test_data=test_data
         )
 
     def run(self, headless: bool = True):
