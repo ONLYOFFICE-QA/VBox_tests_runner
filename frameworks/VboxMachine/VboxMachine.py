@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from VBoxWrapper import VirtualMachine
 
-from frameworks import vm_is_turn_on
+from frameworks.decorators import vm_is_turn_on
 from .vm_data import VmData
 from .configs import VmConfig
 

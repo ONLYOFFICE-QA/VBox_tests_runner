@@ -8,7 +8,8 @@ from VBoxWrapper import VirtualMachinException
 from host_tools import File, Dir
 from ssh_wrapper import Ssh, Sftp, ServerData
 
-from frameworks import VboxMachine, MyConsole, retry, vm_data_created
+from frameworks.decorators import retry, vm_data_created
+from frameworks import VboxMachine, MyConsole
 from .desktop_report import DesktopReport
 from .paths import Paths
 from .ssh_connection import SSHConnection
