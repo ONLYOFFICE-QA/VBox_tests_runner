@@ -80,10 +80,10 @@ class TestTools:
 
     def _get_server(self) -> ServerData:
         return ServerData(
-            self.vm.data.ip,
-            self.vm.data.user,
-            self._get_password(self.vm.data.local_dir),
-            self.vm.data.name
+            ip=self.vm.data.ip,
+            username=self.vm.data.user,
+            password=self._get_password(self.vm.data.local_dir),
+            custom_name=self.vm.data.name
         )
 
     def _initialize_report(self):
