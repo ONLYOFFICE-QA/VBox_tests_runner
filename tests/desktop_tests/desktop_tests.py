@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
-from frameworks.console import MyConsole
+from rich import print
 from .tools import TestTools, TestData
-
-
-console = MyConsole().console
-print = console.print
 
 
 class DesktopTest:

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
 import concurrent.futures
+from rich import print
 
 from .tools import TestData
 from tests.desktop_tests import DesktopTest
