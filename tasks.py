@@ -7,23 +7,18 @@ from rich.prompt import Prompt
 from rich import print
 
 from VBoxWrapper import VirtualMachine, Vbox
-from tests.data import TestData
-from tests.desktop_tests import DesktopTest
-import tests.multiprocessing as multiprocess
-from frameworks.console import MyConsole
-from tests.tools.desktop_report import DesktopReport
+from tests.desktop_tests.tools.test_data import TestData
+from tests.desktop_tests import DesktopTest, DesktopReport
+import tests.desktop_tests.multiprocessing as multiprocess
 from host_tools import Process, Service
 from elevate import elevate
-
-console = MyConsole().console
-print = console.print
 
 
 @task
 def desktop_test(
         c,
         version=None,
-        update_from=None,
+        update_from_version=None,
         name=None,
         processes=None,
         detailed_telegram=False,
@@ -34,7 +29,7 @@ def desktop_test(
 
     data = TestData(
         version=version if version else Prompt.ask('[red]Please enter version'),
-        update_from=update_from,
+        update_from=update_from_version,
         telegram=detailed_telegram,
         config_path=join(getcwd(), 'custom_config.json') if custom_config else join(getcwd(), 'config.json'),
         custom_config_mode=custom_config
@@ -51,7 +46,6 @@ def desktop_test(
     report.get_full(data.version)
     report.send_to_tg(data.version, data.title, data.tg_token, data.tg_chat_id, data.update_from) if not name else ...
 
-
 @task
 def run_vm(c, name: str = '', headless=False):
     vm = VirtualMachine(Vbox().check_vm_names(name))
@@ -59,7 +53,6 @@ def run_vm(c, name: str = '', headless=False):
     vm.network.wait_up(status_bar=True)
     vm.wait_logged_user(status_bar=True)
     return print(f"[green]ip: [red]{vm.network.get_ip()}[/]\nuser: [red]{vm.get_logged_user()}[/]")
-
 
 @task
 def stop_vm(c, name: str = None, group_name: str = None):
@@ -78,18 +71,15 @@ def stop_vm(c, name: str = None, group_name: str = None):
                 print(f"[green]|INFO| Shutting down the virtual machine: [red]{vm_info[0]}[/]")
                 virtualmachine.stop()
 
-
 @task
 def vm_list(c, group_name: str = None):
     vm_names = Vbox().vm_list(group_name)
     print(vm_names)
     return vm_names
 
-
 @task
 def out_info(c, name: str = '', full: bool = False):
     print(VirtualMachine(Vbox().check_vm_names(name)).get_info(full=full))
-
 
 @task
 def group_list(c):

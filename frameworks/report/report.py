@@ -25,23 +25,24 @@ class Report:
 
     def insert_column(self, path: str, location: str, column_name: str, value: str, delimiter='\t') -> pd.DataFrame:
         df = self.read(path, delimiter=delimiter)
-        if column_name  not in df.columns:
+        if column_name not in df.columns:
             df.insert(loc=df.columns.get_loc(location), column=column_name, value=value)
         else:
-            print(f"[green]|INFO| Column `{column_name}` already exists in `{path}`")
+            print(f"[cyan]|INFO| Column `{column_name}` already exists in `{path}`")
         return df
 
     def merge(self, reports: list, result_csv_path: str, delimiter='\t') -> str | None:
-        if reports:
-            merge_reports = []
-            for csv_ in reports:
-                if isfile(csv_):
-                    report = self.read(csv_, delimiter)
-                    if report is not None:
-                        merge_reports.append(report)
+        merge_reports = [
+            self.read(csv_, delimiter)
+            for csv_ in reports
+            if isfile(csv_) and self.read(csv_, delimiter) is not None
+        ]
+
+        if merge_reports:
             df = pd.concat(merge_reports, ignore_index=True)
             df.to_csv(result_csv_path, index=False, sep=delimiter)
             return result_csv_path
+
         print('[green]|INFO| No files to merge')
 
     @staticmethod
