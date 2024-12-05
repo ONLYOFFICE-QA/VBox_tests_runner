@@ -79,7 +79,7 @@ def vm_list(c, group_name: str = None):
 
 @task
 def out_info(c, name: str = '', full: bool = False):
-    print(VirtualMachine(Vbox().check_vm_names(name)).get_info(full=full))
+    print(VirtualMachine(Vbox().check_vm_names(name)).get_info(machine_readable=full))
 
 @task
 def group_list(c):

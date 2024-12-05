@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from .paths import Paths
 from .local_paths import LocalPaths
-from .remote_paths import RemotePaths
+from .linux_remote_paths import LinuxRemotePaths
 
-__all__ = ['Paths', 'RemotePaths', 'LocalPaths']
+__all__ = ['Paths', 'LinuxRemotePaths', 'LocalPaths']

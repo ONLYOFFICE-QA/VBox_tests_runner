@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from posixpath import join
 
-class RemotePaths:
+class LinuxRemotePaths:
     def __init__(self, user_name: str):
         self.user_name = user_name
         self.home_dir = join("/home", user_name)
