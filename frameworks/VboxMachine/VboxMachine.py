@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+from os import getcwd
+from os.path import join
+
 from VBoxWrapper import VirtualMachine
 
 from frameworks.decorators import vm_is_turn_on
@@ -22,6 +25,9 @@ class VboxMachine:
             name=self.name,
             local_dir=self.vm.get_parameter('CfgFile')
         )
+
+    def get_os_type(self) -> str:
+        return self.vm.get_os_type().lower()
 
     def run(self, headless: bool = True, status_bar: bool = False, timeout: int = 600):
         if self.vm.power_status():

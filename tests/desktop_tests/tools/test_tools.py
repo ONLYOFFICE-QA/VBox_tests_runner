@@ -28,12 +28,12 @@ signal.signal(signal.SIGINT, handle_interrupt)
 
 
 class TestTools:
-    vm_config_path = join(getcwd(), "vm_configs", "desktop_test_vm_config.json")
 
-    def __init__(self, vm_name: str, test_data: TestData):
+    def __init__(self, vm: VboxMachine, test_data: TestData):
         self.data = test_data
-        self.vm_name = vm_name
-        self.vm = VboxMachine(self.vm_name, config_path=self.vm_config_path)
+        self.vm = vm
+        self.vm_name = self.vm.name
+        self.os_type = self.vm.get_os_type()
         self.password_cache = None
 
         self._initialize_report()
@@ -100,7 +100,8 @@ class TestTools:
             custom_config_path=self.data.custom_config_mode,
             desktop_testing_url=self.data.desktop_testing_url,
             branch=self.data.branch,
-            paths=self.paths
+            paths=self.paths,
+            windows=('windows' in self.os_type)
         )
 
     @vm_data_created
@@ -113,7 +114,7 @@ class TestTools:
 
     @vm_data_created
     def _initialize_paths(self):
-        self.paths = Paths(remote_user_name=self.vm.data.user)
+        self.paths = Paths(os_type=self.os_type, remote_user_name=self.vm.data.user)
 
     def _clean_known_hosts(self, ip: str):
         with open(self.paths.local.know_hosts, 'r') as file:
