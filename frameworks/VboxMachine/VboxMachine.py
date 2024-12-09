@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-from os import getcwd
-from os.path import join
-
 from VBoxWrapper import VirtualMachine
 
 from frameworks.decorators import vm_is_turn_on
