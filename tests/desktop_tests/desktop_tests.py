@@ -3,6 +3,7 @@ from rich import print
 
 from frameworks import VboxMachine
 from .tools import TestTools, TestData
+from .tools.test_tools_linux import TestToolsLinux
 from .tools.test_tools_windows import TestToolsWindows
 
 
@@ -27,5 +28,5 @@ class DesktopTest:
     def _get_test_tools(self) -> TestTools:
         if 'windows' in self.vm.get_os_type():
             return TestToolsWindows(vm=self.vm, test_data=self.test_data)
-        return TestTools(vm=self.vm, test_data=self.test_data)
+        return TestToolsLinux(vm=self.vm, test_data=self.test_data)
 

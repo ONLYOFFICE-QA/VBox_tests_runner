@@ -14,9 +14,9 @@ class TestToolsWindows(TestTools):
         self.vbox_utils = None
 
     @retry(max_attempts=2, exception_type=VirtualMachinException)
-    def run_vm(self, headless: bool = True):
+    def run_vm(self, headless: bool = False) -> None:
         try:
-            self.vm.run(headless=headless, status_bar=self.data.status_bar)
+            self.vm.run(headless=False, status_bar=self.data.status_bar)
             self._initialize_paths()
             self._initialize_run_script()
             self._initialize_vbox_utils()
