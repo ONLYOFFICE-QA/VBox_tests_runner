@@ -25,12 +25,15 @@ class VboxUtils:
 
     def create_test_dirs(self):
         for cmd in [f'mkdir {self.paths.remote.script_dir}', f'mkdir {self.paths.remote.tg_dir}']:
-            self.file.run_cmd(cmd)
+            self.file.run_cmd(cmd, stdout=False)
 
     def run_script_on_vm(self):
         cmd = f"-ExecutionPolicy Bypass -File '{self.paths.remote.script_path}'"
-        print(f"[green]|INFO| Run command {cmd}")
-        self.file.run_cmd(cmd)
+        server_info = f"{self.file.vm.name}|{self.file.vm.network.get_ip()}"
+        print(f"[cyan]{'-' * 90}\n|INFO|{server_info}| Waiting for execution script on VM\n{'-' * 90}")
+
+        process = self.file.run_cmd(cmd, status_bar=self.data.status_bar, stdout=self.data.status_bar)
+        print(f"[cyan]{process.stdout}\n Exit Code: {process.returncode}")
 
     def download_report(self, product_title: str, version: str, report_dir: str):
         try:
