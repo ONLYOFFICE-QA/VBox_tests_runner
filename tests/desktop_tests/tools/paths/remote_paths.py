@@ -5,8 +5,9 @@ class RemotePaths:
     def __init__(self, user_name: str, windows: bool = False):
         self.windows = windows
         self.user_name = user_name
+        self.run_script_name = 'script.ps1' if windows else 'script.sh'
         self.home_dir = join("C:/Users" if self.windows else "/home", user_name)
-        self.script_path = join(self.home_dir, 'script.ps1' if windows else 'script.sh')
+        self.script_path = join(self.home_dir, self.run_script_name)
         self.script_dir = join(self.home_dir, 'scripts')
         self.desktop_testing_path = join(self.script_dir, 'desktop_testing')
         self.report_dir = join(self.desktop_testing_path, 'reports')

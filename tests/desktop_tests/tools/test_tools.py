@@ -56,16 +56,7 @@ class TestTools(ABC):
 
     @vm_data_created
     def _initialize_run_script(self):
-        self.run_script = RunScript(
-            version=self.data.version,
-            old_version=self.data.update_from,
-            telegram=self.data.telegram,
-            custom_config_path=self.data.custom_config_mode,
-            desktop_testing_url=self.data.desktop_testing_url,
-            branch=self.data.branch,
-            paths=self.paths,
-            windows=('windows' in self.os_type)
-        )
+        self.run_script = RunScript(test_data=self.data, paths=self.paths, windows=('windows' in self.os_type))
 
     @vm_data_created
     def _initialize_paths(self):
