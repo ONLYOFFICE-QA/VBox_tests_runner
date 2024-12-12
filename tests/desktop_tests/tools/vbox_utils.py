@@ -31,7 +31,7 @@ class VboxUtils:
         cmd = f"-ExecutionPolicy Bypass -File '{self.paths.remote.script_path}'"
         server_info = f"{self.file.vm.name}|{self.file.vm.network.get_ip()}"
         line = f"{'-' * 90}"
-        print(f"[cyan]{line}\n|INFO|{server_info}| Waiting for execution script on VM\n{line}")
+        print(f"[bold cyan]{line}\n|INFO|{server_info}| Waiting for execution script on VM\n{line}")
 
         process = self.file.run_cmd(cmd, status_bar=self.data.status_bar, stdout=self.data.status_bar)
         print(
