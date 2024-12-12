@@ -30,10 +30,14 @@ class VboxUtils:
     def run_script_on_vm(self):
         cmd = f"-ExecutionPolicy Bypass -File '{self.paths.remote.script_path}'"
         server_info = f"{self.file.vm.name}|{self.file.vm.network.get_ip()}"
-        print(f"[cyan]{'-' * 90}\n|INFO|{server_info}| Waiting for execution script on VM\n{'-' * 90}")
+        line = f"{'-' * 90}"
+        print(f"[cyan]{line}\n|INFO|{server_info}| Waiting for execution script on VM\n{line}")
 
         process = self.file.run_cmd(cmd, status_bar=self.data.status_bar, stdout=self.data.status_bar)
-        print(f"[cyan]{process.stdout}\n Exit Code: {process.returncode}")
+        print(
+            f"[cyan]{line}\n|INFO|{self.file.vm.name}|Script execution log:\n{line}\n"
+            f"{process.stdout}\n Exit Code: {process.returncode}\n{line}"
+        )
 
     def download_report(self, product_title: str, version: str, report_dir: str):
         try:
