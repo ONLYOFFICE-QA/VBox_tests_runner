@@ -56,7 +56,7 @@ class TestTools(ABC):
 
     @vm_data_created
     def _initialize_run_script(self):
-        self.run_script = RunScript(test_data=self.data, paths=self.paths, windows=('windows' in self.os_type))
+        self.run_script = RunScript(test_data=self.data, paths=self.paths, os_type=self.os_type)
 
     @vm_data_created
     def _initialize_paths(self):

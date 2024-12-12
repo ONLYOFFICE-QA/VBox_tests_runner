@@ -8,30 +8,36 @@ from .paths import Paths
 
 
 class RunScript:
-    def __init__(self, test_data: TestData, paths: Paths, windows: bool):
+
+    def __init__(self, test_data: TestData, paths: Paths, os_type: str):
         self.data = test_data
-        self.windows = windows
+        self.os_type = os_type.lower()
         self._path = paths
 
     def generate(self) -> str:
         return f'''\
-        {'#!/bin/bash' if not self.windows else ''}
+        {self.get_shebang()}
         cd {self._path.remote.script_dir}
         {self.clone_desktop_testing_repo()}
         cd {self._path.remote.desktop_testing_path}
         {self.get_python()} -m venv venv
-        {self.get_activate_env_script()}
+        {self.get_activate_env_cmd()}
         {self.get_python()} ./install_requirements.py
         {self.generate_run_test_cmd()}
         '''.strip()
 
+    def get_shebang(self) -> str:
+        if self.os_type == "windows 10":
+            return ''
+        return '#!/bin/bash'
+
     def get_python(self) -> str:
-        if self.windows:
+        if self.os_type == "windows 10":
             return 'python.exe'
         return 'python3'
 
-    def get_activate_env_script(self) -> str:
-        if self.windows:
+    def get_activate_env_cmd(self) -> str:
+        if self.os_type == "windows 10":
             return './venv/Scripts/activate'
         return 'source ./venv/bin/activate'
 
