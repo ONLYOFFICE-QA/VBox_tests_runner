@@ -11,8 +11,8 @@ class RunScript:
     def __init__(self, test_data: TestData, paths: Paths, windows: bool):
         self.data = test_data
         self.windows = windows
-        self.save_path = self.get_save_path()
         self._path = paths
+        self.save_path = self.get_save_path()
 
     def generate(self) -> str:
         return f'''\
