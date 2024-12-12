@@ -12,7 +12,6 @@ class RunScript:
         self.data = test_data
         self.windows = windows
         self._path = paths
-        self.save_path = self.get_save_path()
 
     def generate(self) -> str:
         return f'''\
@@ -53,5 +52,6 @@ class RunScript:
         return join(gettempdir(), self._path.remote.run_script_name)
 
     def create(self) -> str:
-        File.write(self.save_path, '\n'.join(line.strip() for line in self.generate().split('\n')), newline='')
-        return self.save_path
+        save_path = self.get_save_path()
+        File.write(save_path, '\n'.join(line.strip() for line in self.generate().split('\n')), newline='')
+        return save_path
