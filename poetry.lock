@@ -1556,7 +1556,7 @@ rich = "*"
 type = "git"
 url = "https://github.com/l8556/VBoxWrapper.git"
 reference = "feature/add-new-methods"
-resolved_reference = "40fe6fcdf4ac30d6d249d328cfa5af59252776e6"
+resolved_reference = "856e10568c8523e74a5fe4493be034935e8f1f4c"
 
 [metadata]
 lock-version = "2.0"
