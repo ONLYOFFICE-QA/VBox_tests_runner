@@ -21,9 +21,9 @@ class DesktopTest:
         except KeyboardInterrupt:
             print("[bold red]|WARNING| Interruption by the user")
             raise
-        #
-        # finally:
-        #     self.test_tools.stop_vm()
+
+        finally:
+            self.test_tools.stop_vm()
 
     def _get_test_tools(self) -> TestTools:
         if 'windows' in self.vm.get_os_type():
