@@ -25,6 +25,7 @@ class VboxUtils:
 
     def create_test_dirs(self):
         for cmd in [f'mkdir {self.paths.remote.script_dir}', f'mkdir {self.paths.remote.tg_dir}']:
+            print(f"[green]|INFO| Creating test dir command: [cyan]{cmd}[/]")
             self.file.run_cmd(cmd, stdout=False)
 
     def run_script_on_vm(self):
