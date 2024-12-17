@@ -25,7 +25,7 @@ class VboxUtils:
 
     def create_test_dirs(self):
         for cmd in [f'mkdir {self.paths.remote.script_dir}', f'mkdir {self.paths.remote.tg_dir}']:
-            print(f"[green]|INFO| Creating test dir command: [cyan]{cmd}[/]")
+            print(f"[green]|INFO|{self.file.vm.name}| Creating test dir: [cyan]{cmd}[/]")
             self.file.run_cmd(cmd, stdout=False)
 
     def run_script_on_vm(self):
@@ -50,5 +50,5 @@ class VboxUtils:
             return False
 
     def _upload(self, local_path: str, remote_path: str) -> None:
-        print(f"[green]|INFO| Upload file [cyan]{local_path}[/] to [cyan]{remote_path}[/]")
+        print(f"[green]|INFO|{self.file.vm.name}| Upload file [cyan]{local_path}[/] to [cyan]{remote_path}[/]")
         self.file.copy_to(local_path=local_path, remote_path=remote_path)
