@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import json
+from os import getcwd
+from os.path import join
+
 from rich import print
 from pydantic import BaseModel, conint
 from host_tools import singleton
@@ -23,6 +26,8 @@ class SystemConfigModel(BaseModel):
 
 @singleton
 class VmConfig:
+    vm_config_path = join(getcwd(), "vm_configs", "desktop_test_vm_config.json")
+
     """
     Configuration class for system settings.
 
@@ -30,8 +35,8 @@ class VmConfig:
         cpus (int): The number of CPUs allocated for the system.
         memory (int): The amount of memory in MB.
     """
-    def __init__(self, config_path: str):
-        self.config_path = config_path
+    def __init__(self, config_path: str = None):
+        self.config_path = config_path or self.vm_config_path
         self._config = self._load_config(self.config_path)
         self.cpus = self._config.cpus
         self.memory = self._config.memory

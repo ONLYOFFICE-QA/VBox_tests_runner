@@ -23,6 +23,9 @@ class VboxMachine:
             local_dir=self.vm.get_parameter('CfgFile')
         )
 
+    def get_os_type(self) -> str:
+        return self.vm.get_os_type().lower()
+
     def run(self, headless: bool = True, status_bar: bool = False, timeout: int = 600):
         if self.vm.power_status():
             self.vm.stop()
