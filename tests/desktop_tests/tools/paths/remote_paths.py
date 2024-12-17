@@ -23,12 +23,12 @@ class RemotePaths:
         self.lic_file = join(self.script_dir, 'test_lic.lickey')
 
     def _get_run_script_name(self) -> str:
-        if self.os_type == "windows 10":
+        if self.os_type in ["windows 10", "windows 7"]:
             return 'script.ps1'
         return 'script.sh'
 
     def _get_home_dir_path(self, user_name: str) -> str:
-        if self.os_type == "windows 10":
+        if self.os_type  in ["windows 10", "windows 7"]:
             users_dir = join("C:", "Users")
         else:
             users_dir = "/home"
