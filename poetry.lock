@@ -1555,10 +1555,10 @@ rich = "*"
 [package.source]
 type = "git"
 url = "https://github.com/l8556/VBoxWrapper.git"
-reference = "feature/add-new-methods"
-resolved_reference = "f9416d00e5775482f0b1cb90e7c5649aba138bfd"
+reference = "master"
+resolved_reference = "6d2a77f9f283995403fb312f99dacd65c9d2a6d0"
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "045245143b3faddc538a46b36efc93b1bb359a27001abb7ac2638f0c089e2329"
+content-hash = "ffc08e1cc053bfeea65a2c992dbdc27c10ab8ebbe30010550122a6506a3bed07"
