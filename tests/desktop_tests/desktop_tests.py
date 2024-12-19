@@ -2,9 +2,7 @@
 from rich import print
 
 from frameworks import VboxMachine
-from .tools import TestTools, TestData
-from .tools.test_tools_linux import TestToolsLinux
-from .tools.test_tools_windows import TestToolsWindows
+from .tools import TestToolsLinux, TestToolsWindows, TestTools, TestData
 
 
 class DesktopTest:
