@@ -3,10 +3,11 @@ from posixpath import join
 
 class RemotePaths:
     def __init__(self, user_name: str, os_type: str):
-        self.os_type = os_type.lower()
+        self.os_type = os_type.lower() if os_type else ''
         self.user_name = user_name
+
         self.run_script_name = self._get_run_script_name()
-        self.home_dir = self._get_home_dir_path(self.user_name)
+        self.home_dir = self._get_home_dir_path()
 
         self.script_path = join(self.home_dir, self.run_script_name)
         self.script_dir = join(self.home_dir, 'scripts')
@@ -23,14 +24,14 @@ class RemotePaths:
         self.lic_file = join(self.script_dir, 'test_lic.lickey')
 
     def _get_run_script_name(self) -> str:
-        if self.os_type in ["windows 10", "windows 7"]:
+        if 'windows' in self.os_type:
             return 'script.ps1'
         return 'script.sh'
 
-    def _get_home_dir_path(self, user_name: str) -> str:
-        if self.os_type  in ["windows 10", "windows 7"]:
+    def _get_home_dir_path(self) -> str:
+        if 'windows' in self.os_type:
             users_dir = join("C:", "Users")
         else:
             users_dir = "/home"
 
-        return join(users_dir, user_name)
+        return join(users_dir, self.user_name)
