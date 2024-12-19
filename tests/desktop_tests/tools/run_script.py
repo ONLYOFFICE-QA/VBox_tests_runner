@@ -11,7 +11,7 @@ class RunScript:
 
     def __init__(self, test_data: TestData, paths: Paths, os_type: str):
         self.data = test_data
-        self.os_type = os_type.lower()
+        self.os_type = os_type.lower() if os_type else ''
         self._path = paths
 
     def generate(self) -> str:
@@ -27,17 +27,17 @@ class RunScript:
         '''.strip()
 
     def get_shebang(self) -> str:
-        if self.os_type in ["windows 10", "windows 7"]:
+        if 'windows' in self.os_type:
             return ''
         return '#!/bin/bash'
 
     def get_python(self) -> str:
-        if self.os_type in ["windows 10", "windows 7"]:
+        if 'windows' in self.os_type:
             return 'python.exe'
         return 'python3'
 
     def get_activate_env_cmd(self) -> str:
-        if self.os_type in ["windows 10", "windows 7"]:
+        if 'windows' in self.os_type:
             return './venv/Scripts/activate'
         return 'source ./venv/bin/activate'
 
