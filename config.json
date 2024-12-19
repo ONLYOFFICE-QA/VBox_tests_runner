@@ -6,6 +6,7 @@
   "chat_id_file": "",
   "password": "",
   "hosts": [
+    "Windows7",
     "Windows10",
     "Debian10",
     "Debian11",
