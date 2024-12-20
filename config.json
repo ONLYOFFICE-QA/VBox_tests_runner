@@ -6,7 +6,6 @@
   "chat_id_file": "",
   "password": "",
   "hosts": [
-    "Windows7",
     "Windows10",
     "Debian10",
     "Debian11",
@@ -17,6 +16,7 @@
     "Ubuntu22",
     "Ubuntu24",
     "CentOs9",
+    "Windows7",
     "CentOs7",
     "Fedora37",
     "Fedora38",
