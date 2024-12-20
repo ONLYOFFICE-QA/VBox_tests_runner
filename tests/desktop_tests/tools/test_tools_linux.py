@@ -11,8 +11,8 @@ from .ssh_connection import SSHConnection
 
 class TestToolsLinux(TestTools):
 
-    def __init__(self,  vm: VboxMachine, test_data: TestData):
-        super().__init__(vm=vm, test_data=test_data)
+    def __init__(self,  vm: VboxMachine, test_data: TestData, os_type: str):
+        super().__init__(vm=vm, test_data=test_data, os_type=os_type)
 
     @retry(max_attempts=2, exception_type=VirtualMachinException)
     def run_vm(self, headless: bool = True) -> None:

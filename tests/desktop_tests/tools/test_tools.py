@@ -26,11 +26,11 @@ signal.signal(signal.SIGINT, handle_interrupt)
 
 class TestTools(ABC):
 
-    def __init__(self, vm: VboxMachine, test_data: TestData):
+    def __init__(self, vm: VboxMachine, test_data: TestData, os_type: str):
         self.data = test_data
         self.vm = vm
         self.vm_name = self.vm.name
-        self.os_type = self.vm.get_os_type()
+        self.os_type = os_type or self.vm.get_os_type()
         self.password_cache = None
 
         self._initialize_report()
