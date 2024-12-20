@@ -40,6 +40,7 @@ class VboxUtils:
             print(f"[green]|INFO|{self.file.vm.name}| Creating test dir: [cyan]{cmd}[/]")
             self._run_cmd(cmd, stdout=False)
 
+
     def run_script_on_vm(self):
         cmd = f"-ExecutionPolicy Bypass -File '{self.paths.remote.script_path}'"
         server_info = f"{self.file.vm.name}|{self.file.vm.network.get_ip()}"
@@ -64,9 +65,16 @@ class VboxUtils:
     def _run_cmd(self, cmd: str, status_bar: bool = False, stdout: bool = True) -> CompletedProcess:
         return self.file.run_cmd(command=cmd, status_bar=status_bar, stdout=stdout)
 
-    def _upload(self, local_path: str, remote_path: str, try_num: int = 20, interval: int = 5) -> None:
+    def _upload(self, local_path: str, remote_path: str, try_num: int = 5, interval: int = 5) -> None:
         print(f"[green]|INFO|{self.file.vm.name}| Upload file [cyan]{local_path}[/] to [cyan]{remote_path}[/]")
         _try_num = 0
-        while self.file.copy_to(local_path=local_path, remote_path=remote_path).returncode != 0 or _try_num != try_num:
-            time.sleep(interval)
+        while self.file.copy_to(
+                local_path=local_path,
+                remote_path=remote_path,
+                stdout=True,
+                stderr=False
+        ).returncode != 0 or _try_num != try_num:
+            if _try_num != 0:
+                time.sleep(interval)
+
             _try_num += 1
