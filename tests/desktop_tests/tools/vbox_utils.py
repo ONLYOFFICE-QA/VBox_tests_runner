@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from subprocess import CompletedProcess
+
 from VBoxWrapper import FileUtils, VirtualMachine
 from rich import print
 
@@ -9,8 +11,17 @@ from .run_script import RunScript
 
 class VboxUtils:
 
-    def __init__(self, vm_id: VirtualMachine, user_name: str, password: str, test_data: TestData, paths: Paths):
-        self.file = FileUtils(vm_id=vm_id, username=user_name, password=password)
+    def __init__(
+            self,
+            vm: VirtualMachine,
+            user_name: str,
+            password: str,
+            test_data: TestData,
+            paths: Paths,
+            os_type: str
+    ):
+        self.os_type = os_type
+        self.file = FileUtils(vm_id=vm, username=user_name, password=password, os_type=self.os_type)
         self.data = test_data
         self.paths = paths
 
@@ -26,7 +37,7 @@ class VboxUtils:
     def create_test_dirs(self):
         for cmd in [f'mkdir {self.paths.remote.script_dir}', f'mkdir {self.paths.remote.tg_dir}']:
             print(f"[green]|INFO|{self.file.vm.name}| Creating test dir: [cyan]{cmd}[/]")
-            self.file.run_cmd(cmd, stdout=False)
+            self._run_cmd(cmd, stdout=False)
 
     def run_script_on_vm(self):
         cmd = f"-ExecutionPolicy Bypass -File '{self.paths.remote.script_path}'"
@@ -34,7 +45,7 @@ class VboxUtils:
         line = f"{'-' * 90}"
         print(f"[bold cyan]{line}\n|INFO|{server_info}| Waiting for execution script on VM\n{line}")
 
-        process = self.file.run_cmd(cmd, status_bar=self.data.status_bar, stdout=self.data.status_bar)
+        process = self._run_cmd(cmd, status_bar=self.data.status_bar, stdout=self.data.status_bar)
         print(
             f"[cyan]{line}\n|INFO|{self.file.vm.name}|Script execution log:\n{line}\n"
             f"{process.stdout}\n Exit Code: {process.returncode}\n{line}"
@@ -48,6 +59,9 @@ class VboxUtils:
         except (FileExistsError, FileNotFoundError) as e:
             print(e)
             return False
+
+    def _run_cmd(self, cmd: str, status_bar: bool = False, stdout: bool = True) -> CompletedProcess:
+        return self.file.run_cmd(command=cmd, status_bar=status_bar, stdout=stdout)
 
     def _upload(self, local_path: str, remote_path: str) -> None:
         print(f"[green]|INFO|{self.file.vm.name}| Upload file [cyan]{local_path}[/] to [cyan]{remote_path}[/]")

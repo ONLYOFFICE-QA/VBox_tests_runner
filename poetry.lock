@@ -1595,10 +1595,10 @@ rich = "*"
 [package.source]
 type = "git"
 url = "https://github.com/l8556/VBoxWrapper.git"
-reference = "master"
-resolved_reference = "6d2a77f9f283995403fb312f99dacd65c9d2a6d0"
+reference = "feature/minor-refactoring"
+resolved_reference = "faf03cfa5e37a5dbd933ac4316170df22a93b2cd"
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "95ec5fabff44d24e7cf7deb7ecb73be8af60c6c48a8909859884f7093f03e7c1"
+content-hash = "df36561b857cf27a69650564d31123eae92b930f4a87f0105506a6a78f7e2a01"
