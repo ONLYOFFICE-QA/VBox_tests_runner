@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import time
 from subprocess import CompletedProcess
 
 from VBoxWrapper import FileUtils, VirtualMachine
@@ -63,6 +64,10 @@ class VboxUtils:
     def _run_cmd(self, cmd: str, status_bar: bool = False, stdout: bool = True) -> CompletedProcess:
         return self.file.run_cmd(command=cmd, status_bar=status_bar, stdout=stdout)
 
-    def _upload(self, local_path: str, remote_path: str) -> None:
+    def _upload(self, local_path: str, remote_path: str, try_num: int = 20, interval: int = 5) -> None:
         print(f"[green]|INFO|{self.file.vm.name}| Upload file [cyan]{local_path}[/] to [cyan]{remote_path}[/]")
-        self.file.copy_to(local_path=local_path, remote_path=remote_path)
+        _try_num = 0
+        while self.file.copy_to(local_path=local_path, remote_path=remote_path).returncode != 0 or _try_num != try_num:
+            print(f"[red] Try num {_try_num}")
+            time.sleep(interval)
+            _try_num += 1
