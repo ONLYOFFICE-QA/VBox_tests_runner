@@ -68,6 +68,5 @@ class VboxUtils:
         print(f"[green]|INFO|{self.file.vm.name}| Upload file [cyan]{local_path}[/] to [cyan]{remote_path}[/]")
         _try_num = 0
         while self.file.copy_to(local_path=local_path, remote_path=remote_path).returncode != 0 or _try_num != try_num:
-            print(f"[red] Try num {_try_num}")
             time.sleep(interval)
             _try_num += 1
