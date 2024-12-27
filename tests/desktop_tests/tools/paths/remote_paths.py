@@ -5,13 +5,13 @@ class RemotePaths:
     def __init__(self, user_name: str, os_type: str):
         self.os_type = os_type.lower() if os_type else ''
         self.user_name = user_name
+        self.run_script_name = self._get_run_script_name()
 
-        if 'vista' in self.os_type:
+        if self.run_script_name.endswith(".bat"):
             from os.path import join
         else:
             from posixpath import join
 
-        self.run_script_name = self._get_run_script_name()
         self.home_dir = join("C:\\Users" if 'windows' in self.os_type else "/home", self.user_name)
         self.script_path = join(self.home_dir, self.run_script_name)
         self.script_dir = join(self.home_dir, 'scripts')
