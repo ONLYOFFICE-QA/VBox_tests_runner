@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
 from subprocess import CompletedProcess
+from typing import Optional
 
 from VBoxWrapper import FileUtils, VirtualMachine
 from rich import print
@@ -19,12 +20,11 @@ class VboxUtils:
             password: str,
             test_data: TestData,
             paths: Paths,
-            os_type: str
     ):
-        self.os_type = os_type
-        self.file = FileUtils(vm_id=vm, username=user_name, password=password, os_type=self.os_type)
+        self.file = FileUtils(vm_id=vm, username=user_name, password=password)
         self.data = test_data
         self.paths = paths
+        self.shell = self._get_shell()
 
     def upload_test_files(self, script: RunScript):
         self.create_test_dirs()
@@ -62,7 +62,7 @@ class VboxUtils:
             return False
 
     def _run_cmd(self, cmd: str, status_bar: bool = False, stdout: bool = True) -> CompletedProcess:
-        return self.file.run_cmd(command=cmd, status_bar=status_bar, stdout=stdout, shell='powershell.exe')
+        return self.file.run_cmd(command=cmd, status_bar=status_bar, stdout=stdout, shell=self.shell)
 
     def _upload(self, local_path: str, remote_path: str, try_num: int = 10, interval: int = 1) -> None:
         print(f"[green]|INFO|{self.file.vm.name}| Upload file [cyan]{local_path}[/] to [cyan]{remote_path}[/]")
@@ -90,3 +90,13 @@ class VboxUtils:
 
             time.sleep(interval)
             try_num -= 1
+
+    def _get_shell(self) -> Optional[str]:
+        if self.paths.remote.run_script_name.endswith(".bat"):
+            return "cmd.exe"
+
+        if self.paths.remote.run_script_name.endswith(".ps1"):
+            return "powershell.exe"
+
+        return None
+

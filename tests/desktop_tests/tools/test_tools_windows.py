@@ -48,6 +48,5 @@ class TestToolsWindows(TestTools):
             user_name=self.vm.data.user,
             password=self._get_password(self.vm.data.local_dir),
             paths=self.paths,
-            test_data=self.data,
-            os_type=self.os_type
+            test_data=self.data
         )
