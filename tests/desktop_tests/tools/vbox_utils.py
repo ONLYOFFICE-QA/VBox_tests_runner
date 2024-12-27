@@ -41,15 +41,14 @@ class VboxUtils:
             self._create_dir(cmd, try_num=try_num, interval=interval)
 
     def run_script_on_vm(self):
-        cmd = f"-ExecutionPolicy Bypass -File '{self.paths.remote.script_path}'"
         server_info = f"{self.file.vm.name}|{self.file.vm.network.get_ip()}"
         line = f"{'-' * 90}"
         print(f"[bold cyan]{line}\n|INFO|{server_info}| Waiting for execution script on VM\n{line}")
 
-        process = self._run_cmd(cmd, status_bar=self.data.status_bar, stdout=self.data.status_bar)
+        out = self._run_cmd(self._get_run_script_cmd(), status_bar=self.data.status_bar, stdout=self.data.status_bar)
         print(
             f"[cyan]{line}\n|INFO|{self.file.vm.name}|Script execution log:\n{line}\n"
-            f"{process.stdout}\n Exit Code: {process.returncode}\n{line}"
+            f"{out.stdout}\n Exit Code: {out.returncode}\n{line}"
         )
 
     def download_report(self, product_title: str, version: str, report_dir: str):
@@ -100,3 +99,11 @@ class VboxUtils:
 
         return None
 
+    def _get_run_script_cmd(self):
+        if self.paths.remote.run_script_name.endswith(".bat"):
+            return f"{self.paths.remote.script_path}"
+
+        if self.paths.remote.run_script_name.endswith(".ps1"):
+            return f"-ExecutionPolicy Bypass -File '{self.paths.remote.script_path}'"
+
+        raise
