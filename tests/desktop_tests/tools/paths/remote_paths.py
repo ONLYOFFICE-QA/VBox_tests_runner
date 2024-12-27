@@ -5,6 +5,7 @@ class RemotePaths:
     def __init__(self, user_name: str, os_type: str):
         self.os_type = os_type.lower() if os_type else ''
         self.user_name = user_name
+
         if 'vista' in self.os_type:
             from os.path import join
         else:

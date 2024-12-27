@@ -9,10 +9,10 @@ from .paths import Paths
 
 class RunScript:
 
-    def __init__(self, test_data: TestData, paths: Paths, os_type: str):
+    def __init__(self, test_data: TestData, paths: Paths):
         self.data = test_data
-        self.os_type = os_type.lower() if os_type else ''
         self._path = paths
+        self.script_name = self._path.remote.run_script_name
 
     def generate(self) -> str:
         return f'''\
@@ -27,20 +27,20 @@ class RunScript:
         '''.strip()
 
     def get_shebang(self) -> str:
-        if 'windows' in self.os_type:
+        if self.script_name.endswith('.bat') or self.script_name.endswith('.ps1'):
             return ''
         return '#!/bin/bash'
 
     def get_python(self) -> str:
-        if 'windows' in self.os_type:
+        if self.script_name.endswith('.bat') or self.script_name.endswith('.ps1'):
             return 'python.exe'
         return 'python3'
 
     def get_activate_env_cmd(self) -> str:
-        if 'vista' in self.os_type:
+        if self.script_name.endswith('.bat'):
             return 'call ./venv/Scripts/activate'
 
-        if 'windows' in self.os_type:
+        if self.script_name.endswith('.ps1'):
             return './venv/Scripts/activate'
 
         return 'source ./venv/bin/activate'
