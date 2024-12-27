@@ -5,8 +5,7 @@ class RemotePaths:
     def __init__(self, user_name: str, os_type: str):
         self.os_type = os_type.lower() if os_type else ''
         self.user_name = user_name
-
-        if 'windows' in self.os_type:
+        if 'vista' in self.os_type:
             from os.path import join
         else:
             from posixpath import join
@@ -28,6 +27,10 @@ class RemotePaths:
         self.lic_file = join(self.script_dir, 'test_lic.lickey')
 
     def _get_run_script_name(self) -> str:
-        if 'windows' in self.os_type:
+        if 'vista' in self.os_type:
             return 'script.bat'
+
+        if 'windows' in self.os_type:
+            return 'script.ps1'
+
         return 'script.sh'

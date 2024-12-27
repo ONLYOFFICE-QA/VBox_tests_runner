@@ -37,8 +37,12 @@ class RunScript:
         return 'python3'
 
     def get_activate_env_cmd(self) -> str:
-        if 'windows' in self.os_type:
+        if 'vista' in self.os_type:
             return 'call ./venv/Scripts/activate'
+
+        if 'windows' in self.os_type:
+            return './venv/Scripts/activate'
+
         return 'source ./venv/bin/activate'
 
     def clone_desktop_testing_repo(self) -> str:
