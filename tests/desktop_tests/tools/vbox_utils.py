@@ -62,13 +62,13 @@ class VboxUtils:
         )
 
     def download_report(self, product_title: str, version: str, report_dir: str):
-        try:
-            remote_report_dir = f"{self.paths.remote.report_dir}/{product_title}/{version}"
-            self.file.copy_from(remote_report_dir, report_dir)
-            return True
-        except (FileExistsError, FileNotFoundError) as e:
-            print(e)
+        remote_report_dir = f"{self.paths.remote.report_dir}/{product_title}/{version}"
+        out = self.file.copy_from(remote_report_dir, report_dir)
+
+        if out.stderr and 'No such file or directory' in out.stderr:
             return False
+
+        return True
 
     def _run_cmd(self, cmd: str, status_bar: bool = False, stdout: bool = True) -> CompletedProcess:
         return self.file.run_cmd(command=cmd, status_bar=status_bar, stdout=stdout, shell=self.shell)
