@@ -28,15 +28,25 @@ class VboxUtils:
 
     def upload_test_files(self, script: RunScript):
         self.create_test_dirs()
-        self._upload(self.data.token_file, self.paths.remote.tg_token_file)
-        self._upload(self.data.chat_id_file, self.paths.remote.tg_chat_id_file)
-        self._upload(script.create(), self.paths.remote.script_path)
-        self._upload(self.paths.local.proxy_config, self.paths.remote.proxy_config_file)
-        self._upload(self.data.config_path, self.paths.remote.custom_config_path)
-        self._upload(self.paths.local.lic_file, self.paths.remote.lic_file)
+        uploads = [
+            (self.data.token_file, self.paths.remote.tg_token_file),
+            (self.data.chat_id_file, self.paths.remote.tg_chat_id_file),
+            (script.create(), self.paths.remote.script_path),
+            (self.paths.local.proxy_config, self.paths.remote.proxy_config_file),
+            (self.data.config_path, self.paths.remote.custom_config_path),
+            (self.paths.local.lic_file, self.paths.remote.lic_file),
+        ]
+
+        for local, remote in uploads:
+            self._upload(local, remote)
 
     def create_test_dirs(self, try_num: int = 10, interval: int = 1):
-        for cmd in [f'mkdir {self.paths.remote.script_dir}', f'mkdir {self.paths.remote.tg_dir}']:
+        commands = [
+            f'mkdir {self.paths.remote.script_dir}',
+            f'mkdir {self.paths.remote.tg_dir}'
+        ]
+
+        for cmd in commands:
             print(f"[green]|INFO|{self.file.vm.name}| Creating test dir: [cyan]{cmd}[/]")
             self._create_dir(cmd, try_num=try_num, interval=interval)
 
@@ -101,9 +111,9 @@ class VboxUtils:
 
     def _get_run_script_cmd(self):
         if self.paths.remote.run_script_name.endswith(".bat"):
-            return f"{self.paths.remote.script_path}"
+            return self.paths.remote.script_path
 
         if self.paths.remote.run_script_name.endswith(".ps1"):
             return f"-ExecutionPolicy Bypass -File '{self.paths.remote.script_path}'"
 
-        raise
+        raise ValueError("Unsupported script type.")
