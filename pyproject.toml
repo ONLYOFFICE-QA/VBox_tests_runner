@@ -17,7 +17,7 @@ host-tools = { git = "https://github.com/l8556/host_tools.git", branch = "master
 telegram = { git = "https://github.com/l8556/TelegramApi.git", branch = "master" }
 VBoxWrapper = { git = "https://github.com/l8556/VBoxWrapper.git", branch = "master" }
 ssh-wrapper = { git = "https://github.com/l8556/SshWrapper.git", branch = "master" }
-ruff = "^0.8.4"
+ruff = "^0.9.0"
 pydantic = "^2.10.4"
 
 
