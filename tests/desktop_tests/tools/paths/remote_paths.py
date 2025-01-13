@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from posixpath import join
 
 class RemotePaths:
 
@@ -7,25 +8,22 @@ class RemotePaths:
         self.user_name = user_name
         self.run_script_name = self._get_run_script_name()
 
-        if self.run_script_name.endswith(".bat"):
-            from os.path import join
-        else:
-            from posixpath import join
+        self.path_module = self._windows_path if 'windows' in self.os_type else join
 
-        self.home_dir = join("C:\\Users" if 'windows' in self.os_type else "/home", self.user_name)
-        self.script_path = join(self.home_dir, self.run_script_name)
-        self.script_dir = join(self.home_dir, 'scripts')
-        self.desktop_testing_path = join(self.script_dir, 'desktop_testing')
-        self.report_dir = join(self.desktop_testing_path, 'reports')
-        self.custom_config_path = join(self.script_dir, 'custom_config.json')
-        self.tg_dir = join(self.home_dir, '.telegram')
-        self.tg_token_file = join(self.tg_dir, 'token')
-        self.tg_chat_id_file = join(self.tg_dir, 'chat')
-        self.proxy_config_file = join(self.tg_dir, 'proxy.json')
-        self.services_dir = join('/etc', 'systemd', 'system')
+        self.home_dir = self._join_path("C:\\Users" if 'windows' in self.os_type else "/home", self.user_name)
+        self.script_dir = self._join_path(self.home_dir, 'scripts')
+        self.script_path = self._join_path(self.home_dir, self.run_script_name)
+        self.desktop_testing_path = self._join_path(self.script_dir, 'desktop_testing')
+        self.report_dir = self._join_path(self.desktop_testing_path, 'reports')
+        self.custom_config_path = self._join_path(self.script_dir, 'custom_config.json')
+        self.tg_dir = self._join_path(self.home_dir, '.telegram')
+        self.tg_token_file = self._join_path(self.tg_dir, 'token')
+        self.tg_chat_id_file = self._join_path(self.tg_dir, 'chat')
+        self.proxy_config_file = self._join_path(self.tg_dir, 'proxy.json')
+        self.services_dir = self._join_path('/etc', 'systemd', 'system')
         self.my_service_name = 'myscript.service'
-        self.my_service_path = join(self.services_dir, self.my_service_name)
-        self.lic_file = join(self.script_dir, 'test_lic.lickey')
+        self.my_service_path = self._join_path(self.services_dir, self.my_service_name)
+        self.lic_file = self._join_path(self.script_dir, 'test_lic.lickey')
 
     def _get_run_script_name(self) -> str:
         if 'vista' in self.os_type:
@@ -35,3 +33,11 @@ class RemotePaths:
             return 'script.ps1'
 
         return 'script.sh'
+
+
+    def _join_path(self, *parts):
+        return str(self.path_module(*parts))
+
+    @staticmethod
+    def _windows_path(*parts):
+        return "\\".join(parts)
