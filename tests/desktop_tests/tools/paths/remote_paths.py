@@ -34,8 +34,7 @@ class RemotePaths:
 
         return 'script.sh'
 
-
-    def _join_path(self, *parts):
+    def _join_path(self, *parts) -> str:
         return str(self.path_module(*parts))
 
     @staticmethod
