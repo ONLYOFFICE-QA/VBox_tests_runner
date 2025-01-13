@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
-from posixpath import join
 
 class RemotePaths:
+
     def __init__(self, user_name: str, os_type: str):
-        self.os_type = os_type.lower()
+        self.os_type = os_type.lower() if os_type else ''
         self.user_name = user_name
         self.run_script_name = self._get_run_script_name()
-        self.home_dir = self._get_home_dir_path(self.user_name)
 
+        if self.run_script_name.endswith(".bat"):
+            from os.path import join
+        else:
+            from posixpath import join
+
+        self.home_dir = join("C:\\Users" if 'windows' in self.os_type else "/home", self.user_name)
         self.script_path = join(self.home_dir, self.run_script_name)
         self.script_dir = join(self.home_dir, 'scripts')
         self.desktop_testing_path = join(self.script_dir, 'desktop_testing')
@@ -23,14 +28,10 @@ class RemotePaths:
         self.lic_file = join(self.script_dir, 'test_lic.lickey')
 
     def _get_run_script_name(self) -> str:
-        if self.os_type == "windows 10":
+        if 'vista' in self.os_type:
+            return 'script.bat'
+
+        if 'windows' in self.os_type:
             return 'script.ps1'
+
         return 'script.sh'
-
-    def _get_home_dir_path(self, user_name: str) -> str:
-        if self.os_type == "windows 10":
-            users_dir = join("C:", "Users")
-        else:
-            users_dir = "/home"
-
-        return join(users_dir, user_name)

@@ -9,8 +9,8 @@ from .vbox_utils import VboxUtils
 
 class TestToolsWindows(TestTools):
 
-    def __init__(self, vm: VboxMachine, test_data: TestData):
-        super().__init__(vm=vm, test_data=test_data)
+    def __init__(self, vm: VboxMachine, test_data: TestData, os_type: str):
+        super().__init__(vm=vm, test_data=test_data, os_type=os_type)
         self.vbox_utils = None
 
     @retry(max_attempts=2, exception_type=VirtualMachinException)
@@ -44,7 +44,7 @@ class TestToolsWindows(TestTools):
 
     def _initialize_vbox_utils(self):
         self.vbox_utils = VboxUtils(
-            vm_id=self.vm.vm,
+            vm=self.vm.vm,
             user_name=self.vm.data.user,
             password=self._get_password(self.vm.data.local_dir),
             paths=self.paths,

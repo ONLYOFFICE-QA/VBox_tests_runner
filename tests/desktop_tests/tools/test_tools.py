@@ -26,11 +26,11 @@ signal.signal(signal.SIGINT, handle_interrupt)
 
 class TestTools(ABC):
 
-    def __init__(self, vm: VboxMachine, test_data: TestData):
+    def __init__(self, vm: VboxMachine, test_data: TestData, os_type: str):
         self.data = test_data
         self.vm = vm
         self.vm_name = self.vm.name
-        self.os_type = self.vm.get_os_type()
+        self.os_type = os_type or self.vm.get_os_type()
         self.password_cache = None
 
         self._initialize_report()
@@ -56,7 +56,7 @@ class TestTools(ABC):
 
     @vm_data_created
     def _initialize_run_script(self):
-        self.run_script = RunScript(test_data=self.data, paths=self.paths, os_type=self.os_type)
+        self.run_script = RunScript(test_data=self.data, paths=self.paths)
 
     @vm_data_created
     def _initialize_paths(self):

@@ -2,9 +2,7 @@
 from rich import print
 
 from frameworks import VboxMachine
-from .tools import TestTools, TestData
-from .tools.test_tools_linux import TestToolsLinux
-from .tools.test_tools_windows import TestToolsWindows
+from .tools import TestToolsLinux, TestToolsWindows, TestTools, TestData
 
 
 class DesktopTest:
@@ -26,7 +24,8 @@ class DesktopTest:
             self.test_tools.stop_vm()
 
     def _get_test_tools(self) -> TestTools:
-        if 'windows' in self.vm.get_os_type():
-            return TestToolsWindows(vm=self.vm, test_data=self.test_data)
-        return TestToolsLinux(vm=self.vm, test_data=self.test_data)
+        os_type = self.vm.get_os_type()
+        if 'windows' in os_type:
+            return TestToolsWindows(vm=self.vm, test_data=self.test_data, os_type=os_type)
+        return TestToolsLinux(vm=self.vm, test_data=self.test_data, os_type=os_type)
 

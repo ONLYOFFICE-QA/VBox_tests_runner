@@ -9,9 +9,8 @@ from .paths import Paths
 
 class RunScript:
 
-    def __init__(self, test_data: TestData, paths: Paths, os_type: str):
+    def __init__(self, test_data: TestData, paths: Paths):
         self.data = test_data
-        self.os_type = os_type.lower()
         self._path = paths
 
     def generate(self) -> str:
@@ -27,18 +26,22 @@ class RunScript:
         '''.strip()
 
     def get_shebang(self) -> str:
-        if self.os_type == "windows 10":
+        if self._path.remote.run_script_name.endswith((".bat", ".ps1")):
             return ''
         return '#!/bin/bash'
 
     def get_python(self) -> str:
-        if self.os_type == "windows 10":
+        if self._path.remote.run_script_name.endswith((".bat", ".ps1")):
             return 'python.exe'
         return 'python3'
 
     def get_activate_env_cmd(self) -> str:
-        if self.os_type == "windows 10":
+        if self._path.remote.run_script_name.endswith('.bat'):
+            return 'call ./venv/Scripts/activate'
+
+        if self._path.remote.run_script_name.endswith('.ps1'):
             return './venv/Scripts/activate'
+
         return 'source ./venv/bin/activate'
 
     def clone_desktop_testing_repo(self) -> str:
