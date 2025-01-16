@@ -73,6 +73,9 @@ class TestTools(ABC):
         except (TypeError, FileNotFoundError):
             self.password_cache = self.data.config.get('password')
 
+        if not self.password_cache:
+            raise ValueError(f"Can't get VM password")
+
         return self.password_cache
 
     def _handle_vm_creation_failure(self):
