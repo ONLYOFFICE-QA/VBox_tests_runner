@@ -14,6 +14,7 @@ class RemotePaths:
         self.script_dir = self._join_path(self.home_dir, 'scripts')
         self.script_path = self._join_path(self.home_dir, self.run_script_name)
         self.desktop_testing_path = self._join_path(self.script_dir, 'desktop_testing')
+        self.python_requirements = self._join_path(self.desktop_testing_path, "install_requirements.py")
         self.report_dir = self._join_path(self.desktop_testing_path, 'reports')
         self.custom_config_path = self._join_path(self.script_dir, 'custom_config.json')
         self.tg_dir = self._join_path(self.home_dir, '.telegram')
