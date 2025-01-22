@@ -5,6 +5,7 @@ from frameworks import VboxMachine
 from frameworks.decorators import retry, vm_data_created
 from . import TestTools, TestData
 from .vbox_utils import VboxUtils
+from .vbox_utils_vista import VboxUtilsVista
 
 
 class TestToolsWindows(TestTools):
@@ -43,10 +44,19 @@ class TestToolsWindows(TestTools):
         return False
 
     def _initialize_vbox_utils(self):
-        self.vbox_utils = VboxUtils(
-            vm=self.vm.vm,
-            user_name=self.vm.data.user,
-            password=self._get_password(self.vm.data.local_dir),
-            paths=self.paths,
-            test_data=self.data
-        )
+        if "vista" in self.os_type.lower():
+            self.vbox_utils = VboxUtilsVista(
+                vm=self.vm.vm,
+                user_name=self.vm.data.user,
+                password=self._get_password(self.vm.data.local_dir),
+                paths=self.paths,
+                test_data=self.data
+            )
+        else:
+            self.vbox_utils = VboxUtils(
+                vm=self.vm.vm,
+                user_name=self.vm.data.user,
+                password=self._get_password(self.vm.data.local_dir),
+                paths=self.paths,
+                test_data=self.data
+            )

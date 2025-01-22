@@ -14,7 +14,6 @@ class Report:
         pd.set_option('display.max_columns', None)
         pd.set_option("expand_frame_repr", False)
 
-
     @staticmethod
     def total_count(df: pd.DataFrame, column_name: str) -> int:
         return df[column_name].count()

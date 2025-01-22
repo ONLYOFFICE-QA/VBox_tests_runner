@@ -39,5 +39,5 @@ class RemotePaths:
         return str(self.path_module(*parts))
 
     @staticmethod
-    def _windows_path(*parts):
+    def _windows_path(*parts) -> str:
         return "\\".join(parts)
