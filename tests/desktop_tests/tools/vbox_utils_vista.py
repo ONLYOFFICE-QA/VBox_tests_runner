@@ -32,6 +32,8 @@ class VboxUtilsVista(VboxUtils):
         self.tmp_log_file = join(File.unique_name(self.paths.local.tmp_dir, 'txt'))
 
     def run_script_on_vm(self):
+
+        print(1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111)
         server_info = f"{self.file.vm.name}|{self.file.vm.network.get_ip()}"
         line = f"{'-' * 90}"
         self.create_schtasks()
@@ -73,7 +75,7 @@ class VboxUtilsVista(VboxUtils):
         return f'schtasks /run /tn "{self.task_name}"'
 
     def _run_cmd(self, cmd: str, status_bar: bool = False, stdout: bool = True) -> CompletedProcess:
-        return self.file.run_cmd(command=cmd, status_bar=status_bar, stdout=stdout, shell=self.shell)
+        return self.file.run_cmd(command=cmd, status_bar=status_bar, stdout=stdout, shell='cmd.exe')
 
     @staticmethod
     def _find_status(stdout: str) -> str:
