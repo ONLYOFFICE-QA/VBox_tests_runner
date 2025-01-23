@@ -11,12 +11,13 @@ from host_tools import File
 from rich.console import Console
 
 from .paths import Paths
+from .run_script import RunScript
 from .vbox_utils import VboxUtils
 from tests.desktop_tests.tools import TestData
 
 
 class VboxUtilsVista(VboxUtils):
-    task_name = "RunScriptWithLogs"
+    task_name = "RunScript"
 
     def __init__(
             self,
@@ -31,11 +32,17 @@ class VboxUtilsVista(VboxUtils):
         self.log_file = fr"C:\Users\{self.user}\log.txt"
         self.tmp_log_file = join(File.unique_name(self.paths.local.tmp_dir, 'txt'))
 
-    def run_script_on_vm(self):
+    def upload_test_files(self, script: RunScript):
+        time.sleep(30)
+        self.create_test_dirs()
+        for local, remote in self.get_upload_files(script=script):
+            self._upload(local, remote)
+            time.sleep(1)
 
-        print(1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111)
+    def run_script_on_vm(self):
         server_info = f"{self.file.vm.name}|{self.file.vm.network.get_ip()}"
         line = f"{'-' * 90}"
+        # print(self.get_schtasks_status())
         self.create_schtasks()
         self.run_schtasks()
         self.wait_until_running()
@@ -58,7 +65,7 @@ class VboxUtilsVista(VboxUtils):
 
         while out.returncode != 0 and not out.stderr:
             time.sleep(1)
-            out = self._run_cmd(cmd, stdout=False, status_bar=self.data.status_bar)
+            out = self._run_cmd(cmd, stdout=False, status_bar=False)
 
         return self._find_status(out.stdout)
 
@@ -68,8 +75,7 @@ class VboxUtilsVista(VboxUtils):
         return lines[-max_stdout_lines:]
 
     def _get_create_schtasks_cmd(self) -> str:
-        return fr'schtasks /create /tn "{self.task_name}" /tr \
-        "cmd.exe /c \"C:\Users\{self.user}\script.bat >> {self.log_file} 2>&1\"" /sc onstart /rl highest'
+        return fr'schtasks /create /tn "{self.task_name}" /tr "cmd.exe /c \"C:\Users\{self.user}\script.bat >> C:\Users\{self.user}\log.txt 2>&1\"" /sc onstart /rl highest'
 
     def _get_run_task_cmd(self) -> str:
         return f'schtasks /run /tn "{self.task_name}"'
@@ -83,10 +89,22 @@ class VboxUtilsVista(VboxUtils):
         return match.group(1).strip() if match else ''
 
     def create_schtasks(self) -> None:
-        self._run_cmd(self._get_create_schtasks_cmd(), status_bar=False, stdout=True)
+        print(f"[green]|INFO| Create task: {self.task_name}")
+        cmd = self._get_create_schtasks_cmd()
+        out = self._run_cmd(cmd, status_bar=False, stdout=True)
+        while out.returncode != 0 and not out.stderr:
+            time.sleep(1)
+            out = self._run_cmd(cmd, status_bar=False, stdout=True)
 
     def run_schtasks(self):
-        self._run_cmd(self._get_run_task_cmd(), status_bar=False, stdout=True)
+        print(f"[green]|INFO| Run task: {self.task_name}")
+        cmd = self._get_run_task_cmd()
+        print(cmd)
+        out = self._run_cmd(cmd, status_bar=False, stdout=True)
+        while out.returncode != 0 and not out.stderr or 'SUCCESS' not in out.stdout.upper():
+            time.sleep(1)
+            out = self._run_cmd(cmd, status_bar=False, stdout=True)
+
 
     @staticmethod
     def _read_lines(file_path, mode='r') -> list:

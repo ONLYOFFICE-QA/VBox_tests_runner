@@ -26,7 +26,8 @@ class RunScript:
             self.get_install_requirements_command(),
             self.generate_run_test_cmd()
         ]
-        return '\n'.join(filter(None, commands))
+        script_content = [line.strip() for line in filter(None, commands)]
+        return ' && '.join(script_content) if self.is_bat else '\n'.join(script_content)
 
     @staticmethod
     def get_change_dir_command(dir_path: str) ->str:
@@ -77,6 +78,5 @@ class RunScript:
 
     def create(self) -> str:
         save_path = self.get_save_path()
-        script_content = '\n'.join(line.strip() for line in self.generate().split('\n'))
-        File.write(save_path, script_content, newline='')
+        File.write(save_path, self.generate(), newline='')
         return save_path

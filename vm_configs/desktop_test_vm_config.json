@@ -1,5 +1,5 @@
 {
-  "cpus": 4,
+  "cpus": 1,
   "memory": 4096,
   "audio": false,
   "nested_virtualization": true,

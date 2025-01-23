@@ -4,6 +4,7 @@ from subprocess import CompletedProcess
 from typing import Optional
 
 from VBoxWrapper import FileUtils, VirtualMachine
+from host_tools import File
 from rich import print
 
 from tests.desktop_tests.tools import TestData
@@ -28,16 +29,7 @@ class VboxUtils:
 
     def upload_test_files(self, script: RunScript):
         self.create_test_dirs()
-        uploads = [
-            (self.data.token_file, self.paths.remote.tg_token_file),
-            (self.data.chat_id_file, self.paths.remote.tg_chat_id_file),
-            (script.create(), self.paths.remote.script_path),
-            (self.paths.local.proxy_config, self.paths.remote.proxy_config_file),
-            (self.data.config_path, self.paths.remote.custom_config_path),
-            (self.paths.local.lic_file, self.paths.remote.lic_file),
-        ]
-
-        for local, remote in uploads:
+        for local, remote in self.get_upload_files(script=script):
             self._upload(local, remote)
 
     def create_test_dirs(self, try_num: int = 10, interval: int = 1):
@@ -77,6 +69,7 @@ class VboxUtils:
         print(f"[green]|INFO|{self.file.vm.name}| Upload file [cyan]{local_path}[/] to [cyan]{remote_path}[/]")
         while try_num > 0:
             out = self.file.copy_to(local_path=local_path, remote_path=remote_path)
+            print(out.returncode)
 
             if out.returncode == 0:
                 break
@@ -117,3 +110,14 @@ class VboxUtils:
             return f"-ExecutionPolicy Bypass -File '{self.paths.remote.script_path}'"
 
         raise ValueError("Unsupported script type.")
+
+    def get_upload_files(self, script: RunScript) -> list:
+        return [
+            (self.data.token_file, self.paths.remote.tg_token_file),
+            (self.data.chat_id_file, self.paths.remote.tg_chat_id_file),
+            (script.create(), self.paths.remote.script_path),
+            (self.paths.local.proxy_config, self.paths.remote.proxy_config_file),
+            (self.data.config_path, self.paths.remote.custom_config_path),
+            (self.paths.local.lic_file, self.paths.remote.lic_file),
+        ]
+
