@@ -13,6 +13,7 @@ class VboxMachine:
         self.vm = VirtualMachine(name)
         self.name = name
         self.data = None
+        self.__os_type = None
 
     @vm_is_turn_on
     def create_data(self):
@@ -23,8 +24,12 @@ class VboxMachine:
             local_dir=self.vm.get_parameter('CfgFile')
         )
 
-    def get_os_type(self) -> str:
-        return self.vm.get_os_type().lower()
+    @property
+    def os_type(self) -> str:
+        if self.__os_type is None:
+            self.__os_type = self.vm.get_os_type().lower()
+
+        return self.__os_type
 
     def run(self, headless: bool = True, status_bar: bool = False, timeout: int = 600):
         if self.vm.power_status():
@@ -38,7 +43,7 @@ class VboxMachine:
         self.create_data()
 
     def configurate(self):
-        self.vm.set_cpus(self.vm_config.cpus)
+        self.vm.set_cpus(self._get_cpu_num())
         self.vm.nested_virtualization(self.vm_config.nested_virtualization)
         self.vm.set_memory(self.vm_config.memory)
         self.vm.audio(self.vm_config.audio)
@@ -46,3 +51,8 @@ class VboxMachine:
 
     def stop(self):
         self.vm.stop()
+
+    def _get_cpu_num(self) -> int:
+        if 'vista' in self.os_type:
+            return 1
+        return  self.vm_config.cpus

@@ -26,11 +26,10 @@ signal.signal(signal.SIGINT, handle_interrupt)
 
 class TestTools(ABC):
 
-    def __init__(self, vm: VboxMachine, test_data: TestData, os_type: str):
+    def __init__(self, vm: VboxMachine, test_data: TestData):
         self.data = test_data
         self.vm = vm
         self.vm_name = self.vm.name
-        self.os_type = os_type or self.vm.get_os_type()
         self.password_cache = None
 
         self._initialize_report()
@@ -60,7 +59,7 @@ class TestTools(ABC):
 
     @vm_data_created
     def _initialize_paths(self):
-        self.paths = Paths(os_type=self.os_type, remote_user_name=self.vm.data.user)
+        self.paths = Paths(os_type=self.vm.os_type, remote_user_name=self.vm.data.user)
 
     def _get_password(self, vm_dir: str) -> Optional[str]:
         if self.password_cache:

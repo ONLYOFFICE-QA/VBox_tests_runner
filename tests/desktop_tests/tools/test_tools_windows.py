@@ -10,8 +10,8 @@ from .vbox_utils_vista import VboxUtilsVista
 
 class TestToolsWindows(TestTools):
 
-    def __init__(self, vm: VboxMachine, test_data: TestData, os_type: str):
-        super().__init__(vm=vm, test_data=test_data, os_type=os_type)
+    def __init__(self, vm: VboxMachine, test_data: TestData):
+        super().__init__(vm=vm, test_data=test_data)
         self.vbox_utils = None
 
     @retry(max_attempts=2, exception_type=VirtualMachinException)
@@ -44,7 +44,7 @@ class TestToolsWindows(TestTools):
         return False
 
     def _initialize_vbox_utils(self):
-        if "vista" in self.os_type.lower():
+        if "vista" in self.vm.os_type:
             self.vbox_utils = VboxUtilsVista(
                 vm=self.vm.vm,
                 user_name=self.vm.data.user,

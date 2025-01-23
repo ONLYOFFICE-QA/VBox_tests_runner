@@ -24,8 +24,7 @@ class DesktopTest:
         #     self.test_tools.stop_vm()
 
     def _get_test_tools(self) -> TestTools:
-        os_type = self.vm.get_os_type()
-        if 'windows' in os_type:
-            return TestToolsWindows(vm=self.vm, test_data=self.test_data, os_type=os_type)
-        return TestToolsLinux(vm=self.vm, test_data=self.test_data, os_type=os_type)
+        if 'windows' in self.vm.os_type:
+            return TestToolsWindows(vm=self.vm, test_data=self.test_data)
+        return TestToolsLinux(vm=self.vm, test_data=self.test_data)
 
