@@ -89,5 +89,5 @@ def group_list(c):
 @task
 def reset_vbox(c):
     elevate(show_console=False)
-    Process.terminate(['VBoxSVC.exe', 'VBoxSVC'])
+    Process.terminate(['VBoxSVC.exe', 'VBoxSVC', "VBoxManage.exe", "VBoxSDS.exe"])
     Service.restart("VBoxSDS")
