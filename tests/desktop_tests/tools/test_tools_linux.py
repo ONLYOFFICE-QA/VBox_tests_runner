@@ -11,19 +11,15 @@ from .ssh_connection import SSHConnection
 
 class TestToolsLinux(TestTools):
 
-    def __init__(self,  vm: VboxMachine, test_data: TestData, os_type: str):
-        super().__init__(vm=vm, test_data=test_data, os_type=os_type)
+    def __init__(self,  vm: VboxMachine, test_data: TestData):
+        super().__init__(vm=vm, test_data=test_data)
 
     @retry(max_attempts=2, exception_type=VirtualMachinException)
     def run_vm(self, headless: bool = True) -> None:
-        try:
-            self.vm.run(headless=headless, status_bar=self.data.status_bar)
-            self._initialize_paths()
-            self._initialize_run_script()
-            self._initialize_linux_demon()
-
-        except VirtualMachinException:
-            self._handle_vm_creation_failure()
+        self.vm.run(headless=headless, status_bar=self.data.status_bar)
+        self._initialize_paths()
+        self._initialize_run_script()
+        self._initialize_linux_demon()
 
     def run_test_on_vm(self):
         self._clean_known_hosts(self.vm.data.ip)
@@ -47,7 +43,6 @@ class TestToolsLinux(TestTools):
             return True
 
         print(f"[red]|ERROR| Can't download report from {self.vm.data.name}.")
-        self.report.write(self.data.version, self.vm.data.name, "REPORT_NOT_EXISTS")
         return False
 
     def _get_server(self) -> ServerData:

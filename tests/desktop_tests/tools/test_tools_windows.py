@@ -16,14 +16,10 @@ class TestToolsWindows(TestTools):
 
     @retry(max_attempts=2, exception_type=VirtualMachinException)
     def run_vm(self, headless: bool = False) -> None:
-        try:
-            self.vm.run(headless=False, status_bar=self.data.status_bar)
-            self._initialize_paths()
-            self._initialize_run_script()
-            self._initialize_vbox_utils()
-
-        except VirtualMachinException:
-            self._handle_vm_creation_failure()
+        self.vm.run(headless=False, status_bar=self.data.status_bar)
+        self._initialize_paths()
+        self._initialize_run_script()
+        self._initialize_vbox_utils()
 
     @vm_data_created
     def run_test_on_vm(self):
@@ -40,7 +36,6 @@ class TestToolsWindows(TestTools):
             return True
 
         print(f"[red]|ERROR| Can't download report from {self.vm.data.name}.")
-        self.report.write(self.data.version, self.vm.data.name, "REPORT_NOT_EXISTS")
         return False
 
     def _initialize_vbox_utils(self):

@@ -41,7 +41,7 @@ def desktop_test(
         for vm in Vbox().check_vm_names([name] if name else data.vm_names):
             DesktopTest(vm, data).run(headless=headless)
 
-    report = DesktopReport(report_path=data.report_path)
+    report = DesktopReport(report_path=data.full_report_path)
     report.get_full(data.version)
     report.send_to_tg(data.version, data.title, data.tg_token, data.tg_chat_id, data.update_from) if not name else ...
 

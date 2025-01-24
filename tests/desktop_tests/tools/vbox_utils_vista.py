@@ -40,9 +40,6 @@ class VboxUtilsVista(VboxUtils):
             time.sleep(1)
 
     def run_script_on_vm(self):
-        server_info = f"{self.file.vm.name}|{self.file.vm.network.get_ip()}"
-        line = f"{'-' * 90}"
-        # print(self.get_schtasks_status())
         self.create_schtasks()
         self.run_schtasks()
         self.wait_until_running()
@@ -99,7 +96,6 @@ class VboxUtilsVista(VboxUtils):
     def run_schtasks(self):
         print(f"[green]|INFO| Run task: {self.task_name}")
         cmd = self._get_run_task_cmd()
-        print(cmd)
         out = self._run_cmd(cmd, status_bar=False, stdout=True)
         while out.returncode != 0 and not out.stderr or 'SUCCESS' not in out.stdout.upper():
             time.sleep(1)

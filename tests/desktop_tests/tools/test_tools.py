@@ -50,8 +50,8 @@ class TestTools(ABC):
 
     def _initialize_report(self):
         report_file = join(self.data.report_dir, self.vm_name, f"{self.data.version}_{self.data.title}_report.csv")
-        Dir.create(dirname(report_file), stdout=False)
         self.report = DesktopReport(report_file)
+        Dir.delete(self.report.dir, clear_dir=True)
 
     @vm_data_created
     def _initialize_run_script(self):
@@ -77,6 +77,6 @@ class TestTools(ABC):
 
         return self.password_cache
 
-    def _handle_vm_creation_failure(self):
+    def handle_vm_creation_failure(self):
         print(f"[bold red]|ERROR|{self.vm_name}| Failed to create a virtual machine")
         self.report.write(self.data.version, self.vm_name, "FAILED_CREATE_VM")

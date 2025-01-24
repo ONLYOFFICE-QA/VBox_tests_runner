@@ -48,6 +48,9 @@ class DesktopReport:
             return True
         return False
 
+    def exists(self) -> bool:
+        return isfile(self.path)
+
     def send_to_tg(
             self,
             version: str,

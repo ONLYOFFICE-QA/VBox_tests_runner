@@ -24,7 +24,7 @@ class TestData:
     vm_names: List[str] = field(init=False)
     title: str = field(init=False)
     report_dir: str = field(init=False)
-    report_path: str = field(init=False)
+    full_report_path: str = field(init=False)
     local_paths: LocalPaths = field(init=False)
 
     def __post_init__(self):
@@ -34,7 +34,7 @@ class TestData:
         self.vm_names = self.config.get('hosts', [])
         self.title = self.config.get('title', 'Undefined_title')
         self.report_dir = join(getcwd(), 'reports', self.title, self.version)
-        self.report_path = join(self.report_dir, f"{self.version}_{self.title}_desktop_tests_report.csv")
+        self.full_report_path = join(self.report_dir, f"{self.version}_{self.title}_desktop_tests_report.csv")
         self.local_paths = LocalPaths()
 
     @property

@@ -4,7 +4,6 @@ from subprocess import CompletedProcess
 from typing import Optional
 
 from VBoxWrapper import FileUtils, VirtualMachine
-from host_tools import File
 from rich import print
 
 from tests.desktop_tests.tools import TestData
@@ -57,7 +56,7 @@ class VboxUtils:
         remote_report_dir = f"{self.paths.remote.report_dir}/{product_title}/{version}"
         out = self.file.copy_from(remote_report_dir, report_dir)
 
-        if out.stderr and 'No such file or directory' in out.stderr:
+        if out.stderr and 'no such file or directory' in out.stderr.lower():
             return False
 
         return True
@@ -69,7 +68,6 @@ class VboxUtils:
         print(f"[green]|INFO|{self.file.vm.name}| Upload file [cyan]{local_path}[/] to [cyan]{remote_path}[/]")
         while try_num > 0:
             out = self.file.copy_to(local_path=local_path, remote_path=remote_path)
-            print(out.returncode)
 
             if out.returncode == 0:
                 break
