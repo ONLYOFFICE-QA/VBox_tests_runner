@@ -105,4 +105,3 @@ class VboxUtilsVista(VboxUtilsWindows):
     def _find_status(stdout: str) -> str:
         match = re.search(r'Status:\s+(.*?)\n', stdout)
         return match.group(1).strip() if match else ''
-
