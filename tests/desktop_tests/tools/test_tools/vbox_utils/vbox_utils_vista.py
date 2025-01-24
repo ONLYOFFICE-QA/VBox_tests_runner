@@ -77,7 +77,7 @@ class VboxUtilsVista(VboxUtilsWindows):
         return lines[-max_stdout_lines:]
 
     def _get_create_schtasks_cmd(self) -> str:
-        return fr'schtasks /create /tn "{self.task_name}" /tr "cmd.exe /c \"C:\Users\{self.user}\script.bat >> C:\Users\{self.user}\log.txt 2>&1\"" /sc onstart /rl highest'
+        return fr'schtasks /create /tn "{self.task_name}" /tr "cmd.exe /c \"{self.paths.remote.script_path} >> {self.log_file} 2>&1\"" /sc onstart /rl highest'
 
     def _get_run_task_cmd(self) -> str:
         return f'schtasks /run /tn "{self.task_name}"'
