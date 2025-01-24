@@ -3,7 +3,7 @@ from VBoxWrapper import VirtualMachinException
 
 from frameworks.decorators import retry, vm_data_created
 from .test_tools import TestTools, TestData, VboxMachine
-from ..vbox_utils import VboxUtilsVista, VboxUtilsWindows
+from .vbox_utils import VboxUtilsVista, VboxUtilsWindows
 
 
 class TestToolsWindows(TestTools):

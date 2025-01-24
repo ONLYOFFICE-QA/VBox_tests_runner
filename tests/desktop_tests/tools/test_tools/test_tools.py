@@ -9,6 +9,7 @@ from host_tools import File, Dir
 
 from frameworks.decorators import retry, vm_data_created
 from frameworks import  MyConsole
+
 from ..desktop_report import DesktopReport
 from ..paths import Paths
 from ..run_script import RunScript

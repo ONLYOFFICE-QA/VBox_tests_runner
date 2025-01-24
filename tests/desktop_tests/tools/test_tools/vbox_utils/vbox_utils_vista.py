@@ -12,9 +12,9 @@ from rich.console import Console
 
 from .vbox_utils_windows import VboxUtilsWindows
 
-from ..paths import Paths
-from ..run_script import RunScript
-from ..test_data import TestData
+from tests.desktop_tests.tools.paths import Paths
+from tests.desktop_tests.tools.run_script import RunScript
+from tests.desktop_tests.tools.test_data import TestData
 
 
 class VboxUtilsVista(VboxUtilsWindows):
