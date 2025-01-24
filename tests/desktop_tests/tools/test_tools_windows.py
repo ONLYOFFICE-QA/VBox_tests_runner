@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 from VBoxWrapper import VirtualMachinException
 
-from frameworks import VboxMachine
 from frameworks.decorators import retry, vm_data_created
-from . import TestTools, TestData
+from . import TestTools, TestData, VboxMachine
 from .vbox_utils import VboxUtils
 from .vbox_utils_vista import VboxUtilsVista
 

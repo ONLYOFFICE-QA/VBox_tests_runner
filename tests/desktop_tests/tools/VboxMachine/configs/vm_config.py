@@ -2,6 +2,7 @@
 import json
 from os import getcwd
 from os.path import join
+from pathlib import Path
 
 from rich import print
 from pydantic import BaseModel, conint
@@ -26,7 +27,7 @@ class SystemConfigModel(BaseModel):
 
 @singleton
 class VmConfig:
-    vm_config_path = join(getcwd(), "vm_configs", "desktop_test_vm_config.json")
+    vm_config_path = str(Path(__file__).resolve().parents[3] / "vm_configs" / "desktop_test_vm_config.json")
 
     """
     Configuration class for system settings.

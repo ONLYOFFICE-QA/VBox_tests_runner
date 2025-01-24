@@ -13,7 +13,7 @@ from rich.console import Console
 from .paths import Paths
 from .run_script import RunScript
 from .vbox_utils import VboxUtils
-from tests.desktop_tests.tools import TestData
+from .test_data import TestData
 
 
 class VboxUtilsVista(VboxUtils):
