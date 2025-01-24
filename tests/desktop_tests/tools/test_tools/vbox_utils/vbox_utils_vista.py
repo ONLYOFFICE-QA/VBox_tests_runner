@@ -48,35 +48,55 @@ class VboxUtilsVista(VboxUtilsWindows):
 
     def wait_until_running(self, task_name: str = None, timeout: int = 10) -> None:
         server_info = f"{self.file.vm.name}|{self.file.vm.network.get_ip()}"
-        line = f"{'-' * 90}"
+        print(f"[bold cyan]{'-' * 90}\n|INFO|{server_info}| Waiting for execution script on VM\n{'-' * 90}")
         msg = f'[cyan]|INFO|{server_info}| Waiting for execution script'
-        print(f"[bold cyan]{line}\n|INFO|{server_info}| Waiting for execution script on VM\n{line}")
 
         with Console().status(msg) if self.data.status_bar else nullcontext() as status:
-            while self.get_schtasks_status(task_name=task_name).lower() == "running":
+            while self._is_task_running():
                 time.sleep(timeout)
                 if self.data.status_bar:
-                    self.file.copy_from(self.log_file, self.tmp_log_file)
-                    recent_lines = ''.join(self.tail_lines(self._read_lines(self.tmp_log_file)))
-                    status.update(f"[cyan]{recent_lines}")
+                    self._update_status_bar(status)
 
         self.file.copy_from(self.log_file, self.tmp_log_file)
         print(f'[cyan]|INFO|{File.read(self.tmp_log_file)}')
 
-    def get_schtasks_status(self, task_name: str = None) -> str:
-        cmd = self.schtasks.status()
-        out = self._run_cmd(cmd, stdout=False, status_bar=False)
+    def get_schtasks_status(self) -> str:
+        return self._find_status(self._retry_cmd(self.schtasks.status()).stdout)
 
-        while out.returncode != 0 and not out.stderr:
-            time.sleep(1)
-            out = self._run_cmd(cmd, stdout=False, status_bar=False)
+    def create_schtasks(self) -> None:
+        print(f"[green]|INFO| Create task: {self.task_name}")
+        self._retry_cmd(self.schtasks.create(command=f"{self.paths.remote.script_path} >> {self.log_file} 2>&1"))
 
-        return self._find_status(out.stdout)
+    def run_schtasks(self) -> None:
+        print(f"[green]|INFO| Run task: {self.task_name}")
+        self._retry_cmd(self.schtasks.run())
+
+    def _update_status_bar(self, status: Console().status) -> None:
+
+        def tail_lines(lines: list, max_stdout_lines: int = 20) -> list:
+            return lines[-max_stdout_lines:]
+
+        self.file.copy_from(self.log_file, self.tmp_log_file)
+        recent_lines = ''.join(tail_lines(self._read_lines(self.tmp_log_file)))
+        status.update(f"[cyan]{recent_lines}")
+
+    def _is_task_running(self) -> bool:
+        return self.get_schtasks_status().lower() == "running"
 
     @staticmethod
-    def tail_lines(lines: list, max_stdout_lines: int = 20) -> list:
-        """Keeps only the last `max_lines` from the given list of lines."""
-        return lines[-max_stdout_lines:]
+    def _read_lines(file_path, mode='r') -> list:
+        with open(file_path, mode) as file:
+            return file.readlines()
+
+    def _retry_cmd(self, cmd: str, max_retries: int = 20, delay: int = 1) -> CompletedProcess:
+        for _ in range(max_retries):
+            out = self._run_cmd(cmd, stdout=False, status_bar=False)
+            if out.returncode != 0 and not out.stderr:
+                time.sleep(delay)
+            else:
+                return out
+
+        raise RuntimeError("Command execution failed after retries.")
 
     def _run_cmd(self, cmd: str, status_bar: bool = False, stdout: bool = True) -> CompletedProcess:
         return self.file.run_cmd(command=cmd, status_bar=status_bar, stdout=stdout, shell='cmd.exe')
@@ -86,23 +106,3 @@ class VboxUtilsVista(VboxUtilsWindows):
         match = re.search(r'Status:\s+(.*?)\n', stdout)
         return match.group(1).strip() if match else ''
 
-    def create_schtasks(self) -> None:
-        print(f"[green]|INFO| Create task: {self.task_name}")
-        cmd = self.schtasks.create(f'cmd.exe /c "{self.paths.remote.script_path} >> {self.log_file} 2>&1"')
-        out = self._run_cmd(cmd, status_bar=False, stdout=True)
-        while out.returncode != 0 and not out.stderr:
-            time.sleep(1)
-            out = self._run_cmd(cmd, status_bar=False, stdout=True)
-
-    def run_schtasks(self) -> None:
-        print(f"[green]|INFO| Run task: {self.task_name}")
-        cmd = self.schtasks.run()
-        out = self._run_cmd(cmd, status_bar=False, stdout=True)
-        while out.returncode != 0 and not out.stderr or 'SUCCESS' not in out.stdout.upper():
-            time.sleep(1)
-            out = self._run_cmd(cmd, status_bar=False, stdout=True)
-
-    @staticmethod
-    def _read_lines(file_path, mode='r') -> list:
-        with open(file_path, mode) as file:
-            return file.readlines()

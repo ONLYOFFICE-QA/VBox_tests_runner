@@ -9,7 +9,8 @@ class SchtasksCommand:
         return self._build_command("query", "/v /fo LIST")
 
     def create(self, command: str) -> str:
-        return self._build_command("create", f'/tr "{command}" /sc onstart /rl highest')
+        # TODO
+        return fr'schtasks /create /tn "{self.task_name}" /tr "cmd.exe /c \"{command}\"" /sc onstart /rl highest'
 
     def run(self) -> str:
         return self._build_command("run")
