@@ -3,7 +3,8 @@ import time
 
 from VBoxWrapper import VirtualMachinException
 from rich import print
-from .tools import TestToolsLinux, TestToolsWindows, TestTools, TestData, VboxMachine
+from .tools import TestToolsLinux, TestToolsWindows, TestData, VboxMachine, TestTools
+
 
 
 class DesktopTest:

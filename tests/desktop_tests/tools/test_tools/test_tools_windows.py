@@ -2,9 +2,8 @@
 from VBoxWrapper import VirtualMachinException
 
 from frameworks.decorators import retry, vm_data_created
-from . import TestTools, TestData, VboxMachine
-from .vbox_utils import VboxUtils
-from .vbox_utils_vista import VboxUtilsVista
+from .test_tools import TestTools, TestData, VboxMachine
+from ..vbox_utils import VboxUtilsVista, VboxUtilsWindows
 
 
 class TestToolsWindows(TestTools):
@@ -47,7 +46,7 @@ class TestToolsWindows(TestTools):
                 test_data=self.data
             )
         else:
-            self.vbox_utils = VboxUtils(
+            self.vbox_utils = VboxUtilsWindows(
                 vm=self.vm.vm,
                 user_name=self.vm.data.user,
                 password=self._get_password(self.vm.data.local_dir),

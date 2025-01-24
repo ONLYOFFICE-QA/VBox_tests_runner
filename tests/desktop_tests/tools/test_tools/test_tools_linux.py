@@ -3,9 +3,9 @@ from VBoxWrapper import VirtualMachinException
 from ssh_wrapper import Ssh, Sftp, ServerData
 
 from frameworks.decorators import retry, vm_data_created
-from . import TestTools, TestData, VboxMachine
-from .linux_script_demon import LinuxScriptDemon
-from .ssh_connection import SSHConnection
+from .test_tools import TestTools, TestData, VboxMachine
+from ..linux_script_demon import LinuxScriptDemon
+from ..ssh_connection import SSHConnection
 
 
 class TestToolsLinux(TestTools):

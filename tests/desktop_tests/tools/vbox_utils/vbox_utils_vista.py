@@ -10,13 +10,14 @@ from VBoxWrapper import VirtualMachine
 from host_tools import File
 from rich.console import Console
 
-from .paths import Paths
-from .run_script import RunScript
-from .vbox_utils import VboxUtils
-from .test_data import TestData
+from .vbox_utils_windows import VboxUtilsWindows
+
+from ..paths import Paths
+from ..run_script import RunScript
+from ..test_data import TestData
 
 
-class VboxUtilsVista(VboxUtils):
+class VboxUtilsVista(VboxUtilsWindows):
     task_name = "RunScript"
 
     def __init__(

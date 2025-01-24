@@ -8,10 +8,10 @@ from rich import print
 
 from tests.desktop_tests.tools import TestData
 from tests.desktop_tests.tools.paths import Paths
-from .run_script import RunScript
+from tests.desktop_tests.tools.run_script import RunScript
 
 
-class VboxUtils:
+class VboxUtilsWindows:
 
     def __init__(
             self,
