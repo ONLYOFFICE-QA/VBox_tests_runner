@@ -68,6 +68,6 @@ class VboxMachine:
         self.vm.stop()
 
     def _get_cpu_num(self) -> int:
-        if 'vista' in self.os_type:
-            return 1
-        return  self.vm_config.cpus
+        # if 'vista' in self.os_type:
+        #     return 1
+        return self.vm_config.cpus
