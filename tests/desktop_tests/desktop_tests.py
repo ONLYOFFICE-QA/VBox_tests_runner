@@ -26,10 +26,10 @@ class DesktopTest:
                 raise
 
             except Exception as e:
-                print(f"[bold yellow]|WARNING| Attempt {attempt} failed: {e}")
+                print(f"[bold yellow]|WARNING|{self.vm.name}| Attempt {attempt}/{max_attempts} failed: {e}")
                 time.sleep(interval)
                 if attempt == max_attempts:
-                    print("[bold red]|ERROR| Max attempts reached. Exiting.")
+                    print(f"[bold red]|ERROR|{self.vm.name}| Max attempts reached. Exiting.")
                     self.test_tools.handle_vm_creation_failure()
                     raise
 
