@@ -14,7 +14,6 @@ from .schtasks_command import SchtasksCommand
 from .vbox_utils_windows import VboxUtilsWindows
 
 from ...paths import Paths
-from ...run_script import RunScript
 from ...test_data import TestData
 
 

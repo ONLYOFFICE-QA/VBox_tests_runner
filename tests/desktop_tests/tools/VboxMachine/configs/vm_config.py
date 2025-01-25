@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 import json
-from os import getcwd
-from os.path import join
 from pathlib import Path
 
 from rich import print

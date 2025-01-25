@@ -6,10 +6,8 @@ from tempfile import gettempdir
 from ssh_wrapper import Ssh, Sftp, SshException
 
 from frameworks.console import MyConsole
-from .linux_script_demon import LinuxScriptDemon
 from tests.desktop_tests.tools.test_data import TestData
 from tests.desktop_tests.tools.paths import Paths
-from tests.desktop_tests.tools.run_script import RunScript
 
 console = MyConsole().console
 print = console.print

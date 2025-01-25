@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from os.path import splitext
-from posixpath import join
 from host_tools import File
 from tempfile import gettempdir
 
