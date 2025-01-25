@@ -37,19 +37,16 @@ class TestToolsWindows(TestTools):
         return False
 
     def _initialize_vbox_utils(self):
-        if "vista" in self.vm.os_type:
-            self.vbox_utils = VboxUtilsVista(
-                vm=self.vm.vm,
-                user_name=self.vm.data.user,
-                password=self._get_password(self.vm.data.local_dir),
-                paths=self.paths,
-                test_data=self.data
-            )
-        else:
-            self.vbox_utils = VboxUtilsWindows(
-                vm=self.vm.vm,
-                user_name=self.vm.data.user,
-                password=self._get_password(self.vm.data.local_dir),
-                paths=self.paths,
-                test_data=self.data
-            )
+        common_params = {
+            "vm": self.vm.vm,
+            "user_name": self.vm.data.user,
+            "password": self._get_password(self.vm.data.local_dir),
+            "paths": self.paths,
+            "test_data": self.data,
+        }
+
+        self.vbox_utils = (
+            VboxUtilsVista(**common_params)
+            if "vista" in self.vm.os_type
+            else VboxUtilsWindows(**common_params)
+        )

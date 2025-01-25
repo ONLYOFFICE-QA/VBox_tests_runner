@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from os.path import splitext
 from posixpath import join
 from host_tools import File
 from tempfile import gettempdir
@@ -12,9 +13,9 @@ class RunScript:
     def __init__(self, test_data: TestData, paths: Paths):
         self.data = test_data
         self._path = paths
-        self.is_windows = self._path.remote.run_script_name.endswith(('.bat', '.ps1'))
         self.is_ps1 = self._path.remote.run_script_name.endswith('.ps1')
         self.is_bat = self._path.remote.run_script_name.endswith('.bat')
+        self.is_windows = self.is_bat or self.is_ps1
 
     def generate(self) -> str:
         commands = [
@@ -74,7 +75,7 @@ class RunScript:
         return ' '.join(filter(None, options))
 
     def get_save_path(self) -> str:
-        return join(gettempdir(), self._path.remote.run_script_name)
+        return File.unique_name(gettempdir(), extension=splitext(self._path.remote.run_script_name)[1])
 
     def create(self) -> str:
         save_path = self.get_save_path()

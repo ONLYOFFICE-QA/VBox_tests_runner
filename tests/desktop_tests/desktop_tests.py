@@ -13,7 +13,7 @@ class DesktopTest:
         self.vm = VboxMachine(vm_name)
         self.test_tools = self._get_test_tools()
 
-    def run(self, headless: bool = False, max_attempts: int = 1, interval: int = 5):
+    def run(self, headless: bool = False, max_attempts: int = 5, interval: int = 5) -> None:
         attempt = 0
         while attempt < max_attempts:
             try:
@@ -36,7 +36,7 @@ class DesktopTest:
             finally:
                 self.test_tools.stop_vm()
 
-    def _run_test(self, headless: bool):
+    def _run_test(self, headless: bool) -> None:
         self.test_tools.run_vm(headless=headless)
         self.test_tools.run_test_on_vm()
         if not self.test_tools.report.exists():
@@ -46,4 +46,3 @@ class DesktopTest:
         if 'windows' in self.vm.os_type:
             return TestToolsWindows(vm=self.vm, test_data=self.test_data)
         return TestToolsLinux(vm=self.vm, test_data=self.test_data)
-
