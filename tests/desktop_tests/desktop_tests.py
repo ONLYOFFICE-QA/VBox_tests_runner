@@ -13,7 +13,7 @@ class DesktopTest:
         self.vm = VboxMachine(vm_name)
         self.test_tools = self._get_test_tools()
 
-    def run(self, headless: bool = False, max_attempts: int = 5, interval: int = 5):
+    def run(self, headless: bool = False, max_attempts: int = 1, interval: int = 5):
         attempt = 0
         while attempt < max_attempts:
             try:

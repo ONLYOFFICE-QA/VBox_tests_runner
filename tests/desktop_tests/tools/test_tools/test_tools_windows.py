@@ -21,7 +21,7 @@ class TestToolsWindows(TestTools):
 
     @vm_data_created
     def run_test_on_vm(self):
-        self.vbox_utils.upload_test_files(self.run_script)
+        self.vbox_utils.upload_test_files(self.get_upload_files())
         self.vbox_utils.run_script_on_vm()
         if self.download_and_check_report():
             self.report.insert_vm_name(self.vm_name)

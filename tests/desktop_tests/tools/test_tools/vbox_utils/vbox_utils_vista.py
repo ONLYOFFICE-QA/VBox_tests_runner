@@ -35,9 +35,9 @@ class VboxUtilsVista(VboxUtilsWindows):
         self.tmp_log_file = join(File.unique_name(self.paths.local.tmp_dir, 'txt'))
         self.schtasks = SchtasksCommand(task_name=self.task_name)
 
-    def upload_test_files(self, script: RunScript) -> None:
+    def upload_test_files(self,  upload_files: list[(str, str)]) -> None:
         self.create_test_dirs()
-        for local, remote in self.get_upload_files(script=script):
+        for local, remote in upload_files:
             self._upload(local, remote)
             time.sleep(1)
 

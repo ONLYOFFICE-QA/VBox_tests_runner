@@ -26,9 +26,9 @@ class VboxUtilsWindows:
         self.paths = paths
         self.shell = self._get_shell()
 
-    def upload_test_files(self, script: RunScript):
+    def upload_test_files(self, upload_files: list[(str, str)]):
         self.create_test_dirs()
-        for local, remote in self.get_upload_files(script=script):
+        for local, remote in upload_files:
             self._upload(local, remote)
 
     def create_test_dirs(self, try_num: int = 10, interval: int = 1):
