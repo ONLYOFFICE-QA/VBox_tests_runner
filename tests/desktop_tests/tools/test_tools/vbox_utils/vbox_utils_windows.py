@@ -8,7 +8,6 @@ from rich import print
 
 from tests.desktop_tests.tools import TestData
 from tests.desktop_tests.tools.paths import Paths
-from tests.desktop_tests.tools.run_script import RunScript
 
 
 class VboxUtilsWindows:
@@ -108,14 +107,3 @@ class VboxUtilsWindows:
             return f"-ExecutionPolicy Bypass -File '{self.paths.remote.script_path}'"
 
         raise ValueError("Unsupported script type.")
-
-    def get_upload_files(self, script: RunScript) -> list:
-        return [
-            (self.data.token_file, self.paths.remote.tg_token_file),
-            (self.data.chat_id_file, self.paths.remote.tg_chat_id_file),
-            (script.create(), self.paths.remote.script_path),
-            (self.paths.local.proxy_config, self.paths.remote.proxy_config_file),
-            (self.data.config_path, self.paths.remote.custom_config_path),
-            (self.paths.local.lic_file, self.paths.remote.lic_file),
-        ]
-
