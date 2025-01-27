@@ -33,6 +33,7 @@ class VboxUtilsVista(VboxUtilsWindows):
         self.log_file = fr"C:\Users\{self.user}\log.txt"
         self.tmp_log_file = join(File.unique_name(self.paths.local.tmp_dir, 'txt'))
         self.schtasks = SchtasksCommand(task_name=self.task_name)
+        self.shell = 'cmd.exe'
 
     def upload_test_files(self,  upload_files: list[(str, str)]) -> None:
         self.create_test_dirs()
@@ -96,9 +97,6 @@ class VboxUtilsVista(VboxUtilsWindows):
                 return out
 
         raise RuntimeError("Command execution failed after retries.")
-
-    def _run_cmd(self, cmd: str, status_bar: bool = False, stdout: bool = True) -> CompletedProcess:
-        return self.file.run_cmd(command=cmd, status_bar=status_bar, stdout=stdout, shell='cmd.exe')
 
     @staticmethod
     def _find_status(stdout: str) -> str:

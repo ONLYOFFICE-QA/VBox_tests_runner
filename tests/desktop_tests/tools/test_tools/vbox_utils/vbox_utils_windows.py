@@ -60,9 +60,6 @@ class VboxUtilsWindows:
 
         return True
 
-    def _run_cmd(self, cmd: str, status_bar: bool = False, stdout: bool = True) -> CompletedProcess:
-        return self.file.run_cmd(command=cmd, status_bar=status_bar, stdout=stdout, shell=self.shell)
-
     def _upload(self, local_path: str, remote_path: str, try_num: int = 10, interval: int = 1) -> None:
         print(f"[green]|INFO|{self.file.vm.name}| Upload file [cyan]{local_path}[/] to [cyan]{remote_path}[/]")
         while try_num > 0:
@@ -79,7 +76,7 @@ class VboxUtilsWindows:
 
     def _create_dir(self, command: str, try_num: int = 10, interval: int = 1):
         while try_num > 0:
-            out = self._run_cmd(command, stdout=False)
+            out = self._run_cmd(command, stdout=False, stderr=False)
 
             if out.returncode == 0:
                 break
@@ -107,3 +104,12 @@ class VboxUtilsWindows:
             return f"-ExecutionPolicy Bypass -File '{self.paths.remote.script_path}'"
 
         raise ValueError("Unsupported script type.")
+
+    def _run_cmd(
+            self,
+            cmd: str,
+            status_bar: bool = False,
+            stdout: bool = True,
+            stderr: bool = True
+    ) -> CompletedProcess:
+        return self.file.run_cmd(command=cmd, status_bar=status_bar, stdout=stdout, stderr=stderr, shell=self.shell)
