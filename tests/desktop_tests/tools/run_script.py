@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from posixpath import join
+from os.path import splitext
 from host_tools import File
 from tempfile import gettempdir
 
@@ -12,9 +12,9 @@ class RunScript:
     def __init__(self, test_data: TestData, paths: Paths):
         self.data = test_data
         self._path = paths
-        self.is_windows = self._path.remote.run_script_name.endswith(('.bat', '.ps1'))
         self.is_ps1 = self._path.remote.run_script_name.endswith('.ps1')
         self.is_bat = self._path.remote.run_script_name.endswith('.bat')
+        self.is_windows = self.is_bat or self.is_ps1
 
     def generate(self) -> str:
         commands = [
@@ -26,7 +26,8 @@ class RunScript:
             self.get_install_requirements_command(),
             self.generate_run_test_cmd()
         ]
-        return '\n'.join(filter(None, commands))
+        script_content = [line.strip() for line in filter(None, commands)]
+        return ' && '.join(script_content) if self.is_bat else '\n'.join(script_content)
 
     @staticmethod
     def get_change_dir_command(dir_path: str) ->str:
@@ -73,10 +74,9 @@ class RunScript:
         return ' '.join(filter(None, options))
 
     def get_save_path(self) -> str:
-        return join(gettempdir(), self._path.remote.run_script_name)
+        return File.unique_name(gettempdir(), extension=splitext(self._path.remote.run_script_name)[1])
 
     def create(self) -> str:
         save_path = self.get_save_path()
-        script_content = '\n'.join(line.strip() for line in self.generate().split('\n'))
-        File.write(save_path, script_content, newline='')
+        File.write(save_path, self.generate(), newline='')
         return save_path

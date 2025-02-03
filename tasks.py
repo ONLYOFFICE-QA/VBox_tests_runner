@@ -41,7 +41,7 @@ def desktop_test(
         for vm in Vbox().check_vm_names([name] if name else data.vm_names):
             DesktopTest(vm, data).run(headless=headless)
 
-    report = DesktopReport(report_path=data.report_path)
+    report = DesktopReport(report_path=data.full_report_path)
     report.get_full(data.version)
     report.send_to_tg(data.version, data.title, data.tg_token, data.tg_chat_id, data.update_from) if not name else ...
 
@@ -89,5 +89,5 @@ def group_list(c):
 @task
 def reset_vbox(c):
     elevate(show_console=False)
-    Process.terminate(['VBoxSVC.exe', 'VBoxSVC'])
+    Process.terminate(['VBoxSVC.exe', 'VBoxSVC', "VBoxManage.exe", "VBoxSDS.exe"])
     Service.restart("VBoxSDS")

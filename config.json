@@ -8,6 +8,7 @@
   "hosts": [
     "Windows10",
     "Debian10",
+    "WindowsVista",
     "Debian11",
     "Debian12",
     "Ubuntu16",

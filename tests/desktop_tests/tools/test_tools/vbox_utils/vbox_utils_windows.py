@@ -8,10 +8,9 @@ from rich import print
 
 from tests.desktop_tests.tools import TestData
 from tests.desktop_tests.tools.paths import Paths
-from .run_script import RunScript
 
 
-class VboxUtils:
+class VboxUtilsWindows:
 
     def __init__(
             self,
@@ -26,18 +25,9 @@ class VboxUtils:
         self.paths = paths
         self.shell = self._get_shell()
 
-    def upload_test_files(self, script: RunScript):
+    def upload_test_files(self, upload_files: list[(str, str)]):
         self.create_test_dirs()
-        uploads = [
-            (self.data.token_file, self.paths.remote.tg_token_file),
-            (self.data.chat_id_file, self.paths.remote.tg_chat_id_file),
-            (script.create(), self.paths.remote.script_path),
-            (self.paths.local.proxy_config, self.paths.remote.proxy_config_file),
-            (self.data.config_path, self.paths.remote.custom_config_path),
-            (self.paths.local.lic_file, self.paths.remote.lic_file),
-        ]
-
-        for local, remote in uploads:
+        for local, remote in upload_files:
             self._upload(local, remote)
 
     def create_test_dirs(self, try_num: int = 10, interval: int = 1):
@@ -65,13 +55,10 @@ class VboxUtils:
         remote_report_dir = f"{self.paths.remote.report_dir}/{product_title}/{version}"
         out = self.file.copy_from(remote_report_dir, report_dir)
 
-        if out.stderr and 'No such file or directory' in out.stderr:
+        if out.stderr and 'no such file or directory' in out.stderr.lower():
             return False
 
         return True
-
-    def _run_cmd(self, cmd: str, status_bar: bool = False, stdout: bool = True) -> CompletedProcess:
-        return self.file.run_cmd(command=cmd, status_bar=status_bar, stdout=stdout, shell=self.shell)
 
     def _upload(self, local_path: str, remote_path: str, try_num: int = 10, interval: int = 1) -> None:
         print(f"[green]|INFO|{self.file.vm.name}| Upload file [cyan]{local_path}[/] to [cyan]{remote_path}[/]")
@@ -89,7 +76,7 @@ class VboxUtils:
 
     def _create_dir(self, command: str, try_num: int = 10, interval: int = 1):
         while try_num > 0:
-            out = self._run_cmd(command, stdout=False)
+            out = self._run_cmd(command, stdout=False, stderr=False)
 
             if out.returncode == 0:
                 break
@@ -117,3 +104,12 @@ class VboxUtils:
             return f"-ExecutionPolicy Bypass -File '{self.paths.remote.script_path}'"
 
         raise ValueError("Unsupported script type.")
+
+    def _run_cmd(
+            self,
+            cmd: str,
+            status_bar: bool = False,
+            stdout: bool = True,
+            stderr: bool = True
+    ) -> CompletedProcess:
+        return self.file.run_cmd(command=cmd, status_bar=status_bar, stdout=stdout, stderr=stderr, shell=self.shell)

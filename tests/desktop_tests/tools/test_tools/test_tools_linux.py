@@ -2,28 +2,23 @@
 from VBoxWrapper import VirtualMachinException
 from ssh_wrapper import Ssh, Sftp, ServerData
 
-from frameworks import VboxMachine
 from frameworks.decorators import retry, vm_data_created
-from . import TestTools, TestData
-from .linux_script_demon import LinuxScriptDemon
-from .ssh_connection import SSHConnection
+
+from .test_tools import TestTools, TestData, VboxMachine
+from .ssh_connection import SSHConnection, LinuxScriptDemon
 
 
 class TestToolsLinux(TestTools):
 
-    def __init__(self,  vm: VboxMachine, test_data: TestData, os_type: str):
-        super().__init__(vm=vm, test_data=test_data, os_type=os_type)
+    def __init__(self,  vm: VboxMachine, test_data: TestData):
+        super().__init__(vm=vm, test_data=test_data)
 
     @retry(max_attempts=2, exception_type=VirtualMachinException)
     def run_vm(self, headless: bool = True) -> None:
-        try:
-            self.vm.run(headless=headless, status_bar=self.data.status_bar)
-            self._initialize_paths()
-            self._initialize_run_script()
-            self._initialize_linux_demon()
-
-        except VirtualMachinException:
-            self._handle_vm_creation_failure()
+        self.vm.run(headless=headless, status_bar=self.data.status_bar)
+        self._initialize_paths()
+        self._initialize_run_script()
+        self._initialize_linux_demon()
 
     def run_test_on_vm(self):
         self._clean_known_hosts(self.vm.data.ip)
@@ -32,7 +27,7 @@ class TestToolsLinux(TestTools):
         with Ssh(server) as ssh, Sftp(server, ssh.connection) as sftp:
             connect = SSHConnection(ssh=ssh, sftp=sftp, test_data=self.data, paths=self.paths)
             connect.change_vm_service_dir_access(self.vm.data.user)
-            connect.upload_test_files(self.linux_demon, self.run_script)
+            connect.upload_test_files(self._get_linux_upload_files())
             connect.start_my_service(self.linux_demon.start_demon_commands())
             connect.wait_execute_service(status_bar=self.data.status_bar)
 
@@ -47,7 +42,6 @@ class TestToolsLinux(TestTools):
             return True
 
         print(f"[red]|ERROR| Can't download report from {self.vm.data.name}.")
-        self.report.write(self.data.version, self.vm.data.name, "REPORT_NOT_EXISTS")
         return False
 
     def _get_server(self) -> ServerData:
@@ -71,3 +65,6 @@ class TestToolsLinux(TestTools):
             filtered_lines = [line for line in file if not line.startswith(ip)]
         with open(self.paths.local.know_hosts, 'w') as file:
             file.writelines(filtered_lines)
+
+    def _get_linux_upload_files(self) -> list:
+        return self.get_upload_files() + [(self.linux_demon.create(), self.paths.remote.my_service_path)]

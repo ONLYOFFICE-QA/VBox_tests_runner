@@ -6,10 +6,8 @@ from tempfile import gettempdir
 from ssh_wrapper import Ssh, Sftp, SshException
 
 from frameworks.console import MyConsole
-from . import TestData
-from .linux_script_demon import LinuxScriptDemon
-from .paths import Paths
-from .run_script import RunScript
+from tests.desktop_tests.tools.test_data import TestData
+from tests.desktop_tests.tools.paths import Paths
 
 console = MyConsole().console
 print = console.print
@@ -23,18 +21,15 @@ class SSHConnection:
         self._paths = paths
         self.tmp_dir = gettempdir()
 
-    def upload_test_files(self, service: LinuxScriptDemon, script: RunScript):
+    def upload_test_files(self, upload_files: list[(str, str)]):
+        time.sleep(5)
         self.create_test_dirs()
-        self.upload(self.data.token_file, self._paths.remote.tg_token_file)
-        self.upload(self.data.chat_id_file, self._paths.remote.tg_chat_id_file)
-        self.upload(self._paths.local.proxy_config, self._paths.remote.proxy_config_file)
-        self.upload(service.create(), self._paths.remote.my_service_path)
-        self.upload(script.create(), self._paths.remote.script_path)
-        self.upload(self.data.config_path, self._paths.remote.custom_config_path)
-        self.upload(self._paths.local.lic_file, self._paths.remote.lic_file)
+        for local, remote in upload_files:
+            self.upload(local, remote)
 
     def upload(self, local_path: str, remote_path: str):
         self.sftp.upload_file(local=local_path, remote=remote_path, stdout=True)
+        time.sleep(1)
 
     def create_test_dirs(self):
         for cmd in [f'mkdir {self._paths.remote.script_dir}', f'mkdir {self._paths.remote.tg_dir}']:
