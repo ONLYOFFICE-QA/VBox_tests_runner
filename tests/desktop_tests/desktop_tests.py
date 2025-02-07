@@ -14,6 +14,9 @@ class DesktopTest:
         self.test_tools = self._get_test_tools()
 
     def run(self, headless: bool = False, max_attempts: int = 5, interval: int = 5) -> None:
+        if self.test_tools.is_windows and self.test_data.snap:
+            return print(f"[cyan]|INFO|{self.test_tools.vm_name}| Unable to install snap package on windows")
+
         attempt = 0
         while attempt < max_attempts:
             try:

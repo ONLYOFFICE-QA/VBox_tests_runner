@@ -17,6 +17,7 @@ class TestData:
     telegram: bool = False
     custom_config_mode: Union[bool, str] = False
     update_from: Optional[str] = None
+    snap: bool = False
 
     config: Dict = field(init=False)
     desktop_testing_url: str = field(init=False)
@@ -33,7 +34,7 @@ class TestData:
         self.branch = self.config['branch']
         self.vm_names = self.config.get('hosts', [])
         self.title = self.config.get('title', 'Undefined_title')
-        self.report_dir = join(getcwd(), 'reports', self.title, self.version)
+        self.report_dir = join(getcwd(), 'reports', self.title, f"{self.version}{'_snap' if self.snap else ''}")
         self.full_report_path = join(self.report_dir, f"{self.version}_{self.title}_desktop_tests_report.csv")
         self.local_paths = LocalPaths()
 

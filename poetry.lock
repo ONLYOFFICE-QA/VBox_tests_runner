@@ -485,8 +485,8 @@ rich = "*"
 [package.source]
 type = "git"
 url = "https://github.com/l8556/host_tools.git"
-reference = "master"
-resolved_reference = "f72a64baf23e69b1984b76b165b9ecb6ff08c750"
+reference = "fix/kill-processes"
+resolved_reference = "9fdd31c93f50a2731733ffd47ebe85bc6cb6112d"
 
 [[package]]
 name = "idna"
@@ -1612,4 +1612,4 @@ resolved_reference = "b98a3473546dfe19a6d64f7a76fb2028af79170b"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "fcf4c44d9e75ceb839b867c3035612f8f3b12cc1e4f38658f698ff71d73f9e8c"
+content-hash = "6112c9d869cc0588737ab4f6799438f1f7a61dd91e666755ade952166ea66ee0"
