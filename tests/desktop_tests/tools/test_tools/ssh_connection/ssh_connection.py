@@ -22,8 +22,6 @@ class SSHConnection:
         self.tmp_dir = gettempdir()
 
     def upload_test_files(self, upload_files: list[(str, str)]):
-        time.sleep(5)
-        self.create_test_dirs()
         for local, remote in upload_files:
             self.upload(local, remote)
 
@@ -31,9 +29,9 @@ class SSHConnection:
         self.sftp.upload_file(local=local_path, remote=remote_path, stdout=True)
         time.sleep(1)
 
-    def create_test_dirs(self):
-        for cmd in [f'mkdir {self._paths.remote.script_dir}', f'mkdir {self._paths.remote.tg_dir}']:
-            self.exec_cmd(cmd)
+    def create_test_dirs(self, create_dirs: list) -> None:
+        for test_dir in create_dirs:
+            self.exec_cmd(f"mkdir {test_dir}")
 
     def change_vm_service_dir_access(self, user_name: str):
         for cmd in [
@@ -60,8 +58,8 @@ class SSHConnection:
         with console.status(msg) if status_bar else contextlib.nullcontext() as status:
             print(msg) if not status_bar else None
             start_time = time.time()
-            while self.exec_cmd(f'systemctl is-active {service_name}', stderr=True).stdout == 'active':
-                status.update(f"{msg}\n{self._get_my_service_log(stdout=False)}") if status_bar else None
+            while self.service_is_active(service_name=service_name):
+                status.update(f"{msg}\n{self.get_my_service_log(stdout=False)}") if status_bar else None
                 time.sleep(0.5)
 
                 if isinstance(timeout, int) and (time.time() - start_time) >= timeout:
@@ -70,10 +68,13 @@ class SSHConnection:
                     )
         print(
             f"[blue]{'-' * 90}\n|INFO|{server_info}| Service {service_name} log:\n{'-' * 90}\n\n"
-            f"{self._get_my_service_log(1000, stdout=False)}\n{'-' * 90}"
+            f"{self.get_my_service_log(1000, stdout=False)}\n{'-' * 90}"
         )
 
-    def _get_my_service_log(self, line_num: str | int = 20, stdout: bool = True, stderr: bool = True) -> str:
+    def service_is_active(self, service_name: str) -> bool:
+        return self.exec_cmd(f'systemctl is-active {service_name}', stderr=True).stdout.lower() == 'active'
+
+    def get_my_service_log(self, line_num: str | int = 20, stdout: bool = True, stderr: bool = True) -> str:
         command = f'sudo journalctl -n {line_num} -u {self._paths.remote.my_service_name}'
         return self.exec_cmd(command, stdout=stdout, stderr=stderr).stdout
 

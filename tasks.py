@@ -23,7 +23,8 @@ def desktop_test(
         detailed_telegram: bool = False,
         custom_config: bool = False,
         headless: bool = False,
-        snap: bool = False
+        snap: bool = False,
+        appimage: bool = False
 ):
     num_processes = int(processes) if processes else 1
 
@@ -33,7 +34,8 @@ def desktop_test(
         telegram=detailed_telegram,
         config_path=join(getcwd(), 'custom_config.json') if custom_config else join(getcwd(), 'config.json'),
         custom_config_mode=custom_config,
-        snap=snap
+        snap=snap,
+        appimage=appimage
     )
 
     if num_processes > 1 and not name:
@@ -45,7 +47,7 @@ def desktop_test(
 
     report = DesktopReport(report_path=data.full_report_path)
     report.get_full(data.version)
-    report.send_to_tg(data.version, data.title, data.tg_token, data.tg_chat_id, data.update_from) if not name else ...
+    report.send_to_tg(data=data) if not name else ...
 
 
 @task

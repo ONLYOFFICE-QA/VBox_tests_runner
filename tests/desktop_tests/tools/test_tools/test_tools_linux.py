@@ -27,6 +27,7 @@ class TestToolsLinux(TestTools):
         with Ssh(server) as ssh, Sftp(server, ssh.connection) as sftp:
             connect = SSHConnection(ssh=ssh, sftp=sftp, test_data=self.data, paths=self.paths)
             connect.change_vm_service_dir_access(self.vm.data.user)
+            connect.create_test_dirs(self.get_create_test_dirs())
             connect.upload_test_files(self._get_linux_upload_files())
             connect.start_my_service(self.linux_demon.start_demon_commands())
             connect.wait_execute_service(status_bar=self.data.status_bar)
@@ -67,4 +68,7 @@ class TestToolsLinux(TestTools):
             file.writelines(filtered_lines)
 
     def _get_linux_upload_files(self) -> list:
-        return self.get_upload_files() + [(self.linux_demon.create(), self.paths.remote.my_service_path)]
+        return self.get_upload_files() + [
+            (self.linux_demon.create(), self.paths.remote.my_service_path),
+            (self.paths.local.github_token, self.paths.remote.github_token_path)
+        ]

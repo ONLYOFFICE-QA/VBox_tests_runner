@@ -8,7 +8,7 @@ from VBoxWrapper import VirtualMachinException
 from host_tools import File, Dir
 
 from frameworks.decorators import retry, vm_data_created
-from frameworks import  MyConsole
+from frameworks import MyConsole
 
 from ..desktop_report import DesktopReport
 from ..paths import Paths
@@ -16,12 +16,13 @@ from ..run_script import RunScript
 from ..test_data import TestData
 from ..VboxMachine import VboxMachine
 
-
 console = MyConsole().console
 print = console.print
 
+
 def handle_interrupt(signum, frame):
     raise KeyboardInterrupt
+
 
 signal.signal(signal.SIGINT, handle_interrupt)
 
@@ -38,14 +39,17 @@ class TestTools(ABC):
 
     @retry(max_attempts=2, exception_type=VirtualMachinException)
     @abstractmethod
-    def run_vm(self, headless: bool = True) -> None: ...
+    def run_vm(self, headless: bool = True) -> None:
+        ...
 
     @vm_data_created
     @abstractmethod
-    def run_test_on_vm(self): ...
+    def run_test_on_vm(self):
+        ...
 
     @abstractmethod
-    def download_and_check_report(self, *args) -> bool: ...
+    def download_and_check_report(self, *args) -> bool:
+        ...
 
     def stop_vm(self):
         self.vm.stop()
@@ -94,5 +98,16 @@ class TestTools(ABC):
             (self.paths.local.proxy_config, self.paths.remote.proxy_config_file),
             (self.run_script.create(), self.paths.remote.script_path),
             (self.data.config_path, self.paths.remote.custom_config_path),
-            (self.paths.local.lic_file, self.paths.remote.lic_file),
+            (self.paths.local.lic_file, self.paths.remote.lic_file)
         ]
+
+    def get_create_test_dirs(self) -> list:
+        remote_test_dirs = [
+            self.paths.remote.script_dir,
+            self.paths.remote.tg_dir,
+        ]
+
+        if self.is_windows:
+            return remote_test_dirs
+
+        return remote_test_dirs + [self.paths.remote.github_token_dir]

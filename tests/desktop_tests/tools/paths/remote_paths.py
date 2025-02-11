@@ -25,6 +25,8 @@ class RemotePaths:
         self.my_service_name = 'myscript.service'
         self.my_service_path = self._join_path(self.services_dir, self.my_service_name)
         self.lic_file = self._join_path(self.script_dir, 'test_lic.lickey')
+        self.github_token_dir = self._join_path(self.home_dir, '.github')
+        self.github_token_path = self._join_path(self.github_token_dir, 'token')
 
     def _get_run_script_name(self) -> str:
         if 'vista' in self.os_type:

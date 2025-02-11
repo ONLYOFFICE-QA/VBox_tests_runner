@@ -17,6 +17,9 @@ class DesktopTest:
         if self.test_tools.is_windows and self.test_data.snap:
             return print(f"[cyan]|INFO|{self.test_tools.vm_name}| Unable to install snap package on windows")
 
+        if self.test_tools.is_windows and self.test_data.appimage:
+            return print(f"[cyan]|INFO|{self.test_tools.vm_name}| Unable to install appimage on windows")
+
         attempt = 0
         while attempt < max_attempts:
             try:

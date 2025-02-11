@@ -36,7 +36,6 @@ class VboxUtilsVista(VboxUtilsWindows):
         self.shell = 'cmd.exe'
 
     def upload_test_files(self,  upload_files: list[(str, str)]) -> None:
-        self.create_test_dirs()
         for local, remote in upload_files:
             self._upload(local, remote)
             time.sleep(1)

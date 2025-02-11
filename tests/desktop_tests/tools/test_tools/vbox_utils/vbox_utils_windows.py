@@ -26,19 +26,13 @@ class VboxUtilsWindows:
         self.shell = self._get_shell()
 
     def upload_test_files(self, upload_files: list[(str, str)]):
-        self.create_test_dirs()
         for local, remote in upload_files:
             self._upload(local, remote)
 
-    def create_test_dirs(self, try_num: int = 10, interval: int = 1):
-        commands = [
-            f'mkdir {self.paths.remote.script_dir}',
-            f'mkdir {self.paths.remote.tg_dir}'
-        ]
-
-        for cmd in commands:
+    def create_test_dirs(self, test_dirs: list, try_num: int = 10, interval: int = 1):
+        for test_dir in test_dirs:
             print(f"[green]|INFO|{self.file.vm.name}| Creating test dir: [cyan]{cmd}[/]")
-            self._create_dir(cmd, try_num=try_num, interval=interval)
+            self._create_dir(f"mkdir {test_dir}", try_num=try_num, interval=interval)
 
     def run_script_on_vm(self):
         server_info = f"{self.file.vm.name}|{self.file.vm.network.get_ip()}"
