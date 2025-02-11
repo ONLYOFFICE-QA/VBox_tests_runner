@@ -108,7 +108,7 @@ def reset_vbox(c):
 @task
 def reset_last_snapshot(c, group_name: str = None):
     if not group_name:
-        raise ValueError(f"Needed specified group name")
+        raise ValueError("Needed specified group name")
 
     if group_name not in group_list(c):
         raise ValueError(f"Can't found group name: {group_name}")

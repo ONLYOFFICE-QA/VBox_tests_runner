@@ -70,7 +70,7 @@ class RunScript:
             "-t" if self.data.telegram else '',
             f"-c {self.data.custom_config_mode}" if self.data.custom_config_mode else '',
             f"-l {self._path.remote.lic_file}" if self.data.custom_config_mode else '',
-            f"--snap" if self.data.snap else ''
+            "--snap" if self.data.snap else ''
         ]
         return ' '.join(filter(None, options))
 
