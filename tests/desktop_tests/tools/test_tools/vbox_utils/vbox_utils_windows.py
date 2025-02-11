@@ -31,7 +31,7 @@ class VboxUtilsWindows:
 
     def create_test_dirs(self, test_dirs: list, try_num: int = 10, interval: int = 1):
         for test_dir in test_dirs:
-            print(f"[green]|INFO|{self.file.vm.name}| Creating test dir: [cyan]{cmd}[/]")
+            print(f"[green]|INFO|{self.file.vm.name}| Creating test dir: [cyan]{test_dir}[/]")
             self._create_dir(f"mkdir {test_dir}", try_num=try_num, interval=interval)
 
     def run_script_on_vm(self):
