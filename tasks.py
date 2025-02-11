@@ -16,13 +16,14 @@ from elevate import elevate
 @task
 def desktop_test(
         c,
-        version=None,
-        update_from_version=None,
-        name=None,
-        processes=None,
-        detailed_telegram=False,
-        custom_config=False,
-        headless=False
+        version: str = None,
+        update_from_version: str = None,
+        name: str = None,
+        processes: int = None,
+        detailed_telegram: bool = False,
+        custom_config: bool = False,
+        headless: bool = False,
+        snap: bool = False
 ):
     num_processes = int(processes) if processes else 1
 
@@ -31,7 +32,8 @@ def desktop_test(
         update_from=update_from_version,
         telegram=detailed_telegram,
         config_path=join(getcwd(), 'custom_config.json') if custom_config else join(getcwd(), 'config.json'),
-        custom_config_mode=custom_config
+        custom_config_mode=custom_config,
+        snap=snap
     )
 
     if num_processes > 1 and not name:
@@ -45,6 +47,7 @@ def desktop_test(
     report.get_full(data.version)
     report.send_to_tg(data.version, data.title, data.tg_token, data.tg_chat_id, data.update_from) if not name else ...
 
+
 @task
 def run_vm(c, name: str = '', headless=False):
     vm = VirtualMachine(Vbox().check_vm_names(name))
@@ -52,6 +55,7 @@ def run_vm(c, name: str = '', headless=False):
     vm.network.wait_up(status_bar=True)
     vm.wait_logged_user(status_bar=True)
     return print(f"[green]ip: [red]{vm.network.get_ip()}[/]\nuser: [red]{vm.get_logged_user()}[/]")
+
 
 @task
 def stop_vm(c, name: str = None, group_name: str = None):
@@ -70,24 +74,44 @@ def stop_vm(c, name: str = None, group_name: str = None):
                 print(f"[green]|INFO| Shutting down the virtual machine: [red]{vm_info[0]}[/]")
                 virtualmachine.stop()
 
+
 @task
 def vm_list(c, group_name: str = None):
     vm_names = Vbox().vm_list(group_name)
     print(vm_names)
     return vm_names
 
+
 @task
 def out_info(c, name: str = '', full: bool = False):
     print(VirtualMachine(Vbox().check_vm_names(name)).get_info(machine_readable=full))
 
+
 @task
 def group_list(c):
-    group_names = Vbox().get_group_list()
+    group_names = list(filter(None, Vbox().get_group_list()))
     print(group_names)
     return group_names
+
 
 @task
 def reset_vbox(c):
     elevate(show_console=False)
-    Process.terminate(['VBoxSVC.exe', 'VBoxSVC', "VBoxManage.exe", "VBoxSDS.exe"])
+    for _ in range(10):
+        Process.terminate(
+            ['VBoxSVC.exe', 'VBoxSVC.exe', "VBoxManage.exe", "VBoxSDS.exe", "VBoxHeadless.exe", "VirtualBox.exe"]
+        )
     Service.restart("VBoxSDS")
+    Service.restart("vboxdrv")
+
+
+@task
+def reset_last_snapshot(c, group_name: str = None):
+    if not group_name:
+        raise ValueError("Needed specified group name")
+
+    if group_name not in group_list(c):
+        raise ValueError(f"Can't found group name: {group_name}")
+
+    for vm_name in vm_list(c, group_name=group_name):
+        VirtualMachine(vm_id=vm_name[0]).snapshot.restore()

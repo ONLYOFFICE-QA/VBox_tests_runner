@@ -50,6 +50,10 @@ class TestTools(ABC):
     def stop_vm(self):
         self.vm.stop()
 
+    @property
+    def is_windows(self) -> bool:
+        return 'windows' in self.vm.os_type
+
     def _initialize_report(self):
         report_file = join(self.data.report_dir, self.vm_name, f"{self.data.version}_{self.data.title}_report.csv")
         self.report = DesktopReport(report_file)

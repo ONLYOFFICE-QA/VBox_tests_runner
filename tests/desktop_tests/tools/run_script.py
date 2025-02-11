@@ -69,7 +69,8 @@ class RunScript:
             f"-u {self.data.update_from}" if self.data.update_from else '',
             "-t" if self.data.telegram else '',
             f"-c {self.data.custom_config_mode}" if self.data.custom_config_mode else '',
-            f"-l {self._path.remote.lic_file}" if self.data.custom_config_mode else ''
+            f"-l {self._path.remote.lic_file}" if self.data.custom_config_mode else '',
+            "--snap" if self.data.snap else ''
         ]
         return ' '.join(filter(None, options))
 
