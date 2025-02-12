@@ -5,8 +5,10 @@ from os.path import join, expanduser
 
 class LocalPaths:
     project_dir: str = getcwd()
-    tg_dir: str = join(expanduser('~'), '.telegram')
+    home_dir = expanduser('~')
+    tg_dir: str = join(home_dir, '.telegram')
     tmp_dir: str = join(project_dir, 'tmp')
-    know_hosts: str = join(expanduser('~'), '.ssh', 'known_hosts')
+    know_hosts: str = join(home_dir, '.ssh', 'known_hosts')
     lic_file: str = join(project_dir, 'test_lic.lickey')
-    proxy_config: str = join(expanduser('~'), '.telegram', 'proxy.json')
+    proxy_config: str = join(home_dir, '.telegram', 'proxy.json')
+    github_token: str = join(home_dir, '.github', 'token')

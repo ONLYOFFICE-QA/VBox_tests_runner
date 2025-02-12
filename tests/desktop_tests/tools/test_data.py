@@ -18,6 +18,7 @@ class TestData:
     custom_config_mode: Union[bool, str] = False
     update_from: Optional[str] = None
     snap: bool = False
+    appimage: bool = False
 
     config: Dict = field(init=False)
     desktop_testing_url: str = field(init=False)
@@ -34,7 +35,7 @@ class TestData:
         self.branch = self.config['branch']
         self.vm_names = self.config.get('hosts', [])
         self.title = self.config.get('title', 'Undefined_title')
-        self.report_dir = join(getcwd(), 'reports', self.title, f"{self.version}{'_snap' if self.snap else ''}")
+        self.report_dir = self._get_report_dir()
         self.full_report_path = join(self.report_dir, f"{self.version}_{self.title}_desktop_tests_report.csv")
         self.local_paths = LocalPaths()
 
@@ -76,3 +77,7 @@ class TestData:
                 f"from config file not exists: {file_path}"
             )
         return join(self.local_paths.tg_dir, default_filename)
+
+    def _get_report_dir(self) -> str:
+        version = f"{self.version}{'_snap' if self.snap else ''}{'_appimage' if self.appimage else ''}"
+        return join(getcwd(), 'reports', self.title, version)

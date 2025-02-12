@@ -10,7 +10,6 @@ from frameworks.report import Report
 from telegram import Telegram
 
 
-
 class DesktopReport:
     def __init__(self, report_path: str):
         self.path = report_path
@@ -51,24 +50,31 @@ class DesktopReport:
     def exists(self) -> bool:
         return isfile(self.path)
 
-    def send_to_tg(
-            self,
-            version: str,
-            title: str,
-            token: str,
-            chat_id: str,
-            update_from: str = None
-    ):
+    def send_to_tg(self, data):
         if not isfile(self.path):
             return print(f"[red]|ERROR| Report for sending to telegram not exists: {self.path}")
 
-        Telegram(token=token, chat_id=chat_id).send_document(
-            self.path,
-            caption=f"{title} desktop editor tests completed on version: "
-                    f"`{(update_from + ' -> ')if update_from else ''}{version}`\n\n"
-                    f"Result: {'`All tests passed`' if self.all_is_passed() else '`Some tests have errors`'}\n\n"
-                    f"Number of tested Os: `{self.get_total_count('Exit_code')}`"
+        update_info = f"{data.update_from} -> " if data.update_from else ""
+        result_status = "All tests passed" if self.all_is_passed() else "Some tests have errors"
+
+        caption = (
+            f"{data.title} desktop editor tests completed on version: `{update_info}{data.version}`\n\n"
+            f"Package: `{self._get_package(data=data)}`\n"
+            f"Result: `{result_status}`\n\n"
+            f"Number of tested Os: `{self.get_total_count('Exit_code')}`"
         )
+
+        Telegram(token=data.tg_token, chat_id=data.tg_chat_id).send_document(self.path, caption=caption)
+
+    @staticmethod
+    def _get_package(data) -> str:
+        if data.snap:
+            return "Snap Packages"
+
+        if data.appimage:
+            return "AppImages"
+
+        return "Default Packages"
 
     def _writer(self, mode: str, message: list, delimiter='\t', encoding='utf-8'):
         self.report.write(self.path, mode, message, delimiter, encoding)
