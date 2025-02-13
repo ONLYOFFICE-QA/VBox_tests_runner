@@ -81,13 +81,13 @@ class TestData:
         return join(self.local_paths.tg_dir, default_filename)
 
     def _get_report_dir(self) -> str:
-        version = (
+        dir_name = (
             f"{self.version}"
             f"{'_snap' if self.snap else ''}"
             f"{'_appimage' if self.appimage else ''}"
             f"{'_flatpak' if self.flatpak else ''}"
         )
-        return join(getcwd(), 'reports', self.title, version)
+        return join(getcwd(), 'reports', self.title, dir_name)
 
     def _check_package_options(self):
         if sum([self.snap, self.appimage, self.flatpak]) > 1:
