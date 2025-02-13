@@ -20,6 +20,9 @@ class DesktopTest:
         if self.test_tools.is_windows and self.test_data.appimage:
             return print(f"[cyan]|INFO|{self.test_tools.vm_name}| Unable to install appimage on windows")
 
+        if self.test_tools.is_windows and self.test_data.flatpak:
+            return print(f"[cyan]|INFO|{self.test_tools.vm_name}| Unable to install flatpak on windows")
+
         attempt = 0
         while attempt < max_attempts:
             try:

@@ -71,7 +71,8 @@ class RunScript:
             f"-c {self.data.custom_config_mode}" if self.data.custom_config_mode else '',
             f"-l {self._path.remote.lic_file}" if self.data.custom_config_mode else '',
             "--snap" if self.data.snap else '',
-            "--appimage" if self.data.appimage else ''
+            "--appimage" if self.data.appimage else '',
+            "--flatpak" if self.data.flatpak else ''
         ]
         return ' '.join(filter(None, options))
 

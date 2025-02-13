@@ -19,6 +19,7 @@ class TestData:
     update_from: Optional[str] = None
     snap: bool = False
     appimage: bool = False
+    flatpak: bool = False
 
     config: Dict = field(init=False)
     desktop_testing_url: str = field(init=False)
@@ -38,6 +39,7 @@ class TestData:
         self.report_dir = self._get_report_dir()
         self.full_report_path = join(self.report_dir, f"{self.version}_{self.title}_desktop_tests_report.csv")
         self.local_paths = LocalPaths()
+        self._check_package_options()
 
     @property
     def tg_token(self) -> str:
@@ -79,5 +81,14 @@ class TestData:
         return join(self.local_paths.tg_dir, default_filename)
 
     def _get_report_dir(self) -> str:
-        version = f"{self.version}{'_snap' if self.snap else ''}{'_appimage' if self.appimage else ''}"
+        version = (
+            f"{self.version}"
+            f"{'_snap' if self.snap else ''}"
+            f"{'_appimage' if self.appimage else ''}"
+            f"{'_flatpak' if self.flatpak else ''}"
+        )
         return join(getcwd(), 'reports', self.title, version)
+
+    def _check_package_options(self):
+        if sum([self.snap, self.appimage, self.flatpak]) > 1:
+            raise ValueError("Only one option from snap, appimage, flatpak should be enabled..")
