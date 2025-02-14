@@ -100,7 +100,6 @@ def group_list(c):
 
 @task
 def reset_vbox(c):
-    elevate(show_console=False)
     processes = [
         "VirtualBoxVM",
         "VBoxManage.exe",
@@ -110,11 +109,16 @@ def reset_vbox(c):
         "VBoxSDS.exe"
     ]
 
+    Process.terminate(processes)
+    elevate(show_console=False)
+
+
     for process in processes:
         system(f"taskkill /F /IM {process}")
 
     Service.restart("VBoxSDS")
     Service.restart("vboxdrv")
+    Service.start("VBoxSDS")
 
 
 @task
