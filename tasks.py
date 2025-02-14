@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from os import getcwd
+from os import getcwd, system
 from os.path import join
 
 from invoke import task
@@ -101,10 +101,18 @@ def group_list(c):
 @task
 def reset_vbox(c):
     elevate(show_console=False)
-    for _ in range(10):
-        Process.terminate(
-            ['VBoxSVC.exe', 'VBoxSVC.exe', "VBoxManage.exe", "VBoxSDS.exe", "VBoxHeadless.exe", "VirtualBox.exe"]
-        )
+    processes = [
+        "VirtualBoxVM",
+        "VBoxManage.exe",
+        "VirtualBox.exe",
+        "VBoxHeadless.exe",
+        "VBoxSVC.exe",
+        "VBoxSDS.exe"
+    ]
+
+    for process in processes:
+        system(f"taskkill /F /IM {process}")
+
     Service.restart("VBoxSDS")
     Service.restart("vboxdrv")
 
