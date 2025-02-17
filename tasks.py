@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from os import getcwd
+from os import getcwd, system
 from os.path import join
 
 from invoke import task
@@ -24,7 +24,8 @@ def desktop_test(
         custom_config: bool = False,
         headless: bool = False,
         snap: bool = False,
-        appimage: bool = False
+        appimage: bool = False,
+        flatpak: bool = False
 ):
     num_processes = int(processes) if processes else 1
 
@@ -35,7 +36,8 @@ def desktop_test(
         config_path=join(getcwd(), 'custom_config.json') if custom_config else join(getcwd(), 'config.json'),
         custom_config_mode=custom_config,
         snap=snap,
-        appimage=appimage
+        appimage=appimage,
+        flatpak=flatpak
     )
 
     if num_processes > 1 and not name:
@@ -98,13 +100,25 @@ def group_list(c):
 
 @task
 def reset_vbox(c):
+    processes = [
+        "VirtualBoxVM",
+        "VBoxManage.exe",
+        "VirtualBox.exe",
+        "VBoxHeadless.exe",
+        "VBoxSVC.exe",
+        "VBoxSDS.exe"
+    ]
+
+    Process.terminate(processes)
     elevate(show_console=False)
-    for _ in range(10):
-        Process.terminate(
-            ['VBoxSVC.exe', 'VBoxSVC.exe', "VBoxManage.exe", "VBoxSDS.exe", "VBoxHeadless.exe", "VirtualBox.exe"]
-        )
+
+
+    for process in processes:
+        system(f"taskkill /F /IM {process}")
+
     Service.restart("VBoxSDS")
     Service.restart("vboxdrv")
+    Service.start("VBoxSDS")
 
 
 @task

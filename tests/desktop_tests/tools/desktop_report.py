@@ -74,6 +74,9 @@ class DesktopReport:
         if data.appimage:
             return "AppImages"
 
+        if data.flatpak:
+            return "FlatPak"
+
         return "Default Packages"
 
     def _writer(self, mode: str, message: list, delimiter='\t', encoding='utf-8'):
