@@ -14,7 +14,7 @@ class NetworkConfigModel(BaseModel):
         adapter_name (str): The name of the network adapter.
         connect_type (str): The type of network connection (e.g., "bridged").
     """
-    adapter_name: constr(strip_whitespace=True, min_length=1)
+    adapter_name: constr(strip_whitespace=True, min_length=0)
     connect_type: constr(strip_whitespace=True, min_length=1)
 
     @field_validator('connect_type')
