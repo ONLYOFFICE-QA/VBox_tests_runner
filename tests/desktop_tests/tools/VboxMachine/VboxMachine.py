@@ -58,6 +58,7 @@ class VboxMachine:
         self.create_data()
 
     def configurate(self):
+        self.set_network_adapter()
         self.vm.set_cpus(self._get_cpu_num())
         self.vm.nested_virtualization(self.vm_config.nested_virtualization)
         self.vm.set_memory(self.vm_config.memory)
@@ -66,6 +67,14 @@ class VboxMachine:
 
     def stop(self):
         self.vm.stop()
+
+    def set_network_adapter(self) -> None:
+        if self.vm_config.network.adapter_name and self.vm_config.network.connect_type:
+            self.vm.network.set_adapter(
+                turn=True,
+                adapter_name=self.vm_config.network.adapter_name,
+                connect_type=self.vm_config.network.connect_type
+            )
 
     def _get_cpu_num(self) -> int:
         # if 'vista' in self.os_type:

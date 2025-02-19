@@ -92,14 +92,21 @@ class TestTools(ABC):
         self.report.write(self.data.version, self.vm_name, "FAILED_CREATE_VM")
 
     def get_upload_files(self) -> list:
-        return [
+        files = [
             (self.data.token_file, self.paths.remote.tg_token_file),
             (self.data.chat_id_file, self.paths.remote.tg_chat_id_file),
-            (self.paths.local.proxy_config, self.paths.remote.proxy_config_file),
             (self.run_script.create(), self.paths.remote.script_path),
-            (self.data.config_path, self.paths.remote.custom_config_path),
+            (self.data.config_path, self.paths.remote.custom_config_path)
+        ]
+
+        optional_files = [
+            (self.paths.local.proxy_config, self.paths.remote.proxy_config_file),
             (self.paths.local.lic_file, self.paths.remote.lic_file)
         ]
+
+        files.extend((src, dst) for src, dst in optional_files if isfile(src))
+
+        return [file for file in files if all(file)]
 
     def get_create_test_dirs(self) -> list:
         remote_test_dirs = [
