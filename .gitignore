@@ -4,3 +4,15 @@
 /custom_config.json
 /lic_file/*
 /test_lic.lickey
+test.py
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/.idea/
+**/.pytest_cache/
+**/node_modules/
+**/node_modules/*
+**/node_modules/**/*
+**/node_modules/**/**/*
+**/node_modules/**/**/**/*
+**/node_modules/**/**/**/**/*
