@@ -20,7 +20,7 @@ class TestData:
     snap: bool = False
     appimage: bool = False
     flatpak: bool = False
-    open_retries: int = 10
+    open_retries: int = None
 
     config: Dict = field(init=False)
     desktop_testing_url: str = field(init=False)

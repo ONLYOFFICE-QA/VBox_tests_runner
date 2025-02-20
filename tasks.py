@@ -26,7 +26,7 @@ def desktop_test(
         snap: bool = False,
         appimage: bool = False,
         flatpak: bool = False,
-        open_retries: int = 10
+        open_retries: int = None
 ):
     num_processes = int(processes) if processes else 1
 
