@@ -64,16 +64,18 @@ class RunScript:
 
     def generate_run_test_cmd(self) -> str:
         options = [
-            "invoke open-test -d",
-            f"-v {self.data.version}",
-            f"-u {self.data.update_from}" if self.data.update_from else '',
-            "-t" if self.data.telegram else '',
-            f"-c {self.data.custom_config_mode}" if self.data.custom_config_mode else '',
-            f"-l {self._path.remote.lic_file}" if self.data.custom_config_mode else '',
-            "--snap" if self.data.snap else '',
-            "--appimage" if self.data.appimage else '',
-            "--flatpak" if self.data.flatpak else ''
-        ]
+                "invoke open-test -d",
+                f"-v {self.data.version}",
+                f"-u {self.data.update_from}" if self.data.update_from else '',
+                "-t" if self.data.telegram else '',
+                f"-c {self.data.custom_config_mode}" if self.data.custom_config_mode else '',
+                f"-l {self._path.remote.lic_file}" if self.data.custom_config_mode else '',
+                "--snap" if self.data.snap else '',
+                "--appimage" if self.data.appimage else '',
+                "--flatpak" if self.data.flatpak else '',
+                f"--open-retries {self.data.open_retries}" if self.data.open_retries else ''
+            ]
+
         return ' '.join(filter(None, options))
 
     def get_save_path(self) -> str:

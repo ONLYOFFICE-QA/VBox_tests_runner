@@ -25,7 +25,8 @@ def desktop_test(
         headless: bool = False,
         snap: bool = False,
         appimage: bool = False,
-        flatpak: bool = False
+        flatpak: bool = False,
+        open_retries: int = None
 ):
     num_processes = int(processes) if processes else 1
 
@@ -37,7 +38,8 @@ def desktop_test(
         custom_config_mode=custom_config,
         snap=snap,
         appimage=appimage,
-        flatpak=flatpak
+        flatpak=flatpak,
+        open_retries=open_retries
     )
 
     if num_processes > 1 and not name:
