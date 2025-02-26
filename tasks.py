@@ -7,7 +7,7 @@ from rich.prompt import Prompt
 from rich import print
 
 from VBoxWrapper import VirtualMachine, Vbox
-from tests.desktop_tests import DesktopTest, DesktopReport, TestData
+from tests.desktop_tests import DesktopTest, TestData
 import tests.desktop_tests.multiprocessing as multiprocess
 from host_tools import Process, Service
 from elevate import elevate
