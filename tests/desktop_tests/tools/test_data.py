@@ -6,6 +6,7 @@ from typing import Dict, Optional, Union, List
 from dataclasses import dataclass, field
 from os.path import join, isfile
 from host_tools import File
+from .desktop_report import DesktopReport
 
 from .paths import LocalPaths
 
@@ -21,6 +22,7 @@ class TestData:
     appimage: bool = False
     flatpak: bool = False
     open_retries: int = None
+    retest: bool = False
 
     config: Dict = field(init=False)
     desktop_testing_url: str = field(init=False)
@@ -35,12 +37,18 @@ class TestData:
         self.config = self._read_config()
         self.desktop_testing_url = self.config['desktop_script']
         self.branch = self.config['branch']
-        self.vm_names = self.config.get('hosts', [])
         self.title = self.config.get('title', 'Undefined_title')
         self.report_dir = self._get_report_dir()
         self.full_report_path = join(self.report_dir, f"{self.version}_{self.title}_desktop_tests_report.csv")
+        self.report = DesktopReport(report_path=self.full_report_path)
+        self.vm_names = self._get_vm_names()
         self.local_paths = LocalPaths()
         self._check_package_options()
+
+    def _get_vm_names(self) -> List[str]:
+        if self.retest:
+            return self.report.get_error_vm_list()
+        return self.config.get('hosts', [])
 
     @property
     def tg_token(self) -> str:

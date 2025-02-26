@@ -27,6 +27,13 @@ class DesktopReport:
     def all_is_passed(self) -> bool:
         df = self.report.read(self.path)
         return df['Exit_code'].eq('Passed').all()
+    
+    def get_error_vm_list(self) -> list[str]:
+        if not isfile(self.path):
+            raise FileNotFoundError(f"[red]|ERROR| Report not found: {self.path}")
+
+        df = self.report.read(self.path)
+        return df[df['Exit_code'] != 'Passed']['Vm_name'].unique()
 
     def get_full(self, version: str) -> str:
         File.delete(self.path, stdout=False) if isfile(self.path) else ...

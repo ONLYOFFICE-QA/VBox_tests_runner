@@ -26,7 +26,8 @@ def desktop_test(
         snap: bool = False,
         appimage: bool = False,
         flatpak: bool = False,
-        open_retries: int = None
+        open_retries: int = None,
+        retest: bool = False
 ):
     num_processes = int(processes) if processes else 1
 
@@ -39,7 +40,8 @@ def desktop_test(
         snap=snap,
         appimage=appimage,
         flatpak=flatpak,
-        open_retries=open_retries
+        open_retries=open_retries,
+        retest=retest
     )
 
     if num_processes > 1 and not name:
@@ -49,9 +51,9 @@ def desktop_test(
         for vm in Vbox().check_vm_names([name] if name else data.vm_names):
             DesktopTest(vm, data).run(headless=headless)
 
-    report = DesktopReport(report_path=data.full_report_path)
-    report.get_full(data.version)
-    report.send_to_tg(data=data) if not name else ...
+    data.report.get_full(data.version)
+    data.report.send_to_tg(data=data) if not name else ...
+    print(data.report.get_error_vm_list())
 
 
 @task
@@ -99,29 +101,27 @@ def group_list(c):
     print(group_names)
     return group_names
 
-
 @task
 def reset_vbox(c):
     processes = [
-        "VirtualBoxVM",
-        "VBoxManage.exe",
-        "VirtualBox.exe",
-        "VBoxHeadless.exe",
+        "VBoxSDS.exe",
         "VBoxSVC.exe",
-        "VBoxSDS.exe"
+        "VBoxHeadless.exe",
+        "VirtualBox.exe",
+        "VBoxManage.exe",
+        "VirtualBoxVM"
     ]
 
     Process.terminate(processes)
-    elevate(show_console=False)
 
+    elevate(show_console=False)
 
     for process in processes:
         system(f"taskkill /F /IM {process}")
 
-    Service.restart("VBoxSDS")
-    Service.restart("vboxdrv")
+    for service in ["VBoxSDS", "vboxdrv"]:
+        Service.restart(service)
     Service.start("VBoxSDS")
-
 
 @task
 def reset_last_snapshot(c, group_name: str = None):
