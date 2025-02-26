@@ -53,7 +53,9 @@ def desktop_test(
 
     data.report.get_full(data.version)
     data.report.send_to_tg(data=data) if not name else ...
-    print(data.report.get_error_vm_list())
+    error_vms = data.report.get_error_vm_list()
+    if error_vms:
+        print(f"[red]|ERROR| Tests for the following VMs have errors: {error_vms}")
 
 
 @task
