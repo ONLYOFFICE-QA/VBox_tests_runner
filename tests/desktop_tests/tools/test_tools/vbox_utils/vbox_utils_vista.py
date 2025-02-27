@@ -2,8 +2,10 @@
 import re
 import time
 from contextlib import nullcontext
-from os.path import join
+from os.path import join, dirname, isdir
 from subprocess import CompletedProcess
+
+from host_tools.utils import Dir
 from rich import print
 
 from VBoxWrapper import VirtualMachine
@@ -55,6 +57,9 @@ class VboxUtilsVista(VboxUtilsWindows):
                 time.sleep(timeout)
                 if self.data.status_bar:
                     self._update_status_bar(status)
+
+        if not isdir(dirname(self.tmp_log_file)):
+            Dir.create(dirname(self.tmp_log_file), stdout=False)
 
         self.file.copy_from(self.log_file, self.tmp_log_file)
         print(f'[cyan]|INFO|{File.read(self.tmp_log_file)}')
