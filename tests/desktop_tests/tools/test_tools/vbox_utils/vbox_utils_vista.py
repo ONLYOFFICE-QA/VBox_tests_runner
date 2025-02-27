@@ -11,6 +11,7 @@ from rich import print
 from VBoxWrapper import VirtualMachine
 from host_tools import File
 from rich.console import Console
+from tempfile import gettempdir
 
 from .schtasks_command import SchtasksCommand
 from .vbox_utils_windows import VboxUtilsWindows
@@ -33,7 +34,7 @@ class VboxUtilsVista(VboxUtilsWindows):
         super().__init__(vm=vm, user_name=user_name, password=password, test_data=test_data, paths=paths)
         self.user = user_name
         self.log_file = fr"C:\Users\{self.user}\log.txt"
-        self.tmp_log_file = join(File.unique_name(self.paths.local.tmp_dir, 'txt'))
+        self.tmp_log_file = join(File.unique_name(gettempdir(), 'txt'))
         self.schtasks = SchtasksCommand(task_name=self.task_name)
         self.shell = 'cmd.exe'
 
