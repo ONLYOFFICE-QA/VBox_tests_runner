@@ -55,7 +55,7 @@ def desktop_test(
     data.report.send_to_tg(data=data) if not name else ...
     error_vms = data.report.get_error_vm_list()
 
-    if error_vms:
+    if len(error_vms) > 0:
         print(f"[red]|ERROR| Tests for the following VMs have errors: {error_vms}")
     else:
         print("[green]All tests passed![/]")
@@ -72,21 +72,18 @@ def run_vm(c, name: str = '', headless=False):
 
 @task
 def stop_vm(c, name: str = None, group_name: str = None):
-    if name:
-        vm = VirtualMachine(Vbox().check_vm_names(name))
-        vm.stop() if vm.power_status() else ...
-    else:
+    vms = [VirtualMachine(Vbox().check_vm_names(name))] if name else [VirtualMachine(vm_info[1]) for vm_info in Vbox().vm_list(group_name=group_name)]
+
+    if not name:
         Prompt.ask(
             f"[red]|WARNING| All running virtual machines "
             f"{('in group ' + group_name) if group_name else ''} will be stopped. Press Enter to continue."
         )
-        vms_list = Vbox().vm_list(group_name=group_name)
-        for vm_info in vms_list:
-            virtualmachine = VirtualMachine(vm_info[1])
-            if virtualmachine.power_status():
-                print(f"[green]|INFO| Shutting down the virtual machine: [red]{vm_info[0]}[/]")
-                virtualmachine.stop()
 
+    for vm in vms:
+        if vm.power_status():
+            print(f"[green]|INFO| Shutting down the virtual machine: [red]{vm.name}[/]")
+            vm.stop()
 
 @task
 def vm_list(c, group_name: str = None):
