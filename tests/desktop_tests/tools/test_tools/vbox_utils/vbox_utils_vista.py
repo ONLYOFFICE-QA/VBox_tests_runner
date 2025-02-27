@@ -58,10 +58,7 @@ class VboxUtilsVista(VboxUtilsWindows):
                 if self.data.status_bar:
                     self._update_status_bar(status)
 
-        if not isdir(dirname(self.tmp_log_file)):
-            Dir.create(dirname(self.tmp_log_file), stdout=False)
-
-        self.file.copy_from(self.log_file, self.tmp_log_file)
+        self._download_log_file()
         print(f'[cyan]|INFO|{File.read(self.tmp_log_file)}')
 
     def get_schtasks_status(self) -> str:
@@ -80,7 +77,7 @@ class VboxUtilsVista(VboxUtilsWindows):
         def tail_lines(lines: list, max_stdout_lines: int = 20) -> list:
             return lines[-max_stdout_lines:]
 
-        self.file.copy_from(self.log_file, self.tmp_log_file)
+        self._download_log_file()
         recent_lines = ''.join(tail_lines(self._read_lines(self.tmp_log_file)))
         status.update(f"[cyan]{recent_lines}")
 
@@ -106,3 +103,9 @@ class VboxUtilsVista(VboxUtilsWindows):
     def _find_status(stdout: str) -> str:
         match = re.search(r'Status:\s+(.*?)\n', stdout)
         return match.group(1).strip() if match else ''
+
+    def _download_log_file(self) -> None:
+        if not isdir(dirname(self.tmp_log_file)):
+            Dir.create(dirname(self.tmp_log_file), stdout=False)
+
+        self.file.copy_from(self.log_file, self.tmp_log_file)
