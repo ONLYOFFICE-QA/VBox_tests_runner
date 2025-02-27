@@ -2,7 +2,7 @@
 import re
 import time
 from contextlib import nullcontext
-from os.path import join, dirname, isdir
+from os.path import join, dirname
 from subprocess import CompletedProcess
 
 from host_tools.utils import Dir
@@ -105,7 +105,5 @@ class VboxUtilsVista(VboxUtilsWindows):
         return match.group(1).strip() if match else ''
 
     def _download_log_file(self) -> None:
-        if not isdir(dirname(self.tmp_log_file)):
-            Dir.create(dirname(self.tmp_log_file), stdout=False)
-
+        Dir.create(dirname(self.tmp_log_file), stdout=False)
         self.file.copy_from(self.log_file, self.tmp_log_file)
