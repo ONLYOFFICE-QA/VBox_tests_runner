@@ -7,7 +7,7 @@ from rich.prompt import Prompt
 from rich import print
 
 from VBoxWrapper import VirtualMachine, Vbox
-from tests.desktop_tests import DesktopTest, DesktopReport, TestData
+from tests.desktop_tests import DesktopTest, TestData
 import tests.desktop_tests.multiprocessing as multiprocess
 from host_tools import Process, Service
 from elevate import elevate
@@ -26,7 +26,8 @@ def desktop_test(
         snap: bool = False,
         appimage: bool = False,
         flatpak: bool = False,
-        open_retries: int = None
+        open_retries: int = None,
+        retest: bool = False
 ):
     num_processes = int(processes) if processes else 1
 
@@ -39,7 +40,8 @@ def desktop_test(
         snap=snap,
         appimage=appimage,
         flatpak=flatpak,
-        open_retries=open_retries
+        open_retries=open_retries,
+        retest=retest
     )
 
     if num_processes > 1 and not name:
@@ -49,9 +51,14 @@ def desktop_test(
         for vm in Vbox().check_vm_names([name] if name else data.vm_names):
             DesktopTest(vm, data).run(headless=headless)
 
-    report = DesktopReport(report_path=data.full_report_path)
-    report.get_full(data.version)
-    report.send_to_tg(data=data) if not name else ...
+    data.report.get_full(data.version)
+    data.report.send_to_tg(data=data) if not name else ...
+    error_vms = data.report.get_error_vm_list()
+
+    if len(error_vms) > 0:
+        print(f"[red]|ERROR| Tests for the following VMs have errors: {error_vms}")
+    else:
+        print("[green]All tests passed![/]")
 
 
 @task
@@ -65,21 +72,18 @@ def run_vm(c, name: str = '', headless=False):
 
 @task
 def stop_vm(c, name: str = None, group_name: str = None):
-    if name:
-        vm = VirtualMachine(Vbox().check_vm_names(name))
-        vm.stop() if vm.power_status() else ...
-    else:
+    vms = [VirtualMachine(Vbox().check_vm_names(name))] if name else [VirtualMachine(vm_info[1]) for vm_info in Vbox().vm_list(group_name=group_name)]
+
+    if not name:
         Prompt.ask(
             f"[red]|WARNING| All running virtual machines "
             f"{('in group ' + group_name) if group_name else ''} will be stopped. Press Enter to continue."
         )
-        vms_list = Vbox().vm_list(group_name=group_name)
-        for vm_info in vms_list:
-            virtualmachine = VirtualMachine(vm_info[1])
-            if virtualmachine.power_status():
-                print(f"[green]|INFO| Shutting down the virtual machine: [red]{vm_info[0]}[/]")
-                virtualmachine.stop()
 
+    for vm in vms:
+        if vm.power_status():
+            print(f"[green]|INFO| Shutting down the virtual machine: [red]{vm.name}[/]")
+            vm.stop()
 
 @task
 def vm_list(c, group_name: str = None):
@@ -99,29 +103,27 @@ def group_list(c):
     print(group_names)
     return group_names
 
-
 @task
 def reset_vbox(c):
     processes = [
-        "VirtualBoxVM",
-        "VBoxManage.exe",
-        "VirtualBox.exe",
-        "VBoxHeadless.exe",
+        "VBoxSDS.exe",
         "VBoxSVC.exe",
-        "VBoxSDS.exe"
+        "VBoxHeadless.exe",
+        "VirtualBox.exe",
+        "VBoxManage.exe",
+        "VirtualBoxVM"
     ]
 
     Process.terminate(processes)
-    elevate(show_console=False)
 
+    elevate(show_console=False)
 
     for process in processes:
         system(f"taskkill /F /IM {process}")
 
-    Service.restart("VBoxSDS")
-    Service.restart("vboxdrv")
+    for service in ["VBoxSDS", "vboxdrv"]:
+        Service.restart(service)
     Service.start("VBoxSDS")
-
 
 @task
 def reset_last_snapshot(c, group_name: str = None):

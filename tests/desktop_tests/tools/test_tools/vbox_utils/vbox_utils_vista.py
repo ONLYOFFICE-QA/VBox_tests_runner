@@ -2,13 +2,16 @@
 import re
 import time
 from contextlib import nullcontext
-from os.path import join
+from os.path import join, dirname
 from subprocess import CompletedProcess
+
+from host_tools.utils import Dir
 from rich import print
 
 from VBoxWrapper import VirtualMachine
 from host_tools import File
 from rich.console import Console
+from tempfile import gettempdir
 
 from .schtasks_command import SchtasksCommand
 from .vbox_utils_windows import VboxUtilsWindows
@@ -31,7 +34,7 @@ class VboxUtilsVista(VboxUtilsWindows):
         super().__init__(vm=vm, user_name=user_name, password=password, test_data=test_data, paths=paths)
         self.user = user_name
         self.log_file = fr"C:\Users\{self.user}\log.txt"
-        self.tmp_log_file = join(File.unique_name(self.paths.local.tmp_dir, 'txt'))
+        self.tmp_log_file = join(File.unique_name(gettempdir(), 'txt'))
         self.schtasks = SchtasksCommand(task_name=self.task_name)
         self.shell = 'cmd.exe'
 
@@ -56,7 +59,7 @@ class VboxUtilsVista(VboxUtilsWindows):
                 if self.data.status_bar:
                     self._update_status_bar(status)
 
-        self.file.copy_from(self.log_file, self.tmp_log_file)
+        self._download_log_file()
         print(f'[cyan]|INFO|{File.read(self.tmp_log_file)}')
 
     def get_schtasks_status(self) -> str:
@@ -75,7 +78,7 @@ class VboxUtilsVista(VboxUtilsWindows):
         def tail_lines(lines: list, max_stdout_lines: int = 20) -> list:
             return lines[-max_stdout_lines:]
 
-        self.file.copy_from(self.log_file, self.tmp_log_file)
+        self._download_log_file()
         recent_lines = ''.join(tail_lines(self._read_lines(self.tmp_log_file)))
         status.update(f"[cyan]{recent_lines}")
 
@@ -101,3 +104,7 @@ class VboxUtilsVista(VboxUtilsWindows):
     def _find_status(stdout: str) -> str:
         match = re.search(r'Status:\s+(.*?)\n', stdout)
         return match.group(1).strip() if match else ''
+
+    def _download_log_file(self) -> None:
+        Dir.create(dirname(self.tmp_log_file), stdout=False)
+        self.file.copy_from(self.log_file, self.tmp_log_file)
