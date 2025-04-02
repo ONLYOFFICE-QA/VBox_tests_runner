@@ -3,7 +3,9 @@ import time
 
 from VBoxWrapper import VirtualMachinException
 from rich import print
-from .tools import TestToolsLinux, TestToolsWindows, TestData, VboxMachine, TestTools
+from frameworks.VboxMachine import VboxMachine
+
+from .tools import TestToolsLinux, TestToolsWindows, TestData, TestTools
 
 
 

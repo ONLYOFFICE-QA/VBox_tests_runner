@@ -11,10 +11,10 @@ from frameworks.decorators import retry, vm_data_created
 from frameworks import MyConsole
 
 from ..desktop_report import DesktopReport
-from ..paths import Paths
+from ..desktop_paths import DesktopPaths
 from ..run_script import RunScript
 from ..test_data import TestData
-from ..VboxMachine import VboxMachine
+from frameworks.VboxMachine import VboxMachine
 
 console = MyConsole().console
 print = console.print
@@ -69,7 +69,7 @@ class TestTools(ABC):
 
     @vm_data_created
     def _initialize_paths(self):
-        self.paths = Paths(os_type=self.vm.os_type, remote_user_name=self.vm.data.user)
+        self.paths = DesktopPaths(os_type=self.vm.os_type, remote_user_name=self.vm.data.user)
 
     def _get_password(self, vm_dir: str) -> Optional[str]:
         if self.password_cache:

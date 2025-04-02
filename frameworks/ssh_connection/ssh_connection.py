@@ -14,10 +14,9 @@ print = console.print
 
 class SSHConnection:
 
-    def __init__(self, ssh: Ssh, sftp: Sftp, test_data: TestData, paths: Paths):
+    def __init__(self, ssh: Ssh, sftp: Sftp, paths: Paths):
         self.ssh = ssh
         self.sftp = sftp
-        self.data = test_data
         self._paths = paths
         self.tmp_dir = gettempdir()
 

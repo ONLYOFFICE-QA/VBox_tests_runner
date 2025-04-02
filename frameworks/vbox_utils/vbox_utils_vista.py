@@ -16,8 +16,8 @@ from tempfile import gettempdir
 from .schtasks_command import SchtasksCommand
 from .vbox_utils_windows import VboxUtilsWindows
 
-from ...paths import Paths
-from ...test_data import TestData
+from tests.desktop_tests.tools.paths import Paths
+from tests.desktop_tests.tools.test_data import TestData
 
 
 class VboxUtilsVista(VboxUtilsWindows):
@@ -43,20 +43,20 @@ class VboxUtilsVista(VboxUtilsWindows):
             self._upload(local, remote)
             time.sleep(1)
 
-    def run_script_on_vm(self) -> None:
+    def run_script_on_vm(self, status_bar: bool) -> None:
         self.create_schtasks()
         self.run_schtasks()
-        self.wait_until_running()
+        self.wait_until_running(status_bar=status_bar)
 
-    def wait_until_running(self, task_name: str = None, timeout: int = 10) -> None:
+    def wait_until_running(self, status_bar: bool, timeout: int = 10) -> None:
         server_info = f"{self.file.vm.name}|{self.file.vm.network.get_ip()}"
         print(f"[bold cyan]{'-' * 90}\n|INFO|{server_info}| Waiting for execution script on VM\n{'-' * 90}")
         msg = f'[cyan]|INFO|{server_info}| Waiting for execution script'
 
-        with Console().status(msg) if self.data.status_bar else nullcontext() as status:
+        with Console().status(msg) if status_bar else nullcontext() as status:
             while self._is_task_running():
                 time.sleep(timeout)
-                if self.data.status_bar:
+                if status_bar:
                     self._update_status_bar(status)
 
         self._download_log_file()

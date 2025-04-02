@@ -3,7 +3,7 @@ from VBoxWrapper import VirtualMachinException
 
 from frameworks.decorators import retry, vm_data_created
 from .test_tools import TestTools, TestData, VboxMachine
-from .vbox_utils import VboxUtilsVista, VboxUtilsWindows
+from frameworks.vbox_utils import VboxUtilsVista, VboxUtilsWindows
 
 
 class TestToolsWindows(TestTools):
@@ -23,7 +23,7 @@ class TestToolsWindows(TestTools):
     def run_test_on_vm(self):
         self.vbox_utils.create_test_dirs(self.get_create_test_dirs())
         self.vbox_utils.upload_test_files(self.get_upload_files())
-        self.vbox_utils.run_script_on_vm()
+        self.vbox_utils.run_script_on_vm(status_bar=self.data.status_bar)
         if self.download_and_check_report():
             self.report.insert_vm_name(self.vm_name)
 

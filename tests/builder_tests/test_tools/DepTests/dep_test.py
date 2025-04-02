@@ -1,0 +1,31 @@
+# -*- coding: utf-8 -*-
+import subprocess
+
+from host_tools import File
+
+from frameworks.VersionHandler import VersionHandler
+from tests.builder_tests.paths import Paths
+
+
+class DepTests:
+    repo = "git@git.onlyoffice.com:ONLYOFFICE-QA/Dep.Tests.git"
+
+    def __init__(self, version: str, paths: Paths):
+        self.path = paths
+        self.version = VersionHandler(version=version)
+
+    def get(self) -> None:
+        self.clone_dep_tests()
+
+    def clone_dep_tests(self) -> None:
+        self._git_clone(repo=self.repo, path=self.path.local.dep_test_path)
+
+    def compress_dep_tests(self, path_to: str, delete: bool = True) -> None:
+        File.compress(self.path.local.dep_test_path, archive_path=path_to, delete=delete)
+
+    def _git_clone(self, repo: str, path: str = None) -> None:
+        self._run_cmd(f"git clone {repo} {path or ''}".strip())
+
+    @staticmethod
+    def _run_cmd(cmd: str) -> int:
+        return subprocess.call(cmd, shell=True)

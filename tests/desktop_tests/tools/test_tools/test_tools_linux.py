@@ -5,7 +5,7 @@ from ssh_wrapper import Ssh, Sftp, ServerData
 from frameworks.decorators import retry, vm_data_created
 
 from .test_tools import TestTools, TestData, VboxMachine
-from .ssh_connection import SSHConnection, LinuxScriptDemon
+from frameworks.ssh_connection import SSHConnection, LinuxScriptDemon
 
 
 class TestToolsLinux(TestTools):
@@ -25,7 +25,7 @@ class TestToolsLinux(TestTools):
         server = self._get_server()
 
         with Ssh(server) as ssh, Sftp(server, ssh.connection) as sftp:
-            connect = SSHConnection(ssh=ssh, sftp=sftp, test_data=self.data, paths=self.paths)
+            connect = SSHConnection(ssh=ssh, sftp=sftp, paths=self.paths)
             connect.change_vm_service_dir_access(self.vm.data.user)
             connect.create_test_dirs(self.get_create_test_dirs())
             connect.upload_test_files(self._get_linux_upload_files())

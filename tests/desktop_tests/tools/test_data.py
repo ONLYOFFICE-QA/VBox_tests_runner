@@ -8,7 +8,7 @@ from os.path import join, isfile
 from host_tools import File
 from .desktop_report import DesktopReport
 
-from .paths import LocalPaths
+from .desktop_paths import DesktopLocalPaths
 
 @dataclass
 class TestData:
@@ -31,7 +31,7 @@ class TestData:
     title: str = field(init=False)
     report_dir: str = field(init=False)
     full_report_path: str = field(init=False)
-    local_paths: LocalPaths = field(init=False)
+    local_paths: DesktopLocalPaths = field(init=False)
 
     def __post_init__(self):
         self.config = self._read_config()
@@ -42,7 +42,7 @@ class TestData:
         self.full_report_path = join(self.report_dir, f"{self.version}_{self.title}_desktop_tests_report.csv")
         self.report = DesktopReport(report_path=self.full_report_path)
         self.vm_names = self._get_vm_names()
-        self.local_paths = LocalPaths()
+        self.local_paths = DesktopLocalPaths()
         self._check_package_options()
 
     def _get_vm_names(self) -> List[str]:
