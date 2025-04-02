@@ -1,9 +1,9 @@
 {
   "title": "ONLYOFFICE",
   "desktop_script": "https://github.com/ONLYOFFICE-QA/desktop_editor_testing.git",
-  "branch": "fix/open_test_on_windows",
+  "branch": "",
   "token_file": "",
-  "chat_id_file": "test",
+  "chat_id_file": "",
   "password": "",
   "hosts": [
     "Windows10",
