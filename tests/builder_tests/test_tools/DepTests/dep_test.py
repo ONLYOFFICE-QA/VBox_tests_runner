@@ -4,13 +4,13 @@ import subprocess
 from host_tools import File
 
 from frameworks.VersionHandler import VersionHandler
-from tests.builder_tests.paths import Paths
+from ...builder_paths import BuilderPaths
 
 
 class DepTests:
     repo = "git@git.onlyoffice.com:ONLYOFFICE-QA/Dep.Tests.git"
 
-    def __init__(self, version: str, paths: Paths):
+    def __init__(self, version: str, paths: BuilderPaths):
         self.path = paths
         self.version = VersionHandler(version=version)
 

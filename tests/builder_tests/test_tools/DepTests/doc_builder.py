@@ -2,13 +2,13 @@
 from host_tools.utils import File
 
 from .dep_test import DepTests
-from ...paths import Paths
+from ...builder_paths import BuilderPaths
 
 
 class DocBuilder(DepTests):
     document_builder_samples_repo = 'git@git.onlyoffice.com:ONLYOFFICE/document-builder-samples.git'
 
-    def __init__(self, version: str, paths: Paths):
+    def __init__(self, version: str, paths: BuilderPaths):
         super().__init__(version=version, paths=paths)
 
     def get(self) -> None:
