@@ -1,0 +1,9 @@
+{
+  "token_file": "",
+  "chat_id_file": "test",
+  "password": "",
+  "hosts": [
+    "Debian11",
+    "Ubuntu24"
+  ]
+}

@@ -35,7 +35,9 @@ def desktop_test(
         version=version if version else Prompt.ask('[red]Please enter version'),
         update_from=update_from_version,
         telegram=detailed_telegram,
-        config_path=join(getcwd(), 'custom_config.json') if custom_config else join(getcwd(), 'config.json'),
+        config_path=join(
+            getcwd(), 'custom_config.json') if custom_config else join(getcwd(), 'desktop_tests_config.json'
+        ),
         custom_config_mode=custom_config,
         snap=snap,
         appimage=appimage,
