@@ -36,7 +36,7 @@ class DesktopTestData(TestData):
     local_paths: DesktopLocalPaths = field(init=False)
 
     def __post_init__(self):
-        self.config = self._read_config()
+        self.__config = None
         self.desktop_testing_url = self.config['desktop_script']
         self.branch = self.config['branch']
         self.title = self.config.get('title', 'Undefined_title')
@@ -47,49 +47,21 @@ class DesktopTestData(TestData):
         self.local_paths = DesktopLocalPaths()
         self._check_package_options()
 
+    @property
+    def config(self) -> dict:
+        if self.__config is None:
+            self.__config = self._read_config()
+
+        return self.__config
+
+    def _check_package_options(self):
+        if sum([self.snap, self.appimage, self.flatpak]) > 1:
+            raise ValueError("Only one option from snap, appimage, flatpak should be enabled..")
+
     def _get_vm_names(self) -> List[str]:
         if self.retest:
             return self.report.get_error_vm_list()
         return self.config.get('hosts', [])
-
-    @property
-    def tg_token(self) -> str:
-        return self._read_file(self.token_file).strip()
-
-    @property
-    def token_file(self) -> str:
-        return self._get_file_path('token_file', 'token')
-
-    @property
-    def tg_chat_id(self) -> str:
-        return self._read_file(self.chat_id_file).strip()
-
-    @property
-    def chat_id_file(self) -> str:
-        return self._get_file_path('chat_id_file', 'chat')
-
-    def _read_config(self) -> Dict:
-        if not isfile(self.config_path):
-            raise FileNotFoundError(f"[red]|ERROR| Configuration file not found: {self.config_path}")
-        return File.read_json(self.config_path)
-
-    @staticmethod
-    def _read_file(file_path: str) -> str:
-        if not isfile(file_path):
-            raise FileNotFoundError(f"[red]|ERROR| File not found: {file_path}")
-        return File.read(file_path)
-
-    def _get_file_path(self, config_key: str, default_filename: str) -> str:
-        filename = self.config.get(config_key, '').strip()
-        if filename:
-            file_path = join(self.local_paths.tg_dir, filename)
-            if isfile(file_path):
-                return file_path
-            print(
-                f"[red]|WARNING| {config_key.replace('_', ' ').capitalize()} "
-                f"from config file not exists: {file_path}"
-            )
-        return join(self.local_paths.tg_dir, default_filename)
 
     def _get_report_dir(self) -> str:
         dir_name = (
@@ -98,8 +70,9 @@ class DesktopTestData(TestData):
             f"{'_appimage' if self.appimage else ''}"
             f"{'_flatpak' if self.flatpak else ''}"
         )
-        return join(getcwd(), 'reports', self.title, dir_name)
+        return join(getcwd(), 'reports', f"{self.title}_desktop_tests", dir_name)
 
-    def _check_package_options(self):
-        if sum([self.snap, self.appimage, self.flatpak]) > 1:
-            raise ValueError("Only one option from snap, appimage, flatpak should be enabled..")
+    def _read_config(self) -> Dict:
+        if not isfile(self.config_path):
+            raise FileNotFoundError(f"[red]|ERROR| Configuration file not found: {self.config_path}")
+        return File.read_json(self.config_path)

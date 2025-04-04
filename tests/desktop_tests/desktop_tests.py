@@ -6,31 +6,31 @@ from VBoxWrapper import VirtualMachinException
 from host_tools.utils import Dir
 from rich import print
 
-from frameworks.TestData import TestData
+
 from frameworks.VboxMachine import VboxMachine
 from frameworks.decorators import vm_data_created
 from . import DesktopReport
 
-from .tools import TestToolsLinux, TestToolsWindows, TestTools
+from .tools import TestToolsLinux, TestToolsWindows, TestTools, DesktopTestData
 from .tools.desktop_paths import DesktopPaths
 from .tools.run_script import RunScript
 
 
 class DesktopTest:
-    def __init__(self, vm_name: str, test_data: TestData):
-        self.test_data = test_data
+    def __init__(self, vm_name: str, test_data: DesktopTestData):
+        self.data = test_data
         self.vm = VboxMachine(vm_name)
         self.test_tools = self._get_test_tools()
         self._initialize_report()
 
     def run(self, headless: bool = False, max_attempts: int = 5, interval: int = 5) -> None:
-        if self.test_tools.is_windows and self.test_data.snap:
+        if self.test_tools.is_windows and self.data.snap:
             return print(f"[cyan]|INFO|{self.test_tools.vm_name}| Unable to install snap package on windows")
 
-        if self.test_tools.is_windows and self.test_data.appimage:
+        if self.test_tools.is_windows and self.data.appimage:
             return print(f"[cyan]|INFO|{self.test_tools.vm_name}| Unable to install appimage on windows")
 
-        if self.test_tools.is_windows and self.test_data.flatpak:
+        if self.test_tools.is_windows and self.data.flatpak:
             return print(f"[cyan]|INFO|{self.test_tools.vm_name}| Unable to install flatpak on windows")
 
         attempt = 0
@@ -57,41 +57,41 @@ class DesktopTest:
 
     def _run_test(self, headless: bool) -> None:
         self.test_tools.run_vm(headless=headless)
-        self.test_tools.initialize_libs(report=self._initialize_report(), paths=self._initialize_paths)
-        self._initialize_run_script()
+        self._initialize_libs()
         self.test_tools.run_test_on_vm(upload_files=self.get_upload_files(), create_test_dir=self.get_test_dirs())
         if not self.report.exists():
             raise VirtualMachinException
 
-    def _get_remote_report_path(self):
-        return f"{self.paths.remote.report_dir}/{self.test_data.title}/{self.test_data.version}"
+    def _initialize_libs(self):
+        self.test_tools.initialize_libs(
+            report=self._initialize_report(),
+            paths=self._initialize_paths,
+            remote_report_path=f"{self.paths.remote.report_dir}/{self.data.title}/{self.data.version}"
+        )
 
     def _get_test_tools(self) -> TestTools:
         if 'windows' in self.vm.os_type:
-            return TestToolsWindows(vm=self.vm, test_data=self.test_data)
-        return TestToolsLinux(vm=self.vm, test_data=self.test_data)
+            return TestToolsWindows(vm=self.vm, test_data=self.data)
+        return TestToolsLinux(vm=self.vm, test_data=self.data)
 
     def _initialize_report(self):
-        report_file = join(self.test_data.report_dir, self.vm.name, f"{self.test_data.version}_{self.test_data.title}_report.csv")
+        report_file = join(self.data.report_dir, self.vm.name, f"{self.data.version}_{self.data.title}_report.csv")
         self.report = DesktopReport(report_file)
         Dir.delete(self.report.dir, clear_dir=True)
         return self.report
-
-    @vm_data_created
-    def _initialize_run_script(self):
-        self.run_script = RunScript(test_data=self.test_data, paths=self.paths)
 
     @vm_data_created
     def _initialize_paths(self):
         self.paths = DesktopPaths(os_type=self.vm.os_type, remote_user_name=self.vm.data.user)
         return self.paths
 
+    @vm_data_created
     def get_upload_files(self) -> list:
         files = [
-            (self.test_data.token_file, self.paths.remote.tg_token_file),
-            (self.test_data.chat_id_file, self.paths.remote.tg_chat_id_file),
-            (self.run_script.create(), self.paths.remote.script_path),
-            (self.test_data.config_path, self.paths.remote.custom_config_path)
+            (self.data.token_file, self.paths.remote.tg_token_file),
+            (self.data.chat_id_file, self.paths.remote.tg_chat_id_file),
+            (RunScript(test_data=self.data, paths=self.paths).create(), self.paths.remote.script_path),
+            (self.data.config_path, self.paths.remote.custom_config_path)
         ]
 
         optional_files = [
@@ -116,4 +116,4 @@ class DesktopTest:
 
     def handle_vm_creation_failure(self):
         print(f"[bold red]|ERROR|{self.vm.name}| Failed to create a virtual machine")
-        self.report.write(self.test_data.version, self.vm.name, "FAILED_CREATE_VM")
+        self.report.write(self.data.version, self.vm.name, "FAILED_CREATE_VM")

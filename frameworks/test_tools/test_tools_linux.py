@@ -21,10 +21,10 @@ class TestToolsLinux(TestTools):
     def run_vm(self, headless: bool = True) -> None:
         self.vm.run(headless=headless, status_bar=self.data.status_bar)
 
-    def initialize_libs(self, report, paths) -> None:
+    def initialize_libs(self, report, paths, remote_report_path: str) -> None:
         self.report = report
         self.paths = paths
-        self.remote_report_path = f"{self.paths.remote.report_dir}/{self.data.title}/{self.data.version}"
+        self.remote_report_path = remote_report_path
         self._initialize_linux_demon()
 
     def run_test_on_vm(self, upload_files: list, create_test_dir: list):

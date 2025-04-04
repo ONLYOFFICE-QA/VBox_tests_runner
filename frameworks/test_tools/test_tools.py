@@ -50,7 +50,7 @@ class TestTools(ABC):
         ...
 
     @abstractmethod
-    def initialize_libs(self, report, paths) -> None:
+    def initialize_libs(self, report, paths, remote_report_path: str) -> None:
         ...
 
     def stop_vm(self):

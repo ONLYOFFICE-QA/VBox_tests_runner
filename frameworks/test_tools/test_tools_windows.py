@@ -19,10 +19,10 @@ class TestToolsWindows(TestTools):
     def run_vm(self, headless: bool = False) -> None:
         self.vm.run(headless=False, status_bar=self.data.status_bar)
 
-    def initialize_libs(self, report, paths) -> None:
+    def initialize_libs(self, report, paths, remote_report_path: str) -> None:
         self.report = report
         self.paths = paths
-        self.remote_report_dir = f"{self.paths.remote.report_dir}/{self.data.title}/{self.data.version}"
+        self.remote_report_dir = remote_report_path
         self._initialize_vbox_utils()
 
     @vm_data_created

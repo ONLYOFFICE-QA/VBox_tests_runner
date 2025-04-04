@@ -15,8 +15,10 @@ class BuilderLocalPaths(LocalPaths):
         DOCUMENT_BUILDER_SAMPLES (Path): Path to document-builder-samples inside docbuilder.
         LIC_FILE (Path): Path to license.xml in the project directory.
     """
-    DEP_TEST_PATH: Path = LocalPaths.TMP_DIR / 'Dep.Tests'
-    DOCBUILDER_PATH: Path = DEP_TEST_PATH / 'docbuilder'
-    DOCBUILDER_CONFIG: Path = DOCBUILDER_PATH / 'config.json'
-    DOCUMENT_BUILDER_SAMPLES: Path = DOCBUILDER_PATH / "document-builder-samples"
-    LIC_FILE: Path = LocalPaths.PROJECT_DIR / 'license.xml'
+    dep_test: str = 'Dep.Tests'
+    dep_test_path: Path = LocalPaths.tmp_dir / dep_test
+    docbuilder_path: Path = dep_test_path / 'docbuilder'
+    dep_test_archive: Path = LocalPaths.tmp_dir / f"{dep_test}.zip"
+    docbuilder_config: Path = docbuilder_path / 'config.json'
+    document_builder_samples: Path = docbuilder_path / "document-builder-samples"
+    lic_file: Path = LocalPaths.project_dir / 'license.xml'

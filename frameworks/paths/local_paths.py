@@ -22,6 +22,7 @@ class LocalPaths:
     known_hosts: Path = home_dir / '.ssh' / 'known_hosts'
     proxy_config: Path = tg_dir / 'proxy.json'
     github_token: Path = home_dir /'.github' / 'token'
+    reports_dir: Path = project_dir / 'reports'
 
     # create the temporary directory if it doesn't exist
     def __init__(self):

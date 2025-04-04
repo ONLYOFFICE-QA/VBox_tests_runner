@@ -25,12 +25,25 @@ class RunScript:
     def generate(self) -> str:
         commands = [
             self.get_shebang(),
+            self.unpack_dep_test(),
             self.clone_build_tools_repo(),
             self.get_change_dir_command(self._path.remote.docbuilder_path),
+            self.set_license(),
             self.generate_run_test_cmd()
         ]
         script_content = [line.strip() for line in filter(None, commands)]
         return ' && '.join(script_content) if self.is_bat else '\n'.join(script_content)
+
+    def set_license(self) -> str:
+        return f"export ONLYOFFICE_BUILDER_LICENSE={self._path.remote.lic_file}"
+
+    def unpack_dep_test(self) -> str:
+        if self.is_windows:
+            return (
+                f"Expand-Archive -Path "
+                f"{self._path.remote.dep_test_archive} -DestinationPath {self._path.remote.script_dir} -Force"
+            )
+        return f"unzip {self._path.remote.dep_test_archive} -d {self._path.remote.dep_test_path}"
 
     @staticmethod
     def get_change_dir_command(dir_path: str) ->str:
