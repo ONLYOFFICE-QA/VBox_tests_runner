@@ -16,7 +16,7 @@ from tempfile import gettempdir
 from .schtasks_command import SchtasksCommand
 from .vbox_utils_windows import VboxUtilsWindows
 
-from tests.desktop_tests.tools.paths import Paths
+from frameworks.paths import Paths
 from tests.desktop_tests.tools.test_data import TestData
 
 

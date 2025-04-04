@@ -6,18 +6,19 @@ from tempfile import gettempdir
 from ssh_wrapper import Ssh, Sftp, SshException
 
 from frameworks.console import MyConsole
-from tests.desktop_tests.tools.test_data import TestData
-from tests.desktop_tests.tools.paths import Paths
+from posixpath import join
 
 console = MyConsole().console
 print = console.print
 
 class SSHConnection:
+    my_service_name = 'myscript.service'
+    services_dir = join('/etc', 'systemd', 'system')
+    my_service_path = join(services_dir, my_service_name)
 
-    def __init__(self, ssh: Ssh, sftp: Sftp, paths: Paths):
+    def __init__(self, ssh: Ssh, sftp: Sftp):
         self.ssh = ssh
         self.sftp = sftp
-        self._paths = paths
         self.tmp_dir = gettempdir()
 
     def upload_test_files(self, upload_files: list[(str, str)]):
@@ -34,8 +35,8 @@ class SSHConnection:
 
     def change_vm_service_dir_access(self, user_name: str):
         for cmd in [
-            f'sudo chown {user_name}:{user_name} {self._paths.remote.services_dir}',
-            f'sudo chmod u+w {self._paths.remote.services_dir}'
+            f'sudo chown {user_name}:{user_name} {self.services_dir}',
+            f'sudo chmod u+w {self.services_dir}'
         ]:
             self.exec_cmd(cmd)
 
@@ -48,7 +49,7 @@ class SSHConnection:
         self.exec_cmd("sudo rm /var/log/journal/*/*.journal")
 
     def wait_execute_service(self, timeout: int = None, status_bar: bool = False):
-        service_name = self._paths.remote.my_service_name
+        service_name = self.my_service_name
         server_info = f"{self.ssh.server.custom_name}|{self.ssh.server.ip}"
         msg = f"[cyan]|INFO|{server_info}| Waiting for execution of {service_name}"
 
@@ -74,13 +75,12 @@ class SSHConnection:
         return self.exec_cmd(f'systemctl is-active {service_name}', stderr=True).stdout.lower() == 'active'
 
     def get_my_service_log(self, line_num: str | int = 20, stdout: bool = True, stderr: bool = True) -> str:
-        command = f'sudo journalctl -n {line_num} -u {self._paths.remote.my_service_name}'
+        command = f'sudo journalctl -n {line_num} -u {self.my_service_name}'
         return self.exec_cmd(command, stdout=stdout, stderr=stderr).stdout
 
-    def download_report(self, product_title: str, version: str, report_dir: str):
+    def download_report(self, path_from: str, save_path: str):
         try:
-            remote_report_dir = f"{self._paths.remote.report_dir}/{product_title}/{version}"
-            self.sftp.download_dir(remote_report_dir, report_dir)
+            self.sftp.download_dir(path_from, save_path)
             return True
         except (FileExistsError, FileNotFoundError) as e:
             print(e)

@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+from frameworks.paths.paths import Paths
+
 from .builder_local_paths import BuilderLocalPaths
 from .builder_remote_paths import BuilderRemotePaths
 
 
-class BuilderPaths:
+class BuilderPaths(Paths):
 
     def __init__(self, os_type: str, remote_user_name: str = None):
         self.local = BuilderLocalPaths()

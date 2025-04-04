@@ -2,7 +2,7 @@
 from host_tools.utils import File
 
 from .dep_test import DepTests
-from ...builder_paths import BuilderPaths
+from tests.builder_tests.builder_paths import BuilderPaths
 
 
 class DocBuilder(DepTests):

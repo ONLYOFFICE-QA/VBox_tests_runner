@@ -6,7 +6,7 @@ from typing import Optional
 from VBoxWrapper import FileUtils, VirtualMachine
 from rich import print
 
-from tests.desktop_tests.tools.paths import Paths
+from frameworks.paths import Paths
 
 
 class VboxUtilsWindows:
@@ -42,9 +42,8 @@ class VboxUtilsWindows:
             f"{out.stdout}\n Exit Code: {out.returncode}\n{line}"
         )
 
-    def download_report(self, product_title: str, version: str, report_dir: str):
-        remote_report_dir = f"{self.paths.remote.report_dir}/{product_title}/{version}"
-        out = self.file.copy_from(remote_report_dir, report_dir)
+    def download_report(self, path_from: str, path_to: str) -> bool:
+        out = self.file.copy_from(path_from, path_to)
 
         if out.stderr and 'no such file or directory' in out.stderr.lower():
             return False

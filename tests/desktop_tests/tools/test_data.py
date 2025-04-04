@@ -6,12 +6,14 @@ from typing import Dict, Optional, Union, List
 from dataclasses import dataclass, field
 from os.path import join, isfile
 from host_tools import File
+
+from frameworks.TestData import TestData
 from .desktop_report import DesktopReport
 
 from .desktop_paths import DesktopLocalPaths
 
 @dataclass
-class TestData:
+class DesktopTestData(TestData):
     version: str
     config_path: str
     status_bar: bool = True

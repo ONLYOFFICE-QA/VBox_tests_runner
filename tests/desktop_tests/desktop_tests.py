@@ -1,12 +1,19 @@
 # -*- coding: utf-8 -*-
 import time
+from os.path import join, isfile
 
 from VBoxWrapper import VirtualMachinException
+from host_tools.utils import Dir
 from rich import print
+
+from frameworks.TestData import TestData
 from frameworks.VboxMachine import VboxMachine
+from frameworks.decorators import vm_data_created
+from . import DesktopReport
 
-from .tools import TestToolsLinux, TestToolsWindows, TestData, TestTools
-
+from .tools import TestToolsLinux, TestToolsWindows, TestTools
+from .tools.desktop_paths import DesktopPaths
+from .tools.run_script import RunScript
 
 
 class DesktopTest:
@@ -14,6 +21,7 @@ class DesktopTest:
         self.test_data = test_data
         self.vm = VboxMachine(vm_name)
         self.test_tools = self._get_test_tools()
+        self._initialize_report()
 
     def run(self, headless: bool = False, max_attempts: int = 5, interval: int = 5) -> None:
         if self.test_tools.is_windows and self.test_data.snap:
@@ -41,7 +49,7 @@ class DesktopTest:
                 time.sleep(interval)
                 if attempt == max_attempts:
                     print(f"[bold red]|ERROR|{self.vm.name}| Max attempts reached. Exiting.")
-                    self.test_tools.handle_vm_creation_failure()
+                    self.handle_vm_creation_failure()
                     raise
 
             finally:
@@ -49,11 +57,63 @@ class DesktopTest:
 
     def _run_test(self, headless: bool) -> None:
         self.test_tools.run_vm(headless=headless)
-        self.test_tools.run_test_on_vm()
-        if not self.test_tools.report.exists():
+        self.test_tools.initialize_libs(report=self._initialize_report(), paths=self._initialize_paths)
+        self._initialize_run_script()
+        self.test_tools.run_test_on_vm(upload_files=self.get_upload_files(), create_test_dir=self.get_test_dirs())
+        if not self.report.exists():
             raise VirtualMachinException
+
+    def _get_remote_report_path(self):
+        return f"{self.paths.remote.report_dir}/{self.test_data.title}/{self.test_data.version}"
 
     def _get_test_tools(self) -> TestTools:
         if 'windows' in self.vm.os_type:
             return TestToolsWindows(vm=self.vm, test_data=self.test_data)
         return TestToolsLinux(vm=self.vm, test_data=self.test_data)
+
+    def _initialize_report(self):
+        report_file = join(self.test_data.report_dir, self.vm.name, f"{self.test_data.version}_{self.test_data.title}_report.csv")
+        self.report = DesktopReport(report_file)
+        Dir.delete(self.report.dir, clear_dir=True)
+        return self.report
+
+    @vm_data_created
+    def _initialize_run_script(self):
+        self.run_script = RunScript(test_data=self.test_data, paths=self.paths)
+
+    @vm_data_created
+    def _initialize_paths(self):
+        self.paths = DesktopPaths(os_type=self.vm.os_type, remote_user_name=self.vm.data.user)
+        return self.paths
+
+    def get_upload_files(self) -> list:
+        files = [
+            (self.test_data.token_file, self.paths.remote.tg_token_file),
+            (self.test_data.chat_id_file, self.paths.remote.tg_chat_id_file),
+            (self.run_script.create(), self.paths.remote.script_path),
+            (self.test_data.config_path, self.paths.remote.custom_config_path)
+        ]
+
+        optional_files = [
+            (self.paths.local.proxy_config, self.paths.remote.proxy_config_file),
+            (self.paths.local.lic_file, self.paths.remote.lic_file)
+        ]
+
+        files.extend((src, dst) for src, dst in optional_files if isfile(src))
+
+        return [file for file in files if all(file)]
+
+    def get_test_dirs(self) -> list:
+        remote_test_dirs = [
+            self.paths.remote.script_dir,
+            self.paths.remote.tg_dir,
+        ]
+
+        if self.test_tools.is_windows:
+            return remote_test_dirs
+
+        return remote_test_dirs + [self.paths.remote.github_token_dir]
+
+    def handle_vm_creation_failure(self):
+        print(f"[bold red]|ERROR|{self.vm.name}| Failed to create a virtual machine")
+        self.report.write(self.test_data.version, self.vm.name, "FAILED_CREATE_VM")

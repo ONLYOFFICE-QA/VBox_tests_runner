@@ -4,4 +4,4 @@ from frameworks.paths import LocalPaths
 
 
 class DesktopLocalPaths(LocalPaths):
-    LIC_FILE: Path = LocalPaths.PROJECT_DIR / 'test_lic.lickey'
+    lic_file: Path = LocalPaths.project_dir / 'test_lic.lickey'

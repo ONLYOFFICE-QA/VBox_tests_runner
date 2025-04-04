@@ -15,14 +15,14 @@ class LocalPaths:
         PROXY_CONFIG (Path): Path to the proxy.json file in the .telegram folder.
     """
 
-    PROJECT_DIR: Path = Path.cwd()
-    HOME_DIR: Path = Path.home()
-    TG_DIR: Path = HOME_DIR / '.telegram'
-    TMP_DIR: Path = PROJECT_DIR / 'tmp'
-    KNOWN_HOSTS: Path = HOME_DIR / '.ssh' / 'known_hosts'
-    PROXY_CONFIG: Path = TG_DIR / 'proxy.json'
-    GITHUB_TOKEN: Path = HOME_DIR /'.github' / 'token'
+    project_dir: Path = Path.cwd()
+    home_dir: Path = Path.home()
+    tg_dir: Path = home_dir / '.telegram'
+    tmp_dir: Path = project_dir / 'tmp'
+    known_hosts: Path = home_dir / '.ssh' / 'known_hosts'
+    proxy_config: Path = tg_dir / 'proxy.json'
+    github_token: Path = home_dir /'.github' / 'token'
 
     # create the temporary directory if it doesn't exist
     def __init__(self):
-        self.TMP_DIR.mkdir(parents=True, exist_ok=True)
+        self.tmp_dir.mkdir(parents=True, exist_ok=True)

@@ -4,7 +4,7 @@ import subprocess
 from host_tools import File
 
 from frameworks.VersionHandler import VersionHandler
-from ...builder_paths import BuilderPaths
+from tests.builder_tests.builder_paths import BuilderPaths
 
 
 class DepTests:
