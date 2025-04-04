@@ -11,6 +11,7 @@ from telegram import Telegram
 
 
 class DesktopReport:
+
     def __init__(self, report_path: str):
         self.path = report_path
         self.dir = dirname(self.path)

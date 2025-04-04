@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-from .test_data import TestData
-from .test_tools import  TestToolsLinux, TestToolsWindows, TestTools
+from .desktop_test_data import DesktopTestData
+from frameworks.test_tools import  TestToolsLinux, TestToolsWindows, TestTools
 from .desktop_report import DesktopReport
-from .VboxMachine import VboxMachine, VmConfig
 
-__all__ = [TestData, TestToolsLinux, TestToolsWindows, TestTools, DesktopReport, VboxMachine, VmConfig]
+__all__ = [DesktopTestData, TestToolsLinux, TestToolsWindows, TestTools, DesktopReport]

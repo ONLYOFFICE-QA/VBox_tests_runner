@@ -6,8 +6,7 @@ from typing import Optional
 from VBoxWrapper import FileUtils, VirtualMachine
 from rich import print
 
-from tests.desktop_tests.tools import TestData
-from tests.desktop_tests.tools.paths import Paths
+from frameworks.paths import Paths
 
 
 class VboxUtilsWindows:
@@ -17,11 +16,9 @@ class VboxUtilsWindows:
             vm: VirtualMachine,
             user_name: str,
             password: str,
-            test_data: TestData,
             paths: Paths,
     ):
         self.file = FileUtils(vm_id=vm, username=user_name, password=password)
-        self.data = test_data
         self.paths = paths
         self.shell = self._get_shell()
 
@@ -34,20 +31,19 @@ class VboxUtilsWindows:
             print(f"[green]|INFO|{self.file.vm.name}| Creating test dir: [cyan]{test_dir}[/]")
             self._create_dir(f"mkdir {test_dir}", try_num=try_num, interval=interval)
 
-    def run_script_on_vm(self):
+    def run_script_on_vm(self, status_bar: bool):
         server_info = f"{self.file.vm.name}|{self.file.vm.network.get_ip()}"
         line = f"{'-' * 90}"
         print(f"[bold cyan]{line}\n|INFO|{server_info}| Waiting for execution script on VM\n{line}")
 
-        out = self._run_cmd(self._get_run_script_cmd(), status_bar=self.data.status_bar, stdout=self.data.status_bar)
+        out = self._run_cmd(self._get_run_script_cmd(), status_bar=status_bar, stdout=status_bar)
         print(
             f"[cyan]{line}\n|INFO|{self.file.vm.name}|Script execution log:\n{line}\n"
             f"{out.stdout}\n Exit Code: {out.returncode}\n{line}"
         )
 
-    def download_report(self, product_title: str, version: str, report_dir: str):
-        remote_report_dir = f"{self.paths.remote.report_dir}/{product_title}/{version}"
-        out = self.file.copy_from(remote_report_dir, report_dir)
+    def download_report(self, path_from: str, path_to: str) -> bool:
+        out = self.file.copy_from(path_from, path_to)
 
         if out.stderr and 'no such file or directory' in out.stderr.lower():
             return False

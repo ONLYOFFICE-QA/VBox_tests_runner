@@ -7,10 +7,12 @@ from rich.prompt import Prompt
 from rich import print
 
 from VBoxWrapper import VirtualMachine, Vbox
-from tests.desktop_tests import DesktopTest, TestData
+from tests.desktop_tests import DesktopTest
 import tests.desktop_tests.multiprocessing as multiprocess
 from host_tools import Process, Service
 from elevate import elevate
+
+from tests.desktop_tests.tools.test_data import DesktopTestData
 
 
 @task
@@ -31,11 +33,13 @@ def desktop_test(
 ):
     num_processes = int(processes) if processes else 1
 
-    data = TestData(
+    data = DesktopTestData(
         version=version if version else Prompt.ask('[red]Please enter version'),
         update_from=update_from_version,
         telegram=detailed_telegram,
-        config_path=join(getcwd(), 'custom_config.json') if custom_config else join(getcwd(), 'config.json'),
+        config_path=join(
+            getcwd(), 'custom_config.json') if custom_config else join(getcwd(), 'desktop_tests_config.json'
+        ),
         custom_config_mode=custom_config,
         snap=snap,
         appimage=appimage,

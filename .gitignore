@@ -4,8 +4,9 @@
 /custom_config.json
 /lic_file/*
 /test_lic.lickey
+/license.xml
 test.py
-**/__pycache__/
+**/__pycache__/**
 **/*.pyc
 **/*.pyo
 **/.idea/
