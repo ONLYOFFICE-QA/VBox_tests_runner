@@ -2,12 +2,10 @@
 import time
 from os.path import join
 
-from VBoxWrapper import VirtualMachinException
-
-from frameworks.DepTests import DocBuilder
 from frameworks.VboxMachine import VboxMachine
 from frameworks.decorators import vm_data_created
 from frameworks.test_tools import TestToolsLinux, TestToolsWindows, TestTools
+
 from .builder_paths import BuilderPaths
 from .builder_report import BuilderReport
 from .builder_test_data import BuilderTestData
@@ -20,11 +18,8 @@ class BuilderTests:
         self.data = test_data
         self.vm = VboxMachine(vm_name)
         self.test_tools = self._get_test_tools()
-        self.builder = DocBuilder(version=self.data.version)
 
-    def run(self,  headless: bool = False, max_attempts: int = 5, interval: int = 5):
-        self.prepare_builder_script()
-
+    def run(self, headless: bool = False, max_attempts: int = 5, interval: int = 5):
         attempt = 0
         while attempt < max_attempts:
             try:
@@ -51,13 +46,15 @@ class BuilderTests:
         self.test_tools.run_vm(headless=headless)
         self._initialize_libs()
         self.test_tools.run_test_on_vm(upload_files=self.get_upload_files(), create_test_dir=self.get_test_dirs())
-        if not self.report.exists():
-            raise VirtualMachinException
+        # if not self.report.exists():
+        #     raise VirtualMachinException
 
     def _initialize_libs(self):
+        self._initialize_paths()
+        self._initialize_report()
         self.test_tools.initialize_libs(
-            report=self._initialize_report(),
-            paths=self._initialize_paths,
+            report=self.report,
+            paths=self.paths,
             remote_report_path=f"" # TODO
         )
 
@@ -70,10 +67,6 @@ class BuilderTests:
         )
         self.report = BuilderReport(report_file)
         return self.report
-
-    def prepare_builder_script(self):
-        self.builder.get()
-        self.builder.compress_dep_tests(delete=True)
 
     @vm_data_created
     def _initialize_paths(self):

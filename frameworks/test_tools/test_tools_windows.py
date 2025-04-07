@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from VBoxWrapper import VirtualMachinException
-
 from frameworks.decorators import retry, vm_data_created
-from .test_tools import TestTools, TestData, VboxMachine
-from frameworks.vbox_utils import VboxUtilsVista, VboxUtilsWindows
+
+from .vbox_utils import VboxUtilsVista, VboxUtilsWindows
+from .test_tools import TestTools, VboxMachine
+from ..TestData import TestData
 
 
 class TestToolsWindows(TestTools):

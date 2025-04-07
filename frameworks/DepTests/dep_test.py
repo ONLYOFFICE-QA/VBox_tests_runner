@@ -4,7 +4,7 @@ import subprocess
 from host_tools import File
 
 from frameworks.VersionHandler import VersionHandler
-from tests.builder_tests.builder_local_paths import BuilderLocalPaths
+from tests.builder_tests.builder_paths import BuilderLocalPaths
 
 
 class DepTests:
@@ -21,7 +21,12 @@ class DepTests:
         self._git_clone(repo=self.repo, path=self.local_path.dep_test_path)
 
     def compress_dep_tests(self, delete: bool = True) -> None:
-        File.compress(self.local_path.dep_test_path, archive_path=self.local_path.dep_test_archive, delete=delete)
+        File.compress(
+            self.local_path.dep_test_path,
+            archive_path=self.local_path.dep_test_archive,
+            delete=delete,
+            progress_bar=False
+        )
 
     def _git_clone(self, repo: str, path: str = None) -> None:
         self._run_cmd(f"git clone {repo} {path or ''}".strip())

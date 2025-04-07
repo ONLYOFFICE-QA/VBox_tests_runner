@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from os import getcwd
-from rich import print
 from typing import Dict, Optional, Union, List
 
 from dataclasses import dataclass, field

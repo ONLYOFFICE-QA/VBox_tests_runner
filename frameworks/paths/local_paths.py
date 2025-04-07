@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from os.path import join
 from pathlib import Path
 
 # --- Base class with essential paths ---
@@ -15,15 +16,15 @@ class LocalPaths:
         PROXY_CONFIG (Path): Path to the proxy.json file in the .telegram folder.
     """
 
-    project_dir: Path = Path.cwd()
-    home_dir: Path = Path.home()
-    tg_dir: Path = home_dir / '.telegram'
-    tmp_dir: Path = project_dir / 'tmp'
-    known_hosts: Path = home_dir / '.ssh' / 'known_hosts'
-    proxy_config: Path = tg_dir / 'proxy.json'
-    github_token: Path = home_dir /'.github' / 'token'
-    reports_dir: Path = project_dir / 'reports'
+    project_dir: str = str(Path.cwd())
+    home_dir: str = str(Path.home())
+    tg_dir: Path = join(home_dir, '.telegram')
+    tmp_dir: Path = join(project_dir, 'tmp')
+    known_hosts: Path = join(home_dir, '.ssh', 'known_hosts')
+    proxy_config: Path = join(tg_dir, 'proxy.json')
+    github_token: Path = join(home_dir, '.github', 'token')
+    reports_dir: Path = join(project_dir, 'reports')
 
-    # create the temporary directory if it doesn't exist
-    def __init__(self):
-        self.tmp_dir.mkdir(parents=True, exist_ok=True)
+    # # create the temporary directory if it doesn't exist
+    # def __init__(self):
+    #     self.tmp_dir.mkdir(parents=True, exist_ok=True)

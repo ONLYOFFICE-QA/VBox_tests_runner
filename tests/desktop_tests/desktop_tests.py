@@ -9,9 +9,11 @@ from rich import print
 
 from frameworks.VboxMachine import VboxMachine
 from frameworks.decorators import vm_data_created
+from frameworks.test_tools import TestToolsWindows, TestToolsLinux, TestTools
+
 from . import DesktopReport
 
-from .tools import TestToolsLinux, TestToolsWindows, TestTools, DesktopTestData
+from .tools import DesktopTestData
 from .tools.desktop_paths import DesktopPaths
 from .tools.run_script import RunScript
 

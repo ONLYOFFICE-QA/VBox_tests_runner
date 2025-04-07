@@ -48,7 +48,7 @@ class SystemConfigModel(BaseModel):
 
 @singleton
 class VmConfig:
-    vm_config_path = str(Path(__file__).resolve().parents[3] / "vm_configs" / "desktop_test_vm_config.json")
+    vm_config_path = str(Path(__file__).resolve().parents[3] / "vm_configs" / "vm_config.json")
 
     """
     Configuration class for system settings.

@@ -5,15 +5,12 @@ from os.path import join, dirname, isfile
 from typing import Optional
 
 from VBoxWrapper import VirtualMachinException
-from host_tools import File, Dir
+from host_tools import File
 
+from frameworks.TestData import TestData
 from frameworks.decorators import retry, vm_data_created
 from frameworks import MyConsole
 
-from tests.desktop_tests.tools.desktop_report import DesktopReport
-from tests.desktop_tests.tools.desktop_paths import DesktopPaths
-from tests.desktop_tests.tools.run_script import RunScript
-from tests.desktop_tests.tools.test_data import TestData
 from frameworks.VboxMachine import VboxMachine
 
 console = MyConsole().console

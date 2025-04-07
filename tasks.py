@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
 from os import getcwd, system
 from os.path import join
+from host_tools import Process, Service
+from elevate import elevate
+from host_tools.utils import Dir
 
 from invoke import task
 from rich.prompt import Prompt
 from rich import print
 
 from VBoxWrapper import VirtualMachine, Vbox
-from tests.desktop_tests import DesktopTest
-import tests.desktop_tests.multiprocessing as multiprocess
-from host_tools import Process, Service
-from elevate import elevate
 
-from tests.desktop_tests.tools.test_data import DesktopTestData
+from frameworks.DepTests import DocBuilder
+from tests.builder_tests import BuilderTests, BuilderTestData
+
+from tests.desktop_tests import DesktopTest, DesktopTestData
+import tests.desktop_tests.multiprocessing as multiprocess
 
 
 @task
@@ -34,7 +37,7 @@ def desktop_test(
     num_processes = int(processes) if processes else 1
 
     data = DesktopTestData(
-        version=version if version else Prompt.ask('[red]Please enter version'),
+        version=version or Prompt.ask('[red]Please enter version'),
         update_from=update_from_version,
         telegram=detailed_telegram,
         config_path=join(
@@ -63,6 +66,27 @@ def desktop_test(
         print(f"[red]|ERROR| Tests for the following VMs have errors: {error_vms}")
     else:
         print("[green]All tests passed![/]")
+
+@task
+def builder_test(
+        c,
+        version: str = None,
+        processes: int = None,
+        name: str = None,
+        headless: bool = False
+):
+    Dir.delete(join(getcwd(), 'tmp'))
+    num_processes = int(processes) if processes else 1
+    data = BuilderTestData(
+        version=version or Prompt.ask('[red]Please enter version'),
+        config_path=join(getcwd(), "builder_tests_config.json")
+    )
+    builder = DocBuilder(version=data.version)
+    builder.get()
+    builder.compress_dep_tests(delete=True)
+
+    for vm in Vbox().check_vm_names([name] if name else data.vm_names):
+        BuilderTests(vm, data).run(headless=headless)
 
 
 @task

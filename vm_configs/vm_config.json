@@ -1,0 +1,11 @@
+{
+  "cpus": 4,
+  "memory": 4096,
+  "audio": false,
+  "nested_virtualization": true,
+  "speculative_execution_control": true,
+  "network": {
+    "adapter_name": "",
+    "connect_type": "bridged"
+  }
+}

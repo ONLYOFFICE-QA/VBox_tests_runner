@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
+from os.path import dirname
+
 from VBoxWrapper import VirtualMachinException
 from ssh_wrapper import Ssh, Sftp, ServerData
 
 from frameworks.decorators import retry, vm_data_created
 
-from .test_tools import TestTools, TestData, VboxMachine
-from frameworks.ssh_connection import SSHConnection, LinuxScriptDemon
+from .test_tools import TestTools, VboxMachine
+from .ssh_connection import SSHConnection, LinuxScriptDemon
+from ..TestData import TestData
 
 
 class TestToolsLinux(TestTools):
@@ -32,9 +35,9 @@ class TestToolsLinux(TestTools):
         server = self._get_server()
 
         with Ssh(server) as ssh, Sftp(server, ssh.connection) as sftp:
-            self.connect = SSHConnection(ssh=ssh, sftp=sftp, paths=self.paths)
+            self.connect = SSHConnection(ssh=ssh, sftp=sftp)
             self.connect.change_vm_service_dir_access(self.vm.data.user)
-            self.connect.create_test_dirs(create_test_dir)
+            self.connect.create_test_dirs(self._get_create_dir(create_test_dir))
             self.connect.upload_test_files(self._get_linux_upload_files(upload_files))
             self.connect.start_my_service(self.linux_demon.start_demon_commands())
             self.connect.wait_execute_service(status_bar=self.data.status_bar)
@@ -66,13 +69,18 @@ class TestToolsLinux(TestTools):
         )
 
     def _clean_known_hosts(self, ip: str):
-        with open(self.paths.local.know_hosts, 'r') as file:
+        with open(self.paths.local.known_hosts, 'r') as file:
             filtered_lines = [line for line in file if not line.startswith(ip)]
-        with open(self.paths.local.know_hosts, 'w') as file:
+        with open(self.paths.local.known_hosts, 'w') as file:
             file.writelines(filtered_lines)
 
     def _get_linux_upload_files(self, upload_files: list) -> list:
         return upload_files + [
-            (self.linux_demon.create(), self.paths.remote.my_service_path),
+            (self.linux_demon.create(), SSHConnection.my_service_path),
             (self.paths.local.github_token, self.paths.remote.github_token_path)
+        ]
+
+    def _get_create_dir(self, create_dirs: list) -> list:
+        return create_dirs + [
+            self.paths.remote.github_token_dir
         ]

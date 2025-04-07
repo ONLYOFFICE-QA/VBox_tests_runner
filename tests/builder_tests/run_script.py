@@ -4,7 +4,6 @@ from tempfile import gettempdir
 
 from host_tools import File
 
-from frameworks.DepTests import DocBuilder
 from posixpath import join
 
 from .builder_paths import BuilderPaths
@@ -20,7 +19,6 @@ class RunScript:
         self.is_ps1 = self._path.remote.run_script_name.endswith('.ps1')
         self.is_bat = self._path.remote.run_script_name.endswith('.bat')
         self.is_windows = self.is_bat or self.is_ps1
-        self.doc_builder = DocBuilder(self.data.version, self._path)
 
     def generate(self) -> str:
         commands = [
