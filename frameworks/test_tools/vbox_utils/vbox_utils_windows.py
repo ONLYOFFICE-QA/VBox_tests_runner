@@ -6,7 +6,7 @@ from typing import Optional
 from VBoxWrapper import FileUtils, VirtualMachine
 from rich import print
 
-from frameworks.paths import Paths
+from frameworks.test_data import Paths
 
 
 class VboxUtilsWindows:

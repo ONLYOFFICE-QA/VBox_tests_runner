@@ -16,8 +16,7 @@ from tempfile import gettempdir
 from .schtasks_command import SchtasksCommand
 from .vbox_utils_windows import VboxUtilsWindows
 
-from frameworks.paths import Paths
-from ...TestData import TestData
+from frameworks.test_data import TestData, Paths
 
 
 class VboxUtilsVista(VboxUtilsWindows):

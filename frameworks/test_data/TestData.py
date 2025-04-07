@@ -8,7 +8,7 @@ from os.path import isfile, join
 from host_tools import File
 
 
-from frameworks.paths import LocalPaths
+from frameworks.test_data.paths import LocalPaths
 
 
 @dataclass

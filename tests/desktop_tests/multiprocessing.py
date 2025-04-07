@@ -3,7 +3,7 @@ import time
 import concurrent.futures
 from rich import print
 
-from frameworks.TestData import TestData
+from frameworks.test_data import TestData
 from tests.desktop_tests import DesktopTest
 
 

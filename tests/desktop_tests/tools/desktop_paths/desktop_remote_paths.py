@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from frameworks.paths import RemotePaths
+from frameworks.test_data.paths import RemotePaths
 
 
 class DesktopRemotePaths(RemotePaths):

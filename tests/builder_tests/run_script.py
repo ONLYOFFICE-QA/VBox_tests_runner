@@ -33,13 +33,15 @@ class RunScript:
         return ' && '.join(script_content) if self.is_bat else '\n'.join(script_content)
 
     def set_license(self) -> str:
+        if self.is_windows:
+            return f"$env:ONLYOFFICE_BUILDER_LICENSE = '{self._path.remote.lic_file}'"
         return f"export ONLYOFFICE_BUILDER_LICENSE={self._path.remote.lic_file}"
 
     def unpack_dep_test(self) -> str:
         if self.is_windows:
             return (
                 f"Expand-Archive -Path "
-                f"{self._path.remote.dep_test_archive} -DestinationPath {self._path.remote.script_dir} -Force"
+                f"{self._path.remote.dep_test_archive} -DestinationPath {self._path.remote.dep_test_path} -Force"
             )
         return f"unzip {self._path.remote.dep_test_archive} -d {self._path.remote.dep_test_path}"
 

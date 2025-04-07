@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from os.path import basename
 
-from frameworks.paths import RemotePaths
+from frameworks.test_data.paths import RemotePaths
 
 
 class BuilderRemotePaths(RemotePaths):

@@ -7,7 +7,7 @@ from typing import Optional
 from VBoxWrapper import VirtualMachinException
 from host_tools import File
 
-from frameworks.TestData import TestData
+from frameworks.test_data import TestData
 from frameworks.decorators import retry, vm_data_created
 from frameworks import MyConsole
 
@@ -43,11 +43,11 @@ class TestTools(ABC):
         ...
 
     @abstractmethod
-    def download_report(self) -> bool:
+    def download_report(self, path_from: str, path_to: str) -> bool:
         ...
 
     @abstractmethod
-    def initialize_libs(self, report, paths, remote_report_path: str) -> None:
+    def initialize_libs(self, report, paths) -> None:
         ...
 
     def stop_vm(self):

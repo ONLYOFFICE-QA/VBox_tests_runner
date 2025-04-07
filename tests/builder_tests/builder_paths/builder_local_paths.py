@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 from os.path import join
 from pathlib import Path
+from tempfile import gettempdir
 
-from frameworks.paths import LocalPaths
+from host_tools import File
+
+from frameworks.test_data.paths import LocalPaths
 
 
 class BuilderLocalPaths(LocalPaths):
@@ -17,9 +20,9 @@ class BuilderLocalPaths(LocalPaths):
         LIC_FILE (Path): Path to license.xml in the project directory.
     """
     dep_test: str = 'Dep.Tests'
-    dep_test_path: str = join(LocalPaths.tmp_dir, dep_test)
+    dep_test_path: str = join(File.unique_name(gettempdir()), dep_test)
     docbuilder_path: str = join(dep_test_path, 'docbuilder')
-    dep_test_archive: str = join(LocalPaths.tmp_dir, f"{dep_test}.zip")
+    dep_test_archive: str = join(File.unique_name(gettempdir()), f"{dep_test}.zip")
     docbuilder_config: str = join(docbuilder_path, 'config.json')
     document_builder_samples: str = join(docbuilder_path, "document-builder-samples")
     lic_file: str = join(LocalPaths.project_dir, 'license.xml')

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from os.path import join
-from pathlib import Path
-from frameworks.paths import LocalPaths
+from frameworks.test_data.paths import LocalPaths
 
 
 class DesktopLocalPaths(LocalPaths):

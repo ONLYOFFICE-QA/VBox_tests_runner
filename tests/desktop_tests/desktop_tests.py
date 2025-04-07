@@ -61,6 +61,7 @@ class DesktopTest:
         self.test_tools.run_vm(headless=headless)
         self._initialize_libs()
         self.test_tools.run_test_on_vm(upload_files=self.get_upload_files(), create_test_dir=self.get_test_dirs())
+        self.test_tools.download_report(path_from=self._get_remote_report_path(), path_to=self.report.dir)
         if not self.report.exists():
             raise VirtualMachinException
 
@@ -68,8 +69,10 @@ class DesktopTest:
         self.test_tools.initialize_libs(
             report=self._initialize_report(),
             paths=self._initialize_paths,
-            remote_report_path=f"{self.paths.remote.report_dir}/{self.data.title}/{self.data.version}"
         )
+
+    def _get_remote_report_path(self) -> str:
+        return f"{self.paths.remote.report_dir}/{self.data.title}/{self.data.version}"
 
     def _get_test_tools(self) -> TestTools:
         if 'windows' in self.vm.os_type:

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from frameworks.paths.paths import Paths
+from frameworks.test_data.paths.paths import Paths
 
 from .builder_local_paths import BuilderLocalPaths
 from .builder_remote_paths import BuilderRemotePaths

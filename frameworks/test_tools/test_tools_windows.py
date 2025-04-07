@@ -4,7 +4,7 @@ from frameworks.decorators import retry, vm_data_created
 
 from .vbox_utils import VboxUtilsVista, VboxUtilsWindows
 from .test_tools import TestTools, VboxMachine
-from ..TestData import TestData
+from frameworks.test_data import TestData
 
 
 class TestToolsWindows(TestTools):
@@ -20,10 +20,9 @@ class TestToolsWindows(TestTools):
     def run_vm(self, headless: bool = False) -> None:
         self.vm.run(headless=False, status_bar=self.data.status_bar)
 
-    def initialize_libs(self, report, paths, remote_report_path: str) -> None:
+    def initialize_libs(self, report, paths) -> None:
         self.report = report
         self.paths = paths
-        self.remote_report_dir = remote_report_path
         self._initialize_vbox_utils()
 
     @vm_data_created
@@ -31,11 +30,10 @@ class TestToolsWindows(TestTools):
         self.vbox_utils.create_test_dirs(create_test_dir)
         self.vbox_utils.upload_test_files(upload_files)
         self.vbox_utils.run_script_on_vm(status_bar=self.data.status_bar)
-        self.download_report()
 
-    def download_report(self):
+    def download_report(self, path_from: str, path_to: str):
         if (
-                self.vbox_utils.download_report(self.remote_report_dir, self.report.dir)
+                self.vbox_utils.download_report(path_from, path_to)
                 and not self.report.column_is_empty("Os")
         ):
             self.report.insert_vm_name(self.vm_name)
@@ -47,8 +45,7 @@ class TestToolsWindows(TestTools):
             "vm": self.vm.vm,
             "user_name": self.vm.data.user,
             "password": self._get_password(self.vm.data.local_dir),
-            "paths": self.paths,
-            "test_data": self.data,
+            "paths": self.paths
         }
 
         self.vbox_utils = (
