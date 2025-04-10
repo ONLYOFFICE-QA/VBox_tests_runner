@@ -15,7 +15,7 @@ from frameworks.DepTests import DocBuilder
 from tests.builder_tests import BuilderTests, BuilderTestData
 
 from tests.desktop_tests import DesktopTest, DesktopTestData
-import tests.desktop_tests.multiprocessing as multiprocess
+import tests.multiprocessing as multiprocess
 
 
 @task
@@ -53,7 +53,7 @@ def desktop_test(
 
     if num_processes > 1 and not name:
         data.status_bar = False
-        multiprocess.run(data, num_processes, 10, headless)
+        multiprocess.run(DesktopTest, data, num_processes, 10, headless)
     else:
         for vm in Vbox().check_vm_names([name] if name else data.vm_names):
             DesktopTest(vm, data).run(headless=headless)
@@ -85,8 +85,12 @@ def builder_test(
     builder.get(branch='feature/add-docbuilder-report')
     builder.compress_dep_tests(delete=True)
 
-    for vm in Vbox().check_vm_names([name] if name else data.vm_names):
-        BuilderTests(vm, data).run(headless=headless)
+    if num_processes > 1 and not name:
+        data.status_bar = False
+        multiprocess.run(BuilderTests, data, num_processes, 10, headless)
+    else:
+        for vm in Vbox().check_vm_names([name] if name else data.vm_names):
+            BuilderTests(vm, data).run(headless=headless)
 
 
 @task
