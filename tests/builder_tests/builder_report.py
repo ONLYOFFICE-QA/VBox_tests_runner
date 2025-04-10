@@ -14,6 +14,11 @@ class BuilderReport:
         self.report = Report()
         Dir.create(self.dir, stdout=False)
 
+    def column_is_empty(self, column_name: str) -> bool:
+        if not self.report.read(self.path)[column_name].count() or not isfile(self.path):
+            return True
+        return False
+
     def _writer(self, mode: str, message: list, delimiter='\t', encoding='utf-8'):
         self.report.write(self.path, mode, message, delimiter, encoding)
 

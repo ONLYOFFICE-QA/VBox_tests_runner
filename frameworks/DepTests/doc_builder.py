@@ -10,8 +10,8 @@ class DocBuilder(DepTests):
     def __init__(self, version: str):
         super().__init__(version=version)
 
-    def get(self) -> None:
-        self.clone_dep_tests()
+    def get(self, branch: str = None) -> None:
+        self.clone_dep_tests(branch=branch)
         self.clone_builder_samples()
         self.configure()
 

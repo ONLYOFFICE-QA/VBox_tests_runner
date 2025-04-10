@@ -13,3 +13,4 @@ class BuilderRemotePaths(RemotePaths):
         self.dep_test_archive: str = self._join_path(self.script_dir, f"{basename(self.dep_test_path)}.zip")
         self.docbuilder_main_script: str = self._join_path(self.docbuilder_path, 'check.py')
         self.lic_file = self._join_path(self.script_dir, 'license.xml')
+        self.builder_report_dir = self._join_path(self.docbuilder_path, 'out')

@@ -4,12 +4,11 @@ from host_tools import File
 from tempfile import gettempdir
 
 from .desktop_paths import DesktopPaths
-from .. import DesktopTestData
 
 
 class RunScript:
 
-    def __init__(self, test_data: DesktopTestData, paths: DesktopPaths):
+    def __init__(self, test_data, paths: DesktopPaths):
         self.data = test_data
         self._path = paths
         self.is_ps1 = self._path.remote.run_script_name.endswith('.ps1')

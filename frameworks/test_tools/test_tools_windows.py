@@ -32,13 +32,7 @@ class TestToolsWindows(TestTools):
         self.vbox_utils.run_script_on_vm(status_bar=self.data.status_bar)
 
     def download_report(self, path_from: str, path_to: str):
-        if (
-                self.vbox_utils.download_report(path_from, path_to)
-                and not self.report.column_is_empty("Os")
-        ):
-            self.report.insert_vm_name(self.vm_name)
-        else:
-            print(f"[red]|ERROR| Can't download report from {self.vm.data.name}.")
+        return self.vbox_utils.download_report(path_from, path_to)
 
     def _initialize_vbox_utils(self):
         common_params = {

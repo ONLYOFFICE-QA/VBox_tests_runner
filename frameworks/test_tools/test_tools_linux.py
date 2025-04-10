@@ -41,15 +41,9 @@ class TestToolsLinux(TestTools):
             connect.start_my_service(self.linux_demon.start_demon_commands())
             connect.wait_execute_service(status_bar=self.data.status_bar)
 
-    def download_report(self, path_from: str, path_to: str) -> None:
+    def download_report(self, path_from: str, path_to: str) -> bool:
         with Ssh(self.server) as ssh, Sftp(self.server, ssh.connection) as sftp:
-            if (
-                    SSHConnection(ssh=ssh, sftp=sftp).download_report(path_from, path_to)
-                    and not self.report.column_is_empty("Os")
-            ):
-                self.report.insert_vm_name(self.vm_name)
-            else:
-                print(f"[red]|ERROR| Can't download report from {self.vm.data.name}.")
+            return SSHConnection(ssh=ssh, sftp=sftp).download_report(path_from, path_to)
 
     def _get_server(self) -> ServerData:
         return ServerData(

@@ -26,3 +26,4 @@ class BuilderLocalPaths(LocalPaths):
     docbuilder_config: str = join(docbuilder_path, 'config.json')
     document_builder_samples: str = join(docbuilder_path, "document-builder-samples")
     lic_file: str = join(LocalPaths.project_dir, 'license.xml')
+    builder_report_dir = join(LocalPaths.reports_dir, 'Builder_tests')

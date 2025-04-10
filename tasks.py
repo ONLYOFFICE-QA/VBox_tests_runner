@@ -82,7 +82,7 @@ def builder_test(
         config_path=join(getcwd(), "builder_tests_config.json")
     )
     builder = DocBuilder(version=data.version)
-    builder.get()
+    builder.get(branch='feature/add-docbuilder-report')
     builder.compress_dep_tests(delete=True)
 
     for vm in Vbox().check_vm_names([name] if name else data.vm_names):
