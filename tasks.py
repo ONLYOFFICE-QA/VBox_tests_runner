@@ -82,7 +82,7 @@ def builder_test(
         config_path=join(getcwd(), "builder_tests_config.json")
     )
     builder = DocBuilder(version=data.version)
-    builder.get(branch='feature/add-docbuilder-report')
+    builder.get(branch=data.dep_test_branch)
     builder.compress_dep_tests(delete=True)
 
     if num_processes > 1 and not name:

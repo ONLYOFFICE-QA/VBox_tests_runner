@@ -17,6 +17,7 @@ class BuilderTestData(TestData):
     def __post_init__(self):
         super().__post_init__()
         self.__config = None
+        self.dep_test_branch = self.config.get('branch')
 
     @property
     def config(self) -> dict:
