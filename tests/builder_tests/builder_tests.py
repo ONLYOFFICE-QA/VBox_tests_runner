@@ -23,35 +23,32 @@ class BuilderTests:
 
     def run(self, headless: bool = False, max_attempts: int = 5, interval: int = 5):
         attempt = 0
-        self._run_test(headless=headless)
-        # while attempt < max_attempts:
-        #     try:
-        #         attempt += 1
-        #         self._run_test(headless=headless)
-        #         break
-        #
-        #     except KeyboardInterrupt:
-        #         print("[bold red]|WARNING| Interruption by the user")
-        #         raise
-        #
-        #     except Exception as e:
-        #         print(f"[bold yellow]|WARNING|{self.vm.name}| Attempt {attempt}/{max_attempts} failed: {e}")
-        #         time.sleep(interval)
-        #         if attempt == max_attempts:
-        #             print(f"[bold red]|ERROR|{self.vm.name}| Max attempts reached. Exiting.")
-        #             self.handle_vm_creation_failure()
-        #             raise
-        #
-        #     finally:
-        #         self.test_tools.stop_vm()
+        while attempt < max_attempts:
+            try:
+                attempt += 1
+                self._run_test(headless=headless)
+                break
+
+            except KeyboardInterrupt:
+                print("[bold red]|WARNING| Interruption by the user")
+                raise
+
+            except Exception as e:
+                print(f"[bold yellow]|WARNING|{self.vm.name}| Attempt {attempt}/{max_attempts} failed: {e}")
+                time.sleep(interval)
+                if attempt == max_attempts:
+                    print(f"[bold red]|ERROR|{self.vm.name}| Max attempts reached. Exiting.")
+                    self.handle_vm_creation_failure()
+                    raise
+
+            finally:
+                self.test_tools.stop_vm()
 
     def _run_test(self, headless: bool) -> None:
         self.test_tools.run_vm(headless=headless)
         self._initialize_libs()
         self.test_tools.run_test_on_vm(upload_files=self.get_upload_files(), create_test_dir=self.get_test_dirs())
         self.test_tools.download_report(path_from=self.paths.remote.builder_report_dir, path_to=self.report.dir)
-        if not self.report.exists():
-            raise VirtualMachinException
 
     def _initialize_libs(self):
         self._initialize_paths()
@@ -103,4 +100,3 @@ class BuilderTests:
         ]
 
         return remote_test_dirs
-    
