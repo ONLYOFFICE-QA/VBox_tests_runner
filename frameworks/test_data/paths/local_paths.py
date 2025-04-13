@@ -24,7 +24,3 @@ class LocalPaths:
     proxy_config: Path = join(tg_dir, 'proxy.json')
     github_token: Path = join(home_dir, '.github', 'token')
     reports_dir: Path = join(project_dir, 'reports')
-
-    # # create the temporary directory if it doesn't exist
-    # def __init__(self):
-    #     self.tmp_dir.mkdir(parents=True, exist_ok=True)
