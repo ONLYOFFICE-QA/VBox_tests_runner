@@ -39,7 +39,7 @@ class DesktopTestTools:
     def initialize_libs(self):
         self.test_tools.initialize_libs(
             report=self._initialize_report(),
-            paths=self._initialize_paths,
+            paths=self._initialize_paths(),
         )
 
     def _get_remote_report_path(self) -> str:
