@@ -25,7 +25,6 @@ class DesktopTestData(TestData):
     open_retries: int = None
     retest: bool = False
 
-    __config: Dict = field(init=False)
     desktop_testing_url: str = field(init=False)
     branch: str = field(init=False)
     vm_names: List[str] = field(init=False)
@@ -35,6 +34,7 @@ class DesktopTestData(TestData):
     local_paths: DesktopLocalPaths = field(init=False)
 
     def __post_init__(self):
+        self.__config: Optional[Dict] = None
         self.desktop_testing_url = self.config['desktop_script']
         self.branch = self.config['branch']
         self.title = self.config.get('title', 'Undefined_title')
