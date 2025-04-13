@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from os.path import join
+from os.path import join, isfile
 
 from VBoxWrapper import VirtualMachinException
 from host_tools.utils import Dir

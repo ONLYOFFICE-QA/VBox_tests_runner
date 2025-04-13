@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from os.path import join
-from pathlib import Path
 from tempfile import gettempdir
 
 from host_tools import File

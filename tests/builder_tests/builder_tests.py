@@ -2,8 +2,6 @@
 import time
 from os.path import join
 
-from VBoxWrapper import VirtualMachinException
-
 from frameworks.VboxMachine import VboxMachine
 from frameworks.decorators import vm_data_created
 from frameworks.test_tools import TestToolsLinux, TestToolsWindows, TestTools

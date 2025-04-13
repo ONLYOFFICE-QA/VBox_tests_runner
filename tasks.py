@@ -83,7 +83,8 @@ def builder_test(
     )
     builder = DocBuilder(version=data.version)
     builder.get(branch=data.dep_test_branch)
-    builder.compress_dep_tests(delete=True)
+    builder.compress_dep_tests(delete=False)
+    Dir.delete(builder.local_path.dep_test_path)
 
     if num_processes > 1 and not name:
         data.status_bar = False
