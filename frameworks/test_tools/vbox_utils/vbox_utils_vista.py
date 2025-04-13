@@ -27,10 +27,9 @@ class VboxUtilsVista(VboxUtilsWindows):
             vm: VirtualMachine,
             user_name: str,
             password: str,
-            test_data: TestData,
             paths: Paths,
     ):
-        super().__init__(vm=vm, user_name=user_name, password=password, test_data=test_data, paths=paths)
+        super().__init__(vm=vm, user_name=user_name, password=password, paths=paths)
         self.user = user_name
         self.log_file = fr"C:\Users\{self.user}\log.txt"
         self.tmp_log_file = join(File.unique_name(gettempdir(), 'txt'))
