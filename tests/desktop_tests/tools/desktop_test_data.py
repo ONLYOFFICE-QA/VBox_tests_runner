@@ -27,7 +27,6 @@ class DesktopTestData(TestData):
 
     desktop_testing_url: str = field(init=False)
     branch: str = field(init=False)
-    vm_names: List[str] = field(init=False)
     title: str = field(init=False)
     report_dir: str = field(init=False)
     full_report_path: str = field(init=False)
@@ -41,7 +40,6 @@ class DesktopTestData(TestData):
         self.report_dir = self._get_report_dir()
         self.full_report_path = join(self.report_dir, f"{self.version}_{self.title}_desktop_tests_report.csv")
         self.report = DesktopReport(report_path=self.full_report_path)
-        self.vm_names = self._get_vm_names()
         self.local_paths = DesktopLocalPaths()
         self._check_package_options()
 
@@ -52,14 +50,15 @@ class DesktopTestData(TestData):
 
         return self.__config
 
-    def _check_package_options(self):
-        if sum([self.snap, self.appimage, self.flatpak]) > 1:
-            raise ValueError("Only one option from snap, appimage, flatpak should be enabled..")
-
-    def _get_vm_names(self) -> List[str]:
+    @property
+    def vm_names(self) -> List[str]:
         if self.retest:
             return self.report.get_error_vm_list()
         return self.config.get('hosts', [])
+
+    def _check_package_options(self):
+        if sum([self.snap, self.appimage, self.flatpak]) > 1:
+            raise ValueError("Only one option from snap, appimage, flatpak should be enabled..")
 
     def _get_report_dir(self) -> str:
         dir_name = (

@@ -25,6 +25,10 @@ class TestData(ABC):
         return False
 
     @property
+    @abstractmethod
+    def vm_names(self) -> list: ...
+
+    @property
     def tg_token(self) -> str:
         return self._read_file(self.token_file).strip()
 
