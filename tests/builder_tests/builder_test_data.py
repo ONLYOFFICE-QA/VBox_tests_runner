@@ -19,16 +19,12 @@ class BuilderTestData(TestData):
         self.dep_test_branch = self.config.get('branch')
         self.__status_bar: bool  | None = None
 
-    @property  # Сначала getter с декоратором @property
+    @property
     def status_bar(self) -> bool | None:
-        """Getter для status_bar."""
-        print("Getting status_bar")  # Для отладки
         return self.__status_bar
 
-    @status_bar.setter  # Затем setter с декоратором @<имя_свойства>.setter
+    @status_bar.setter
     def status_bar(self, value: bool):
-        """Setter для status_bar."""
-        print(f"Setting status_bar to: {value}")  # Для отладки
         if not isinstance(value, bool):
             raise TypeError("status_bar must be a boolean value")
         self.__status_bar = value
