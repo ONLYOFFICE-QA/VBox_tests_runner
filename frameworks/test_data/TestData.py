@@ -20,6 +20,7 @@ class TestData(ABC):
         ...
 
     @property
+    @abstractmethod
     def status_bar(self):
         return False
 

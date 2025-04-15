@@ -32,9 +32,9 @@ class DesktopTestData(TestData):
     report_dir: str = field(init=False)
     full_report_path: str = field(init=False)
     local_paths: DesktopLocalPaths = field(init=False)
+    __config: Optional[Dict] = field(init=False)
 
     def __post_init__(self):
-        self.__config: Optional[Dict] = None
         self.desktop_testing_url = self.config['desktop_script']
         self.branch = self.config['branch']
         self.title = self.config.get('title', 'Undefined_title')

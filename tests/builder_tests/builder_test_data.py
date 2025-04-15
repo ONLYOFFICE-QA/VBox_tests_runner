@@ -12,12 +12,12 @@ from frameworks.test_data import TestData
 class BuilderTestData(TestData):
     version: str
     config_path: str
+    __status_bar: bool | None = None
+    __config = None
 
     def __post_init__(self):
         super().__post_init__()
-        self.__config = None
         self.dep_test_branch = self.config.get('branch')
-        self.__status_bar: bool  | None = None
 
     @property
     def status_bar(self) -> bool | None:
