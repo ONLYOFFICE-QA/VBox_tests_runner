@@ -12,12 +12,26 @@ from frameworks.test_data import TestData
 class BuilderTestData(TestData):
     version: str
     config_path: str
-    status_bar: bool = True
 
     def __post_init__(self):
         super().__post_init__()
         self.__config = None
         self.dep_test_branch = self.config.get('branch')
+        self.__status_bar: bool  | None = None
+
+    @property  # Сначала getter с декоратором @property
+    def status_bar(self) -> bool | None:
+        """Getter для status_bar."""
+        print("Getting status_bar")  # Для отладки
+        return self.__status_bar
+
+    @status_bar.setter  # Затем setter с декоратором @<имя_свойства>.setter
+    def status_bar(self, value: bool):
+        """Setter для status_bar."""
+        print(f"Setting status_bar to: {value}")  # Для отладки
+        if not isinstance(value, bool):
+            raise TypeError("status_bar must be a boolean value")
+        self.__status_bar = value
 
     @property
     def config(self) -> dict:

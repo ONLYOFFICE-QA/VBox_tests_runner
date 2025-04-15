@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
 from dataclasses import dataclass
-
 from abc import ABC, abstractmethod
 from os.path import isfile, join
-
-
 from host_tools import File
 
-
-from frameworks.test_data.paths import LocalPaths
+from .paths import LocalPaths
 
 
 @dataclass
@@ -22,6 +18,10 @@ class TestData(ABC):
     @abstractmethod
     def config(self):
         ...
+
+    @property
+    def status_bar(self):
+        return False
 
     @property
     def tg_token(self) -> str:
