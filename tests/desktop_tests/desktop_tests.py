@@ -1,33 +1,31 @@
 # -*- coding: utf-8 -*-
 import time
-
-from VBoxWrapper import VirtualMachinException
 from rich import print
-from .tools import TestToolsLinux, TestToolsWindows, TestData, VboxMachine, TestTools
 
+from .tools import DesktopTestData, DesktopTestTools
 
 
 class DesktopTest:
-    def __init__(self, vm_name: str, test_data: TestData):
-        self.test_data = test_data
-        self.vm = VboxMachine(vm_name)
-        self.test_tools = self._get_test_tools()
+    def __init__(self, vm_name: str, test_data: DesktopTestData):
+        self.data = test_data
+        self.test_tools = DesktopTestTools(vm_name=vm_name, test_data=self.data)
+        self.vm = self.test_tools.vm
 
     def run(self, headless: bool = False, max_attempts: int = 5, interval: int = 5) -> None:
-        if self.test_tools.is_windows and self.test_data.snap:
-            return print(f"[cyan]|INFO|{self.test_tools.vm_name}| Unable to install snap package on windows")
+        if self.test_tools.is_windows and self.data.snap:
+            return print(f"[cyan]|INFO|{self.vm.name}| Unable to install snap package on windows")
 
-        if self.test_tools.is_windows and self.test_data.appimage:
-            return print(f"[cyan]|INFO|{self.test_tools.vm_name}| Unable to install appimage on windows")
+        if self.test_tools.is_windows and self.data.appimage:
+            return print(f"[cyan]|INFO|{self.vm.name}| Unable to install appimage on windows")
 
-        if self.test_tools.is_windows and self.test_data.flatpak:
-            return print(f"[cyan]|INFO|{self.test_tools.vm_name}| Unable to install flatpak on windows")
+        if self.test_tools.is_windows and self.data.flatpak:
+            return print(f"[cyan]|INFO|{self.vm.name}| Unable to install flatpak on windows")
 
         attempt = 0
         while attempt < max_attempts:
             try:
                 attempt += 1
-                self._run_test(headless=headless)
+                self.test_tools.run_test(headless=headless)
                 break
 
             except KeyboardInterrupt:
@@ -43,15 +41,5 @@ class DesktopTest:
                     raise
 
             finally:
-                self.test_tools.stop_vm()
+                self.test_tools.test_tools.stop_vm()
 
-    def _run_test(self, headless: bool) -> None:
-        self.test_tools.run_vm(headless=headless)
-        self.test_tools.run_test_on_vm()
-        if not self.test_tools.report.exists():
-            raise VirtualMachinException
-
-    def _get_test_tools(self) -> TestTools:
-        if 'windows' in self.vm.os_type:
-            return TestToolsWindows(vm=self.vm, test_data=self.test_data)
-        return TestToolsLinux(vm=self.vm, test_data=self.test_data)

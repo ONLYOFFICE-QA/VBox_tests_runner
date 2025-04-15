@@ -3,13 +3,12 @@ from os.path import splitext
 from host_tools import File
 from tempfile import gettempdir
 
-from .test_data import TestData
-from .paths import Paths
+from .desktop_paths import DesktopPaths
 
 
 class RunScript:
 
-    def __init__(self, test_data: TestData, paths: Paths):
+    def __init__(self, test_data, paths: DesktopPaths):
         self.data = test_data
         self._path = paths
         self.is_ps1 = self._path.remote.run_script_name.endswith('.ps1')

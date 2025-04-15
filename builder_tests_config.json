@@ -1,0 +1,11 @@
+{
+  "token_file": "",
+  "chat_id_file": "test",
+  "branch": "",
+  "password": "",
+  "hosts": [
+    "Windows11",
+    "Ubuntu22",
+    "Windows10_x32"
+  ]
+}
