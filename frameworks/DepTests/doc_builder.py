@@ -19,10 +19,14 @@ class DocBuilder(DepTests):
         self._git_clone(repo=self.document_builder_samples_repo, path=self.local_path.document_builder_samples)
 
     def configure(self):
-        data = File.read_json(self.local_path.docbuilder_config)
-        data['branch'] = self._get_branch()
-        data['build'] = self._get_build()
-        File.write_json(self.local_path.docbuilder_config, data=data, indent=2)
+        branch = self._get_branch()
+        build = self._get_build()
+
+        for config in [self.local_path.docbuilder_config, self.local_path.docbuilder_docs_config]: # TODO
+            data = File.read_json(config)
+            data['branch'] = branch
+            data['build'] = build
+            File.write_json(config, data=data, indent=2)
 
     def _get_branch(self):
         if "99.99.99" in self.version.version:

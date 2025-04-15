@@ -30,8 +30,9 @@ class RunScript:
             self.get_change_dir_command(self._path.remote.docbuilder_path),
             self.set_license(),
             self.generate_run_test_cmd(),
-            self.run_update_docs_cmd(),
-            self.generate_run_test_docs_cmd()
+            self.get_change_dir_command(self._path.remote.docbuilder_docs_scripts_dir), # TODO
+            self.run_update_docs_cmd(), # TODO
+            self.generate_run_test_docs_cmd() # TODO
         ]
         script_content = [line.strip() for line in filter(None, commands)]
         return ' && '.join(script_content) if self.is_bat else '\n'.join(script_content)

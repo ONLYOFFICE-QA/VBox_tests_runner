@@ -55,6 +55,7 @@ def desktop_test(
         data.status_bar = False
         multiprocess.run(DesktopTest, data, num_processes, 10, headless)
     else:
+        data.status_bar = True
         for vm in Vbox().check_vm_names([name] if name else data.vm_names):
             DesktopTest(vm, data).run(headless=headless)
 
@@ -90,6 +91,7 @@ def builder_test(
         data.status_bar = False
         multiprocess.run(BuilderTests, data, num_processes, 10, headless)
     else:
+        data.status_bar = True
         for vm in Vbox().check_vm_names([name] if name else data.vm_names):
             BuilderTests(vm, data).run(headless=headless)
 
