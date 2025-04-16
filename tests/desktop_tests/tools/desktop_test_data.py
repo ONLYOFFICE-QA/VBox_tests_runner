@@ -31,7 +31,7 @@ class DesktopTestData(TestData):
     report_dir: str = field(init=False)
     full_report_path: str = field(init=False)
     local_paths: DesktopLocalPaths = field(init=False)
-    __config: Optional[Dict] = field(init=False)
+    __config: Optional[Dict] = None
 
     def __post_init__(self):
         self.desktop_testing_url = self.config['desktop_script']
