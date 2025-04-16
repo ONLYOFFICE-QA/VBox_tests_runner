@@ -12,11 +12,10 @@ class BuilderRemotePaths(RemotePaths):
         self.docbuilder_path: str = self._join_path(self.dep_test_path, 'docbuilder')
         self.docbuilder_docs_path: str = self._join_path(self.dep_test_path, 'docbuilder-docs')
         self.dep_test_archive: str = self._join_path(self.script_dir, f"{basename(self.dep_test_path)}.zip")
-        self.docbuilder_main_script: str = self._join_path(self.docbuilder_path, 'check.py')
 
-        self.docbuilder_docs_scripts_dir: str = self._join_path(self.docbuilder_docs_path, 'scripts') # TODO
-        self.docbuilder_docs_main_script: str = self._join_path(self.docbuilder_docs_scripts_dir, 'check.py') # TODO
-        self.docbuilder_docs_update_script: str = self._join_path(self.docbuilder_docs_scripts_dir, 'update.py') # TODO
+        self.update_script: str = self._join_path(self.docbuilder_path, 'update.py')
+        self.docbuilder_main_script: str = self._join_path(self.docbuilder_path, 'check-framework.py')
+        self.docbuilder_docs_main_script: str = self._join_path(self.docbuilder_path, 'check-docs.py')
 
-        self.lic_file = self._join_path(self.script_dir, 'license.xml')
+        self.lic_file = self._join_path(self.docbuilder_path, '.license', 'license.xml')
         self.builder_report_dir = self._join_path(self.docbuilder_path, 'out')

@@ -21,10 +21,7 @@ class BuilderLocalPaths(LocalPaths):
     dep_test: str = 'Dep.Tests'
     dep_test_path: str = join(File.unique_name(gettempdir()), dep_test)
     docbuilder_path: str = join(dep_test_path, 'docbuilder')
-    docbuilder_docs: str = join(dep_test_path, 'docbuilder-docs') # TODO
     dep_test_archive: str = join(LocalPaths.tmp_dir, f"{dep_test}.zip")
     docbuilder_config: str = join(docbuilder_path, 'config.json')
-    docbuilder_docs_config: str = join(docbuilder_docs, 'config.json') # TODO
     document_builder_samples: str = join(docbuilder_path, "document-builder-samples")
-    lic_file: str = join(LocalPaths.project_dir, 'license.xml')
     builder_report_dir = join(LocalPaths.reports_dir, 'Builder_tests')

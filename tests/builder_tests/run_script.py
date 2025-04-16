@@ -29,11 +29,11 @@ class RunScript:
             self.clone_office_js_api_repo(),
             self.get_change_dir_command(self._path.remote.docbuilder_path),
             self.set_license(),
-            self.generate_run_test_cmd(),
-            self.get_change_dir_command(self._path.remote.docbuilder_docs_scripts_dir), # TODO
-            self.run_update_docs_cmd(), # TODO
-            self.generate_run_test_docs_cmd() # TODO
+            self.run_update(),
+            self.generate_run_framework_cmd(),
+            self.generate_run_docs_cmd()
         ]
+
         script_content = [line.strip() for line in filter(None, commands)]
         return ' && '.join(script_content) if self.is_bat else '\n'.join(script_content)
 
@@ -76,7 +76,7 @@ class RunScript:
             f"{join(self._path.remote.script_dir, splitext(basename(self.office_js_api))[0])}"
         )
 
-    def generate_run_test_cmd(self) -> str:
+    def generate_run_framework_cmd(self) -> str:
         options = [
                 f"{self.get_python()}",
                 f"{self._path.remote.docbuilder_main_script}"
@@ -84,14 +84,14 @@ class RunScript:
 
         return ' '.join(filter(None, options))
 
-    def run_update_docs_cmd(self) -> str:
+    def run_update(self) -> str:
         options = [
             f"{self.get_python()}",
-            f"{self._path.remote.docbuilder_docs_update_script}"
+            f"{self._path.remote.update_script}"
         ]
         return ' '.join(filter(None, options))
 
-    def generate_run_test_docs_cmd(self) -> str:
+    def generate_run_docs_cmd(self) -> str:
         options = [
             f"{self.get_python()}",
             f"{self._path.remote.docbuilder_docs_main_script}"

@@ -77,7 +77,7 @@ class BuilderTests:
 
     def handle_vm_creation_failure(self):
         print(f"[bold red]|ERROR|{self.vm.name}| Failed to create a virtual machine")
-        # self.report.write(self.data.version, self.vm.name, "FAILED_CREATE_VM")
+        self.report.writer(mode='a', message=[self.data.version, self.vm.name, "FAILED_CREATE_VM"])
 
     @vm_data_created
     def get_upload_files(self) -> list:
@@ -86,7 +86,6 @@ class BuilderTests:
             (self.data.chat_id_file, self.paths.remote.tg_chat_id_file),
             (RunScript(test_data=self.data, paths=self.paths).create(), self.paths.remote.script_path),
             (self.paths.local.dep_test_archive, self.paths.remote.dep_test_archive),
-            (self.paths.local.lic_file, self.paths.remote.lic_file)
         ]
 
         return [file for file in files if all(file)]
