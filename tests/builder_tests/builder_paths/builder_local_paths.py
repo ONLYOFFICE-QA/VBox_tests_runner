@@ -13,7 +13,7 @@ class BuilderLocalPaths(LocalPaths):
 
     Attributes:
         dep_test (str): Name of the Dep.Tests directory (used as a reference name).
-        dep_test_path (str): Full path to the Dep.Tests folder in the system's temporary directory.
+        dep_test_path (str): Full path to the Dep.Tests folder.
         docbuilder_path (str): Full path to the 'docbuilder' directory inside Dep.Tests.
         dep_test_archive (str): Path to the zip archive of Dep.Tests created in the temp directory.
         docbuilder_config (str): Path to the config.json file inside the docbuilder directory.
