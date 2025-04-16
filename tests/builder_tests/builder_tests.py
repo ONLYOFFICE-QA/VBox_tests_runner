@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
 from os.path import join
+from rich import print
 
 from frameworks.VboxMachine import VboxMachine
 from frameworks.decorators import vm_data_created
@@ -47,6 +48,8 @@ class BuilderTests:
         self._initialize_libs()
         self.test_tools.run_test_on_vm(upload_files=self.get_upload_files(), create_test_dir=self.get_test_dirs())
         self.test_tools.download_report(path_from=self.paths.remote.builder_report_dir, path_to=self.report.dir)
+        # if not isfile(self.report.path) or self.report.column_is_empty('Os'):
+        #     raise VirtualMachinException
 
     def _initialize_libs(self):
         self._initialize_paths()
@@ -77,7 +80,7 @@ class BuilderTests:
 
     def handle_vm_creation_failure(self):
         print(f"[bold red]|ERROR|{self.vm.name}| Failed to create a virtual machine")
-        # self.report.write(self.data.version, self.vm.name, "FAILED_CREATE_VM")
+        self.report.writer(mode='a', message=[self.data.version, self.vm.name, "FAILED_CREATE_VM"])
 
     @vm_data_created
     def get_upload_files(self) -> list:
@@ -86,7 +89,6 @@ class BuilderTests:
             (self.data.chat_id_file, self.paths.remote.tg_chat_id_file),
             (RunScript(test_data=self.data, paths=self.paths).create(), self.paths.remote.script_path),
             (self.paths.local.dep_test_archive, self.paths.remote.dep_test_archive),
-            (self.paths.local.lic_file, self.paths.remote.lic_file)
         ]
 
         return [file for file in files if all(file)]
