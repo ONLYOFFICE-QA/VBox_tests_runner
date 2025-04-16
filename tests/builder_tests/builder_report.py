@@ -14,7 +14,6 @@ class BuilderReport(Report):
         self.dir = dirname(self.path)
         Dir.create(self.dir, stdout=False)
 
-
     def column_is_empty(self, column_name: str) -> bool:
         if not self.read(self.path)[column_name].count() or not isfile(self.path):
             return True

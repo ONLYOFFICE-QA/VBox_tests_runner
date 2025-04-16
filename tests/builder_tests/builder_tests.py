@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
 from os.path import join
+from rich import print
 
 from frameworks.VboxMachine import VboxMachine
 from frameworks.decorators import vm_data_created
@@ -47,6 +48,8 @@ class BuilderTests:
         self._initialize_libs()
         self.test_tools.run_test_on_vm(upload_files=self.get_upload_files(), create_test_dir=self.get_test_dirs())
         self.test_tools.download_report(path_from=self.paths.remote.builder_report_dir, path_to=self.report.dir)
+        # if not isfile(self.report.path) or self.report.column_is_empty('Os'):
+        #     raise VirtualMachinException
 
     def _initialize_libs(self):
         self._initialize_paths()
