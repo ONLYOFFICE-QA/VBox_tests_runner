@@ -18,4 +18,4 @@ class BuilderRemotePaths(RemotePaths):
         self.docbuilder_docs_main_script: str = self._join_path(self.docbuilder_path, 'check-docs.py')
 
         self.lic_file = self._join_path(self.docbuilder_path, '.license', 'license.xml')
-        self.builder_report_dir = self._join_path(self.docbuilder_path, 'out')
+        self.builder_report_dir = self._join_path(self.docbuilder_path, 'reports')
