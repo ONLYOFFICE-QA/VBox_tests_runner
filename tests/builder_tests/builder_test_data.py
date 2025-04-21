@@ -9,6 +9,7 @@ from frameworks.test_data import TestData
 from tests.builder_tests.builder_paths import BuilderLocalPaths
 
 from .builder_report import BuilderReport
+from .builder_report_sender import BuilderReportSender
 
 
 @dataclass
@@ -22,12 +23,9 @@ class BuilderTestData(TestData):
         super().__post_init__()
         self.dep_test_branch = self.config.get('branch')
         self.portal_project_name = self.config.get('report_portal').get('project_name')
-        self.full_report_path = join(
-            BuilderLocalPaths().builder_report_dir,
-            self.version,
-            f"{self.version}_full_report.csv"
-        )
+        self.full_report_path = self._get_full_report_path()
         self.report = BuilderReport(self.full_report_path)
+        self.report_sender = BuilderReportSender(report_path=self.report.path)
 
     @property
     def status_bar(self) -> bool | None:
@@ -54,3 +52,10 @@ class BuilderTestData(TestData):
         if not isfile(self.config_path):
             raise FileNotFoundError(f"[red]|ERROR| Configuration file not found: {self.config_path}")
         return File.read_json(self.config_path)
+
+    def _get_full_report_path(self) -> str:
+        return join(
+            BuilderLocalPaths().builder_report_dir,
+            self.version,
+            f"{self.version}_full_report.csv"
+        )

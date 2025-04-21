@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import concurrent.futures
-from os.path import join
+from os.path import join, dirname
 from typing import Any
 from rich import print
 
@@ -10,20 +10,17 @@ from telegram import Telegram
 from frameworks import Report
 from frameworks.report_portal import PortalManager
 
-from .builder_test_data import BuilderTestData
-
 
 class BuilderReportSender:
 
-    def __init__(self, report_path: str, test_data: BuilderTestData):
+    def __init__(self, report_path: str):
         self.report = Report()
+        self.tg = Telegram()
         self.report_path = report_path
-        self.test_data = test_data
-        self.rp = PortalManager(project_name=self.test_data.portal_project_name)
         self.df = self.report.read(self.report_path)
         self.version = self._get_version()
-        self.tg = Telegram()
-        self.errors_only_report = join(self.test_data.report.dir, f"{self.version}_errors_only_report.csv")
+        self.errors_only_report = join(dirname(self.report_path), f"{self.version}_errors_only_report.csv")
+        self.portal_manager = None
 
     def _get_version(self):
         if self.df.empty:
@@ -40,22 +37,6 @@ class BuilderReportSender:
 
         return self.df.loc[0, 'Version']
 
-    def to_report_portal(self):
-        print(f"[green]|INFO| Starting send to report portal for version: {self.version}...")
-        df = self.df.dropna(how='all')
-
-        if df.empty:
-            raise ValueError("Report is empty")
-
-        self.rp.start_launcher(launch_name=self.version)
-        self._create_suites(df)
-
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = [executor.submit(self._process_row, row) for _, row in df.iterrows()]
-            concurrent.futures.wait(futures)
-
-        self.rp.finish_launcher()
-
     def all_is_passed(self) -> bool:
         return self.df['Exit_code'].eq(0.0).all()
 
@@ -70,6 +51,23 @@ class BuilderReportSender:
         self.tg.send_media_group([self.report_path, self.errors_only_report], caption=caption)
 
 
+    def to_report_portal(self, project_name: str):
+        self.portal_manager = PortalManager(project_name=project_name)
+        print(f"[green]|INFO| Starting sending to report portal for version: {self.version}...")
+        df = self.df.dropna(how='all')
+
+        if df.empty:
+            raise ValueError("Report is empty")
+
+        self.portal_manager.start_launch(launch_name=self.version)
+        self._create_suites(df)
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(self._process_row, row) for _, row in df.iterrows()]
+            concurrent.futures.wait(futures)
+
+        self.portal_manager.finish_launcher()
+
     def _process_row(self, row: pd.Series) -> Any:
         ret_code = self.get_exit_code(row)
 
@@ -78,14 +76,15 @@ class BuilderReportSender:
             f"finished with exit code {ret_code}"
         )
 
-        os_suite_id = self.rp.create_suite(row['Os'])
-        samples_suite_id = self.rp.create_suite(row['Builder_samples'], parent_suite_id=os_suite_id)
-        self.rp.start_test(test_name=row['Test_name'], suite_id=samples_suite_id)
+        os_suite_id = self.portal_manager.create_suite(row['Os'])
+        samples_suite_id = self.portal_manager.create_suite(row['Builder_samples'], parent_suite_id=os_suite_id)
+
+        test = self.portal_manager.start_test(test_name=row['Test_name'], suite_id=samples_suite_id)
 
         if row['ConsoleLog']:
-            self.rp.send_test_log(message=row['ConsoleLog'], level='ERROR' if ret_code != 0 else 'WARN')
+            test.send_log(message=row['ConsoleLog'],level='ERROR' if ret_code != 0 else 'INFO',)
 
-        self.rp.finish_test(return_code=ret_code, status='PASSED' if ret_code == 0 else 'FAILED')
+        test.finish(return_code=ret_code)
 
     def _create_suites(self, df: pd.DataFrame):
         for _, row in df.iterrows():
@@ -94,8 +93,8 @@ class BuilderReportSender:
                 f"launchers for {row['Version']} test."
             )
 
-            os_suite_id = self.rp.create_suite(row['Os'])
-            self.rp.create_suite(row['Builder_samples'], parent_suite_id=os_suite_id)
+            os_suite_id = self.portal_manager.create_suite(row['Os'])
+            self.portal_manager.create_suite(row['Builder_samples'], parent_suite_id=os_suite_id)
 
     @staticmethod
     def get_exit_code(row: pd.Series) -> int:
