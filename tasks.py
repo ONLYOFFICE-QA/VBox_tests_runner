@@ -100,7 +100,7 @@ def builder_test(
 
     data.report.get_full(data.version)
     data.report_sender.to_telegram() if telegram else None
-    data.report_sender.to_report_portal() if connect_portal else None
+    data.report_sender.to_report_portal(project_name=data.portal_project_name) if connect_portal else None
 
 
 @task
