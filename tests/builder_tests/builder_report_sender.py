@@ -33,7 +33,7 @@ class BuilderReportSender:
             raise ValueError("Version is None")
 
         if self.df['Version'].nunique() > 1:
-            print("[red]|WARNING| Version is not unique.")
+            print("[red]|WARNING| Versions is not unique.")
             return self.df['Version'].unique()[
                 self.df['Version'].nunique() - 1
             ]
