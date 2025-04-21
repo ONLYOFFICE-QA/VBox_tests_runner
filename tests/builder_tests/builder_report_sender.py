@@ -8,8 +8,9 @@ import pandas as pd
 from telegram import Telegram
 
 from frameworks import Report
-from frameworks.report_portal.portal_manager import PortalManager
-from tests.builder_tests import BuilderTestData
+from frameworks.report_portal import PortalManager
+
+from .builder_test_data import BuilderTestData
 
 
 class BuilderReportSender:
