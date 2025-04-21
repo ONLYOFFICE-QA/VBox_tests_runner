@@ -40,6 +40,7 @@ class BuilderReportSender:
         return self.df.loc[0, 'Version']
 
     def to_report_portal(self):
+        print(f"[green]|INFO| Starting send to report portal for version: {self.version}...")
         df = self.df.dropna(how='all')
 
         if df.empty:
@@ -70,20 +71,28 @@ class BuilderReportSender:
 
     def _process_row(self, row: pd.Series) -> Any:
         ret_code = self.get_exit_code(row)
-        log = row['ConsoleLog']
-        print(f"[{row['Os']}] {row['Test_name']} finished with exit code {ret_code}")
+
+        print(
+            f"[cyan][{'green' if ret_code == 0 else 'red'}][{row['Os']}] {row['Test_name']} "
+            f"finished with exit code {ret_code}"
+        )
+
         os_suite_id = self.rp.create_suite(row['Os'])
         samples_suite_id = self.rp.create_suite(row['Builder_samples'], parent_suite_id=os_suite_id)
         self.rp.start_test(test_name=row['Test_name'], suite_id=samples_suite_id)
 
-        if log:
-            self.rp.send_test_log(message=log, level='ERROR' if ret_code != 0 else 'WARN')
+        if row['ConsoleLog']:
+            self.rp.send_test_log(message=row['ConsoleLog'], level='ERROR' if ret_code != 0 else 'WARN')
 
         self.rp.finish_test(return_code=ret_code, status='PASSED' if ret_code == 0 else 'FAILED')
 
     def _create_suites(self, df: pd.DataFrame):
         for _, row in df.iterrows():
-            print(f"Created suite {row['Os']} and {row['Builder_samples']} launchers for {row['Version']} test.")
+            print(
+                f"[cyan]|INFO| Created suite {row['Os']} and {row['Builder_samples']} "
+                f"launchers for {row['Version']} test."
+            )
+
             os_suite_id = self.rp.create_suite(row['Os'])
             self.rp.create_suite(row['Builder_samples'], parent_suite_id=os_suite_id)
 

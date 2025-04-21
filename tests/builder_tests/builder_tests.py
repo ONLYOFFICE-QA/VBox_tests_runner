@@ -51,7 +51,8 @@ class BuilderTests:
         self._initialize_libs()
         self.test_tools.run_test_on_vm(upload_files=self.get_upload_files(), create_test_dir=self.get_test_dirs())
         self.test_tools.download_report(path_from=self.paths.remote.builder_report_dir, path_to=self.report.dir)
-        if not isfile(File.last_modified(self.report.dir)) or self.report.column_is_empty('Os'):
+        self.report.path = File.last_modified(self.report.dir)
+        if not isfile(self.report.path) or self.report.column_is_empty('Os'):
             raise VirtualMachinException
 
     def _initialize_libs(self):
@@ -67,7 +68,7 @@ class BuilderTests:
             self.paths.local.builder_report_dir,
             self.data.version,
             self.vm.name,
-            f"{self.data.version}_report.csv"
+            f"builder_report_v{self.data.version}.csv"
         )
         self.report = BuilderReport(report_file)
         return self.report
