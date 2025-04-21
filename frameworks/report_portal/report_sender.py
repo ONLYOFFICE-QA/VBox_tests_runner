@@ -20,7 +20,6 @@ class ReportSender:
 
     def handel_report(self):
         df = self.report.read(self.report_path)
-        self._create_suites(df)
 
         for _, row in df.iterrows():
             self._process_row(row)
