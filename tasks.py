@@ -94,6 +94,9 @@ def builder_test(
         data.status_bar = True
         for vm in Vbox().check_vm_names([name] if name else data.vm_names):
             BuilderTests(vm, data).run(headless=headless)
+    Dir.delete(builder.local_path.dep_test_path)
+
+    data.report.get_full(data.version)
 
 
 @task

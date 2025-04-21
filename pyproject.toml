@@ -17,6 +17,7 @@ dependencies = [
     "telegram",
     "VBoxWrapper",
     "ssh-wrapper",
+    "report-portal"
 ]
 
 [tool.uv.sources]
@@ -24,6 +25,7 @@ host-tools = { git = "https://github.com/l8556/host_tools.git", branch = "master
 telegram = { git = "https://github.com/l8556/TelegramApi.git", branch = "master" }
 VBoxWrapper = { git = "https://github.com/l8556/VBoxWrapper.git", branch = "feature/minor-refactoring" }
 ssh-wrapper = { git = "https://github.com/l8556/SshWrapper.git", branch = "master" }
+report-portal = { git = "https://github.com/l8556/report_portal.git", branch = "master" }
 
 
 [tool.poetry]
@@ -45,5 +47,6 @@ host-tools = { git = "https://github.com/l8556/host_tools.git", branch = "master
 telegram = { git = "https://github.com/l8556/TelegramApi.git", branch = "master" }
 VBoxWrapper = { git = "https://github.com/l8556/VBoxWrapper.git", branch = "feature/minor-refactoring" }
 ssh-wrapper = { git = "https://github.com/l8556/SshWrapper.git", branch = "master" }
+report-portal = { git = "https://github.com/l8556/report_portal.git", branch = "master" }
 ruff = "^0.11.5"
 pydantic = "^2.11.3"

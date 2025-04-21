@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 from dataclasses import dataclass
-from os.path import isfile
+from os.path import isfile, join
 from typing import Dict, List
 
 from host_tools import File
 
 from frameworks.test_data import TestData
+from tests.builder_tests.builder_paths import BuilderLocalPaths
+
+from tests.builder_tests.builder_report import BuilderReport
 
 
 @dataclass
@@ -18,6 +21,12 @@ class BuilderTestData(TestData):
     def __post_init__(self):
         super().__post_init__()
         self.dep_test_branch = self.config.get('branch')
+        self.full_report_path = join(
+            BuilderLocalPaths().builder_report_dir,
+            self.version,
+            f"{self.version}_full_report.csv"
+        )
+        self.report = BuilderReport(self.full_report_path)
 
     @property
     def status_bar(self) -> bool | None:
