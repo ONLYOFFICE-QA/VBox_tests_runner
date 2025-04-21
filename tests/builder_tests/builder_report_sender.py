@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import concurrent.futures
 from os.path import join, dirname
-from typing import Any
+from typing import Any, Optional
 from rich import print
+from rich.console import Console
 
 import pandas as pd
 from telegram import Telegram
@@ -20,6 +21,7 @@ class BuilderReportSender:
         self.df = self.report.read(self.report_path)
         self.version = self._get_version()
         self.errors_only_report = join(dirname(self.report_path), f"{self.version}_errors_only_report.csv")
+        self.console = Console()
         self.launch = None
 
     def _get_version(self):
@@ -61,19 +63,27 @@ class BuilderReportSender:
         with PortalManager(project_name=project_name, launch_name=self.version) as launch:
             self._create_suites(df, launch)
 
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                futures = [executor.submit(self._process_row, row, launch) for _, row in df.iterrows()]
-                concurrent.futures.wait(futures)
+            with self.console.status('') as status:
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    futures = [executor.submit(self._process_row, row, launch) for _, row in df.iterrows()]
+                    for future in concurrent.futures.as_completed(futures):
+                        future.add_done_callback(lambda *_: status.update(self._get_thread_result(future)))
+                    concurrent.futures.wait(futures)
 
+    @staticmethod
+    def _get_thread_result(future):
+        """
+        Gets the result of a thread execution.
+        :param future: The future object representing the result of a thread.
+        :return: The result of the thread execution.
+        """
+        try:
+            return future.result()
+        except (PermissionError, FileExistsError, NotADirectoryError, IsADirectoryError) as e:
+            return f"[red]|ERROR| Exception when getting result {e}"
 
-    def _process_row(self, row: pd.Series, launch) -> Any:
-        ret_code = self.get_exit_code(row)
-
-        print(
-            f"[cyan][{'green' if ret_code == 0 else 'red'}][{row['Os']}] {row['Test_name']} "
-            f"finished with exit code {ret_code}"
-        )
-
+    def _process_row(self, row: pd.Series, launch) -> Optional[str]:
+        ret_code = self._get_exit_code(row)
         os_suite_id = launch.create_suite(row['Os'])
         samples_suite_id = launch.create_suite(row['Builder_samples'], parent_suite_id=os_suite_id)
         test = launch.start_test(test_name=row['Test_name'], suite_id=samples_suite_id)
@@ -83,19 +93,30 @@ class BuilderReportSender:
 
         test.finish(return_code=ret_code)
 
-    @staticmethod
-    def _create_suites(df: pd.DataFrame, launch):
-        for _, row in df.iterrows():
-            print(
-                f"[cyan]|INFO| Created suite {row['Os']} and {row['Builder_samples']} "
-                f"launchers for {row['Version']} test."
+        if ret_code != 0:
+            self.console.print(
+                f"[bold red]|ERROR| {row['Test_name']} failed. Exit Code: {ret_code}\n"
+                f"Console log: {row['ConsoleLog']}"
+            )
+            return ''
+        return (
+                f"[cyan][{'green' if ret_code == 0 else 'red'}][{row['Os']}] {row['Test_name']} "
+                f"finished with exit code {ret_code}"
             )
 
-            os_suite_id = launch.create_suite(row['Os'])
-            launch.create_suite(row['Builder_samples'], parent_suite_id=os_suite_id)
+
+    def _create_suites(self, df: pd.DataFrame, launch: PortalManager):
+        with self.console.status('') as status:
+            for _, row in df.iterrows():
+                status.update(
+                    f"[cyan]|INFO| Created suite {row['Os']} and {row['Builder_samples']} "
+                    f"launchers for {row['Version']} test."
+                )
+                os_suite_id = launch.create_suite(row['Os'])
+                launch.create_suite(row['Builder_samples'], parent_suite_id=os_suite_id)
 
     @staticmethod
-    def get_exit_code(row: pd.Series) -> int:
+    def _get_exit_code(row: pd.Series) -> int:
         try:
             return int(row['Exit_code'])
         except ValueError:
