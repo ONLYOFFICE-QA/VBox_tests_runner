@@ -78,7 +78,6 @@ def builder_test(
         connect_portal: bool = False,
         telegram: bool = False,
 ):
-    Dir.delete(join(getcwd(), 'tmp'))
     num_processes = int(processes) if processes else 1
     data = BuilderTestData(
         version=version or Prompt.ask('[red]Please enter version'),
@@ -87,7 +86,6 @@ def builder_test(
     builder = DocBuilder(version=data.version)
     builder.get(branch=data.dep_test_branch)
     builder.compress_dep_tests(delete=False)
-    Dir.delete(builder.local_path.dep_test_path)
 
     if num_processes > 1 and not name:
         data.status_bar = False
