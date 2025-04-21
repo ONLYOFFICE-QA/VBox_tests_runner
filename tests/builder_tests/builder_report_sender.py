@@ -70,6 +70,7 @@ class BuilderReportSender:
                         future.add_done_callback(lambda *_: status.update(self._get_thread_result(future)))
 
                     concurrent.futures.wait(futures)
+
     @staticmethod
     def _get_thread_result(future):
         """
