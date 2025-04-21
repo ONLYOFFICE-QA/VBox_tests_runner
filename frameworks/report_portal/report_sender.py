@@ -44,7 +44,7 @@ class ReportSender:
         if log:
             self.rp.send_test_log(message=log, level='ERROR' if ret_code != 0 else 'WARN')
 
-        self.rp.finish_test(return_code=ret_code)
+        self.rp.finish_test(return_code=ret_code, status='PASSED' if ret_code == 0 else 'FAILED')
 
     def _create_suites(self, df: pd.DataFrame):
         for _, row in df.iterrows():
