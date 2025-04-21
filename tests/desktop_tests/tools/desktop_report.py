@@ -97,7 +97,6 @@ class DesktopReport:
 
                     concurrent.futures.wait(futures)
 
-
     def _process_row(self, row: pd.Series, launch: PortalManager) -> Optional[str]:
         os_suite_id = launch.create_suite(row['Os'])
         test = launch.start_test(test_name=row['Test_name'], suite_id=os_suite_id)
