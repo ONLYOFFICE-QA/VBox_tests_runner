@@ -19,17 +19,23 @@ class ReportSender:
         self.rp = PortalManager(project_name=self.project_name)
 
     def handel_report(self):
-        df = self.report.read(self.report_path)
+        df = self.report.read(self.report_path).dropna(how='all')
 
-        for _, row in df.iterrows():
-            self._process_row(row)
+        if df.empty:
+            raise ValueError("Report is empty")
+
+        self.rp.start_launcher(launch_name=df.loc[0, 'Version'])
+        self._create_suites(df)
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(self._process_row, row) for _, row in df.iterrows()]
+            concurrent.futures.wait(futures)
 
         self.rp.finish_launcher()
 
     def _process_row(self, row: pd.Series) -> Any:
         ret_code = self.get_exit_code(row)
         log = row['ConsoleLog']
-        self.rp.start_launcher(launch_name=row['Version'])
         print(f"[{row['Os']}] {row['Test_name']} finished with exit code {ret_code}")
         os_suite_id = self.rp.create_suite(row['Os'])
         samples_suite_id = self.rp.create_suite(row['Builder_samples'], parent_suite_id=os_suite_id)
@@ -39,6 +45,12 @@ class ReportSender:
             self.rp.send_test_log(message=log, level='ERROR' if ret_code != 0 else 'WARN')
 
         self.rp.finish_test(return_code=ret_code)
+
+    def _create_suites(self, df: pd.DataFrame):
+        for _, row in df.iterrows():
+            print(f"Created suite {row['Os']} and {row['Builder_samples']} launchers for {row['Version']} test.")
+            os_suite_id = self.rp.create_suite(row['Os'])
+            self.rp.create_suite(row['Builder_samples'], parent_suite_id=os_suite_id)
 
     @staticmethod
     def get_exit_code(row: pd.Series) -> int:

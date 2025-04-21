@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from typing import Optional
+from reportportal_client.helpers import timestamp
 
 from report_portal import ReportPortalTest, ReportPortalLauncher
 
@@ -33,6 +34,11 @@ class PortalManager:
         else:
             suite_id = self.test.start_test(test_name=suite_name, item_type="SUITE", parent_item_id=parent_suite_id)
             self._suite_cache[cache_key] = suite_id
+            self.test.client.finish_test_item(
+                item_id=suite_id,
+                end_time=timestamp(),
+                status="PASSED"
+            )
 
         return suite_id
 
