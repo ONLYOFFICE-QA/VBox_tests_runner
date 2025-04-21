@@ -42,4 +42,3 @@ class DesktopTest:
 
             finally:
                 self.test_tools.test_tools.stop_vm()
-

@@ -58,7 +58,7 @@ class BuilderReportSender:
         df = self.df.dropna(how='all')
 
         if df.empty:
-            raise ValueError("Report is empty")
+            raise ValueError(f"Report is empty: {self.report_path}")
 
         with PortalManager(project_name=project_name, launch_name=self.version) as launch:
             self._create_suites(df, launch)
@@ -68,8 +68,8 @@ class BuilderReportSender:
                     futures = [executor.submit(self._process_row, row, launch) for _, row in df.iterrows()]
                     for future in concurrent.futures.as_completed(futures):
                         future.add_done_callback(lambda *_: status.update(self._get_thread_result(future)))
-                    concurrent.futures.wait(futures)
 
+                    concurrent.futures.wait(futures)
     @staticmethod
     def _get_thread_result(future):
         """
@@ -82,28 +82,24 @@ class BuilderReportSender:
         except (PermissionError, FileExistsError, NotADirectoryError, IsADirectoryError) as e:
             return f"[red]|ERROR| Exception when getting result {e}"
 
-    def _process_row(self, row: pd.Series, launch) -> Optional[str]:
+    def _process_row(self, row: pd.Series, launch: PortalManager) -> Optional[str]:
         ret_code = self._get_exit_code(row)
         os_suite_id = launch.create_suite(row['Os'])
         samples_suite_id = launch.create_suite(row['Builder_samples'], parent_suite_id=os_suite_id)
         test = launch.start_test(test_name=row['Test_name'], suite_id=samples_suite_id)
 
         if row['ConsoleLog']:
-            test.send_log(message=row['ConsoleLog'],level='ERROR' if ret_code != 0 else 'INFO',)
+            test.send_log(message=row['ConsoleLog'], level='ERROR' if ret_code != 0 else 'INFO')
 
         test.finish(return_code=ret_code)
 
         if ret_code != 0:
             self.console.print(
-                f"[bold red]|ERROR| {row['Test_name']} failed. Exit Code: {ret_code}\n"
-                f"Console log: {row['ConsoleLog']}"
+                f"[bold red]|ERROR| {row['Test_name']} failed. Exit Code: {ret_code}\nConsole log: {row['ConsoleLog']}"
             )
             return ''
-        return (
-                f"[cyan][{'green' if ret_code == 0 else 'red'}][{row['Os']}] {row['Test_name']} "
-                f"finished with exit code {ret_code}"
-            )
 
+        return f"[cyan]|INFO|[{'green'}][{row['Os']}] {row['Test_name']} finished with exit code {ret_code}"
 
     def _create_suites(self, df: pd.DataFrame, launch: PortalManager):
         with self.console.status('') as status:
