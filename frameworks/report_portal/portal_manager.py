@@ -53,4 +53,3 @@ class PortalManager:
 
     def finish_launcher(self):
         self.rp_launcher.finish_launch()
-

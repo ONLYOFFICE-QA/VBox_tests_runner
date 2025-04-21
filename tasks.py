@@ -13,6 +13,7 @@ from VBoxWrapper import VirtualMachine, Vbox
 
 from frameworks.DepTests import DocBuilder
 from tests.builder_tests import BuilderTests, BuilderTestData
+from tests.builder_tests.builder_report_sender import BuilderReportSender
 
 from tests.desktop_tests import DesktopTest, DesktopTestData
 import tests.multiprocessing as multiprocess
@@ -74,7 +75,9 @@ def builder_test(
         version: str = None,
         processes: int = None,
         name: str = None,
-        headless: bool = False
+        headless: bool = False,
+        connect_portal: bool = False,
+        telegram: bool = False,
 ):
     Dir.delete(join(getcwd(), 'tmp'))
     num_processes = int(processes) if processes else 1
@@ -97,6 +100,9 @@ def builder_test(
     Dir.delete(builder.local_path.dep_test_path)
 
     data.report.get_full(data.version)
+    sender = BuilderReportSender(data.report.path, data)
+    sender.to_telegram() if telegram else None
+    sender.to_report_portal() if connect_portal else None
 
 
 @task

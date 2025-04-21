@@ -8,7 +8,7 @@ from host_tools import File
 from frameworks.test_data import TestData
 from tests.builder_tests.builder_paths import BuilderLocalPaths
 
-from tests.builder_tests.builder_report import BuilderReport
+from .builder_report import BuilderReport
 
 
 @dataclass
@@ -21,6 +21,7 @@ class BuilderTestData(TestData):
     def __post_init__(self):
         super().__post_init__()
         self.dep_test_branch = self.config.get('branch')
+        self.portal_project_name = self.config.get('report_portal').get('project_name')
         self.full_report_path = join(
             BuilderLocalPaths().builder_report_dir,
             self.version,
