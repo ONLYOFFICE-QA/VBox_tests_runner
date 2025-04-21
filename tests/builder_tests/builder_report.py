@@ -23,9 +23,6 @@ class BuilderReport(Report):
         )
         return self.path
 
-    def send_to_report_portal(self):
-        ...
-
     def column_is_empty(self, column_name: str) -> bool:
         if not self.read(self.path)[column_name].count() or not isfile(self.path):
             return True

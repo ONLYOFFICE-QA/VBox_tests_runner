@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import concurrent.futures
-from os.path import join, dirname
+from os.path import join, dirname, isfile
 from typing import Any, Optional
 from rich import print
 from rich.console import Console
@@ -18,26 +18,35 @@ class BuilderReportSender:
         self.report = Report()
         self.tg = Telegram()
         self.report_path = report_path
-        self.df = self.report.read(self.report_path)
-        self.version = self._get_version()
+        self.__df = None
+        self.__version = None
         self.errors_only_report = join(dirname(self.report_path), f"{self.version}_errors_only_report.csv")
         self.console = Console()
         self.launch = None
 
-    def _get_version(self):
-        if self.df.empty:
-            raise ValueError("Report is empty")
+    @property
+    def df(self):
+        if self.__df is None and isfile(self.report_path):
+            self.__df = self.report.read(self.report_path)
+        return self.__df
+
+    @property
+    def version(self):
+        if not self.df or self.df.empty:
+            return None
 
         if not self.df.loc[0, 'Version']:
             raise ValueError("Version is None")
 
         if self.df['Version'].nunique() > 1:
             print("[red]|WARNING| Versions is not unique.")
-            return self.df['Version'].unique()[
+            self.__version = self.df['Version'].unique()[
                 self.df['Version'].nunique() - 1
             ]
+        else:
+            self.__version = self.df.loc[0, 'Version']
 
-        return self.df.loc[0, 'Version']
+        return self.__version
 
     def all_is_passed(self) -> bool:
         return self.df['Exit_code'].eq(0.0).all()
