@@ -25,7 +25,6 @@ class BuilderTestData(TestData):
         self.portal_project_name = self.config.get('report_portal').get('project_name')
         self.full_report_path = self._get_full_report_path()
         self.report = BuilderReport(self.full_report_path)
-        self.report_sender = BuilderReportSender(report_path=self.report.path)
 
     @property
     def status_bar(self) -> bool | None:

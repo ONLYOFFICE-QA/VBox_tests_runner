@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import concurrent.futures
 from os.path import join, dirname, isfile
-from typing import Any, Optional
+from typing import Optional
 from rich import print
 from rich.console import Console
 

@@ -13,6 +13,7 @@ from VBoxWrapper import VirtualMachine, Vbox
 
 from frameworks.DepTests import DocBuilder
 from tests.builder_tests import BuilderTests, BuilderTestData
+from tests.builder_tests.builder_report_sender import BuilderReportSender
 
 from tests.desktop_tests import DesktopTest, DesktopTestData
 import tests.multiprocessing as multiprocess
@@ -97,8 +98,9 @@ def builder_test(
     Dir.delete(builder.local_path.dep_test_path)
 
     data.report.get_full(data.version)
-    data.report_sender.to_telegram() if telegram else None
-    data.report_sender.to_report_portal(project_name=data.portal_project_name) if connect_portal else None
+    report_sender = BuilderReportSender(report_path=data.report.path)
+    report_sender.to_telegram() if telegram else None
+    report_sender.to_report_portal(project_name=data.portal_project_name) if connect_portal else None
 
 
 @task
