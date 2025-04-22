@@ -40,7 +40,6 @@ class DesktopTestData(TestData):
         self.portal_project_name = self.config.get('report_portal').get('project_name')
         self.report_dir = self._get_report_dir()
         self.full_report_path = join(self.report_dir, f"{self.version}_{self.title}_desktop_tests_report.csv")
-        self.report = DesktopReport(report_path=self.full_report_path)
         self.local_paths = DesktopLocalPaths()
         self._check_package_options()
 

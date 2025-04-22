@@ -15,7 +15,7 @@ from frameworks.DepTests import DocBuilder
 from tests.builder_tests import BuilderTests, BuilderTestData
 from tests.builder_tests.builder_report_sender import BuilderReportSender
 
-from tests.desktop_tests import DesktopTest, DesktopTestData
+from tests.desktop_tests import DesktopTest, DesktopTestData, DesktopReport
 import tests.multiprocessing as multiprocess
 
 
@@ -61,10 +61,11 @@ def desktop_test(
         for vm in Vbox().check_vm_names([name] if name else data.vm_names):
             DesktopTest(vm, data).run(headless=headless)
 
-    data.report.get_full(data.version)
-    data.report.send_to_tg(data=data) if not name else None
-    data.report.send_to_portal(data=data) if connect_portal else None
-    error_vms = data.report.get_error_vm_list()
+    report = DesktopReport(report_path=data.full_report_path)
+    report.get_full(data.version)
+    report.send_to_tg(data=data) if not name else None
+    report.send_to_report_portal(data.portal_project_name) if connect_portal else None
+    error_vms = report.get_error_vm_list()
 
     if len(error_vms) > 0:
         print(f"[red]|ERROR| Tests for the following VMs have errors: {error_vms}")
