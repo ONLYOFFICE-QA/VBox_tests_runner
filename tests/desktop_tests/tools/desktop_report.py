@@ -115,7 +115,7 @@ class DesktopReport:
 
     @staticmethod
     def is_passed(row: pd.Series) -> bool:
-        return row['Exit_code'].eq('Passed')
+        return row['Exit_code'] == 'Passed'
 
     def _create_suites(self, df: pd.DataFrame, launch: PortalManager):
         with self.console.status('') as status:
