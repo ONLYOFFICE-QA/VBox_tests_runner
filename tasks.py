@@ -27,6 +27,7 @@ def desktop_test(
         name: str = None,
         processes: int = None,
         detailed_telegram: bool = False,
+        connect_portal: bool = False,
         custom_config: bool = False,
         headless: bool = False,
         snap: bool = False,
@@ -61,7 +62,8 @@ def desktop_test(
             DesktopTest(vm, data).run(headless=headless)
 
     data.report.get_full(data.version)
-    data.report.send_to_tg(data=data) if not name else ...
+    data.report.send_to_tg(data=data) if not name else None
+    data.report.send_to_portal(data=data) if connect_portal else None
     error_vms = data.report.get_error_vm_list()
 
     if len(error_vms) > 0:

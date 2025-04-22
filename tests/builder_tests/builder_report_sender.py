@@ -35,7 +35,12 @@ class BuilderReportSender:
         if self.__version is not None:
             return self.__version
 
-        if not self.df or self.df.empty:
+        if self.df is None:
+            print("[red]|ERROR| Can't read report.csv. Check path: ", self.report_path)
+            return None
+
+        if self.df.empty:
+            print("[red]|ERROR| Report is empty")
             return None
 
         if not self.df.loc[0, 'Version']:
