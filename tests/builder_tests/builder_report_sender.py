@@ -32,6 +32,9 @@ class BuilderReportSender:
 
     @property
     def version(self):
+        if self.__version is not None:
+            return self.__version
+
         if not self.df or self.df.empty:
             return None
 
