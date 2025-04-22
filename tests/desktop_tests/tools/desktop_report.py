@@ -78,7 +78,7 @@ class DesktopReport:
 
         return df.loc[0, 'Version']
 
-    def send_to_report_portal(self, project_name: str):
+    def send_to_report_portal(self, project_name: str, packege_name: str):
         df = self.report.read(self.path).dropna(how='all')
         version = self._get_version(df)
 
@@ -87,19 +87,18 @@ class DesktopReport:
 
         print(f"[green]|INFO| Starting sending to report portal for version: {version}...")
         with PortalManager(project_name=project_name, launch_name=version) as launch:
-            self._create_suites(df, launch)
+            self._create_suites(df, launch, packege_name)
 
             with self.console.status('') as status:
                 with concurrent.futures.ThreadPoolExecutor() as executor:
-                    futures = [executor.submit(self._process_row, row, launch) for _, row in df.iterrows()]
+                    futures = [executor.submit(self._process_row, row, launch, packege_name) for _, row in df.iterrows()]
                     for future in concurrent.futures.as_completed(futures):
                         future.add_done_callback(lambda *_: status.update(self._get_thread_result(future)))
 
                     concurrent.futures.wait(futures)
 
-    def _process_row(self, row: pd.Series, launch: PortalManager) -> Optional[str]:
-        os_suite_id = launch.create_suite(row['Os'])
-        test = launch.start_test(test_name=row['Test_name'], suite_id=os_suite_id)
+    def _process_row(self, row: pd.Series, launch: PortalManager, packege_name: str) -> Optional[str]:
+        test = launch.start_test(test_name=row['Test_name'], suite_id=self._create_suite(row, launch, packege_name))
 
         if not self.is_passed(row):
             test.send_log(message=row['Exit_code'], level='ERROR')
@@ -117,11 +116,15 @@ class DesktopReport:
     def is_passed(row: pd.Series) -> bool:
         return row['Exit_code'] == 'Passed'
 
-    def _create_suites(self, df: pd.DataFrame, launch: PortalManager):
+    def _create_suites(self, df: pd.DataFrame, launch: PortalManager, packege_name: str):
         with self.console.status('') as status:
             for _, row in df.iterrows():
                 status.update(f"[cyan]|INFO| Created suite {row['Os']} launchers for {row['Version']} test.")
-                launch.create_suite(row['Os'])
+                self._create_suite(row, launch, packege_name)
+
+    @staticmethod
+    def _create_suite(row: pd.Series, launch: PortalManager, packege_name: str) -> str:
+        return launch.create_suite(row['Os'], parent_suite_id=launch.create_suite(packege_name))
 
     def exists(self) -> bool:
         return isfile(self.path)
