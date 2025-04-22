@@ -42,9 +42,7 @@ def desktop_test(
         version=version or Prompt.ask('[red]Please enter version'),
         update_from=update_from_version,
         telegram=detailed_telegram,
-        config_path=join(
-            getcwd(), 'custom_config.json') if custom_config else join(getcwd(), 'desktop_tests_config.json'
-        ),
+        config_path=join(getcwd(), 'custom_config.json' if custom_config else 'desktop_tests_config.json'),
         custom_config_mode=custom_config,
         snap=snap,
         appimage=appimage,
@@ -65,8 +63,8 @@ def desktop_test(
     report.get_full(data.version)
     report.send_to_tg(data=data) if not name else None
     report.send_to_report_portal(data.portal_project_name) if connect_portal else None
-    error_vms = report.get_error_vm_list()
 
+    error_vms = report.get_error_vm_list()
     if len(error_vms) > 0:
         print(f"[red]|ERROR| Tests for the following VMs have errors: {error_vms}")
     else:
