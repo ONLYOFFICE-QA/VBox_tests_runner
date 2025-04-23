@@ -9,6 +9,8 @@ from host_tools import File
 from frameworks.test_data.TestData import TestData
 
 from .desktop_paths import DesktopLocalPaths
+from .. import DesktopReport
+
 
 @dataclass
 class DesktopTestData(TestData):
@@ -52,7 +54,7 @@ class DesktopTestData(TestData):
     @property
     def vm_names(self) -> List[str]:
         if self.retest:
-            return self.report.get_error_vm_list()
+            return DesktopReport(self.full_report_path).get_error_vm_list()
         return self.config.get('hosts', [])
 
     def _check_package_options(self):
