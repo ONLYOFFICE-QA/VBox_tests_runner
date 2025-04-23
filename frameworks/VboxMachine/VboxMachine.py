@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from functools import wraps
 
 from host_tools import HostInfo
 from vboxwrapper import VirtualMachine
