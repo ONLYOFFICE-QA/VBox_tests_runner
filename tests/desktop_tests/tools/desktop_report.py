@@ -138,25 +138,12 @@ class DesktopReport:
 
         caption = (
             f"{data.title} desktop editor tests completed on version: `{update_info}{data.version}`\n\n"
-            f"Package: `{self._get_package(data=data)}`\n"
+            f"Package: `{data.package_name}`\n"
             f"Result: `{result_status}`\n\n"
             f"Number of tested Os: `{self.get_total_count('Exit_code')}`"
         )
 
         Telegram(token=data.tg_token, chat_id=data.tg_chat_id).send_document(self.path, caption=caption)
-
-    @staticmethod
-    def _get_package(data) -> str:
-        if data.snap:
-            return "Snap Packages"
-
-        if data.appimage:
-            return "AppImages"
-
-        if data.flatpak:
-            return "FlatPak"
-
-        return "Default Packages"
 
     def _writer(self, mode: str, message: list, delimiter='\t', encoding='utf-8'):
         self.report.write(self.path, mode, message, delimiter, encoding)

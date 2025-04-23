@@ -62,7 +62,7 @@ def desktop_test(
     report = DesktopReport(report_path=data.full_report_path)
     report.get_full(data.version)
     report.send_to_tg(data=data) if not name else None
-    report.send_to_report_portal(data.portal_project_name) if connect_portal else None
+    report.send_to_report_portal(data.portal_project_name, data.package_name) if connect_portal else None
 
     error_vms = report.get_error_vm_list()
     if len(error_vms) > 0:

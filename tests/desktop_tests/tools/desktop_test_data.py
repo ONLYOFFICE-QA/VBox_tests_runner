@@ -57,6 +57,19 @@ class DesktopTestData(TestData):
             return DesktopReport(self.full_report_path).get_error_vm_list()
         return self.config.get('hosts', [])
 
+    @property
+    def package_name(self) -> str:
+        if self.snap:
+            return "Snap Packages"
+
+        if self.appimage:
+            return "AppImages"
+
+        if self.flatpak:
+            return "FlatPak"
+
+        return "Default Packages"
+
     def _check_package_options(self):
         if sum([self.snap, self.appimage, self.flatpak]) > 1:
             raise ValueError("Only one option from snap, appimage, flatpak should be enabled..")
@@ -74,3 +87,4 @@ class DesktopTestData(TestData):
         if not isfile(self.config_path):
             raise FileNotFoundError(f"[red]|ERROR| Configuration file not found: {self.config_path}")
         return File.read_json(self.config_path)
+
