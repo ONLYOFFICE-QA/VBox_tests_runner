@@ -1935,7 +1935,7 @@ name = "report-portal"
 version = "0.1.0"
 description = "Add your description here"
 optional = false
-python-versions = ">=3.10"
+python-versions = "^3.11"
 groups = ["main"]
 markers = "python_version == \"3.11\" or python_version >= \"3.12\""
 files = []
@@ -1947,8 +1947,8 @@ reportportal-client = ">=5.6.4"
 [package.source]
 type = "git"
 url = "https://github.com/l8556/report_portal.git"
-reference = "master"
-resolved_reference = "cb07dc97a14254f0237974f9ba04b4d2812b4cc0"
+reference = "feature/refactoring"
+resolved_reference = "b44fefc844087b6c7ac0d7b10ca17cb532093ec7"
 
 [[package]]
 name = "reportportal-client"
@@ -1994,15 +1994,15 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "rich"
-version = "13.9.4"
+version = "14.0.0"
 description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
 optional = false
 python-versions = ">=3.8.0"
 groups = ["main"]
 markers = "python_version == \"3.11\" or python_version >= \"3.12\""
 files = [
-    {file = "rich-13.9.4-py3-none-any.whl", hash = "sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90"},
-    {file = "rich-13.9.4.tar.gz", hash = "sha256:439594978a49a09530cff7ebc4b5c7103ef57baf48d5ea3184f21d9a2befa098"},
+    {file = "rich-14.0.0-py3-none-any.whl", hash = "sha256:1c9491e1951aac09caffd42f448ee3d04e58923ffe14993f6e83068dc395d7e0"},
+    {file = "rich-14.0.0.tar.gz", hash = "sha256:82f1bc23a6a21ebca4ae0c45af9bdbc492ed20231dcb63f297d6d1021a9d5725"},
 ]
 
 [package.dependencies]
@@ -2066,15 +2066,15 @@ files = []
 develop = false
 
 [package.dependencies]
-cryptography = "^44.0.0"
+cryptography = "^44.0.2"
 paramiko = "^3"
-rich = "^13"
+rich = "^14"
 
 [package.source]
 type = "git"
 url = "https://github.com/l8556/SshWrapper.git"
 reference = "master"
-resolved_reference = "2eb4cb6818fe18781d10436813811844250f2fb6"
+resolved_reference = "5222ebc5223800115ae394fdb3cace950d8ff81e"
 
 [[package]]
 name = "telegram"
@@ -2188,8 +2188,8 @@ rich = "*"
 [package.source]
 type = "git"
 url = "https://github.com/l8556/VBoxWrapper.git"
-reference = "feature/minor-refactoring"
-resolved_reference = "b98a3473546dfe19a6d64f7a76fb2028af79170b"
+reference = "master"
+resolved_reference = "6d2a77f9f283995403fb312f99dacd65c9d2a6d0"
 
 [[package]]
 name = "yarl"
@@ -2314,4 +2314,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "0c030dca8d5af470cc845d64c636d0b30cc0926274ff4fec8f48830b7e9778d5"
+content-hash = "1e4e73ef731509e6a79f66062a683f99463cd291f355865321d4513932c6764c"

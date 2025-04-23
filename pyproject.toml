@@ -7,11 +7,11 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "invoke>=2",
-    "rich>=13",
+    "rich>=14.0.0",
     "paramiko>=3",
     "pandas>=2",
     "elevate>=0.1.3",
-    "ruff>=0.11.2",
+    "ruff>=0.11",
     "pydantic>=2.11.1",
     "host-tools",
     "telegram",
@@ -39,7 +39,7 @@ package-mode = false
 [tool.poetry.dependencies]
 python = "^3.11"
 invoke = "^2"
-rich = "^13"
+rich = "^14"
 paramiko = "^3"
 pandas = "^2"
 elevate = "^0.1.3"
@@ -48,5 +48,5 @@ telegram = { git = "https://github.com/l8556/TelegramApi.git", branch = "master"
 vboxwrapper = { git = "https://github.com/l8556/VBoxWrapper.git", branch = "master" }
 ssh-wrapper = { git = "https://github.com/l8556/SshWrapper.git", branch = "master" }
 report-portal = { git = "https://github.com/l8556/report_portal.git", branch = "feature/refactoring" }
-ruff = "^0.11.5"
+ruff = "^0.11"
 pydantic = "^2.11.3"
