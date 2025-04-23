@@ -9,12 +9,13 @@ from invoke import task
 from rich.prompt import Prompt
 from rich import print
 
-from VBoxWrapper import VirtualMachine, Vbox
+from vboxwrapper import VirtualMachine, Vbox
 
 from frameworks.DepTests import DocBuilder
 from tests.builder_tests import BuilderTests, BuilderTestData
+from tests.builder_tests.builder_report_sender import BuilderReportSender
 
-from tests.desktop_tests import DesktopTest, DesktopTestData
+from tests.desktop_tests import DesktopTest, DesktopTestData, DesktopReport
 import tests.multiprocessing as multiprocess
 
 
@@ -26,6 +27,7 @@ def desktop_test(
         name: str = None,
         processes: int = None,
         detailed_telegram: bool = False,
+        connect_portal: bool = False,
         custom_config: bool = False,
         headless: bool = False,
         snap: bool = False,
@@ -40,9 +42,7 @@ def desktop_test(
         version=version or Prompt.ask('[red]Please enter version'),
         update_from=update_from_version,
         telegram=detailed_telegram,
-        config_path=join(
-            getcwd(), 'custom_config.json') if custom_config else join(getcwd(), 'desktop_tests_config.json'
-        ),
+        config_path=join(getcwd(), 'custom_config.json' if custom_config else 'desktop_tests_config.json'),
         custom_config_mode=custom_config,
         snap=snap,
         appimage=appimage,
@@ -51,7 +51,7 @@ def desktop_test(
         retest=retest
     )
 
-    if num_processes > 1 and not name:
+    if num_processes > 1 and not name or len(data.vm_names) == 1 and not name:
         data.status_bar = False
         multiprocess.run(DesktopTest, data, num_processes, 10, headless)
     else:
@@ -59,10 +59,12 @@ def desktop_test(
         for vm in Vbox().check_vm_names([name] if name else data.vm_names):
             DesktopTest(vm, data).run(headless=headless)
 
-    data.report.get_full(data.version)
-    data.report.send_to_tg(data=data) if not name else ...
-    error_vms = data.report.get_error_vm_list()
+    report = DesktopReport(report_path=data.full_report_path)
+    report.get_full(data.version)
+    report.send_to_tg(data=data) if not name else None
+    report.send_to_report_portal(data.portal_project_name) if connect_portal else None
 
+    error_vms = report.get_error_vm_list()
     if len(error_vms) > 0:
         print(f"[red]|ERROR| Tests for the following VMs have errors: {error_vms}")
     else:
@@ -74,26 +76,33 @@ def builder_test(
         version: str = None,
         processes: int = None,
         name: str = None,
-        headless: bool = False
+        headless: bool = False,
+        connect_portal: bool = False,
+        telegram: bool = False,
 ):
-    Dir.delete(join(getcwd(), 'tmp'))
     num_processes = int(processes) if processes else 1
     data = BuilderTestData(
         version=version or Prompt.ask('[red]Please enter version'),
         config_path=join(getcwd(), "builder_tests_config.json")
     )
+
     builder = DocBuilder(version=data.version)
     builder.get(branch=data.dep_test_branch)
     builder.compress_dep_tests(delete=False)
     Dir.delete(builder.local_path.dep_test_path)
 
-    if num_processes > 1 and not name:
+    if num_processes > 1 and not name or len(data.vm_names) == 1 and not name:
         data.status_bar = False
         multiprocess.run(BuilderTests, data, num_processes, 10, headless)
     else:
         data.status_bar = True
         for vm in Vbox().check_vm_names([name] if name else data.vm_names):
             BuilderTests(vm, data).run(headless=headless)
+
+    data.report.get_full(data.version)
+    report_sender = BuilderReportSender(report_path=data.report.path)
+    report_sender.to_telegram() if telegram else None
+    report_sender.to_report_portal(project_name=data.portal_project_name) if connect_portal else None
 
 
 @task

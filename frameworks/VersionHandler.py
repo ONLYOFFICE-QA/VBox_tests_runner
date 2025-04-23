@@ -38,12 +38,12 @@ class VersionHandler:
         Validates the format of the version number.
         :param value: Version number string..
         """
-        if self.len_version == 4 or self.len_version == 3:
+        if self.len_version == 4:
             self.__version = value
         else:
             raise ValueError(
                 "[red]|WARNING| Version is entered incorrectly. "
-                "The version must be in the format 'x.x.x.x' or 'x.x.x'"
+                "The version must be in the format 'x.x.x.x'"
             )
 
     @property

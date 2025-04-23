@@ -8,7 +8,7 @@ from subprocess import CompletedProcess
 from host_tools.utils import Dir
 from rich import print
 
-from VBoxWrapper import VirtualMachine
+from vboxwrapper import VirtualMachine
 from host_tools import File
 from rich.console import Console
 from tempfile import gettempdir

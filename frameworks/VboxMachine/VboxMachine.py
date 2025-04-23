@@ -1,24 +1,12 @@
 # -*- coding: utf-8 -*-
-from functools import wraps
 
-from VBoxWrapper import VirtualMachine
+from host_tools import HostInfo
+from vboxwrapper import VirtualMachine
 
-from frameworks.decorators import vm_is_turn_on
+from frameworks.decorators import vm_is_turn_on, class_cache
 from .vm_data import VmData
 from .configs import VmConfig
 
-
-def class_cache(class_):
-    __instances = {}
-
-    @wraps(class_)
-    def wrapper(*args, **kwargs):
-        key = (class_, args, frozenset(kwargs.items()))
-        if key not in __instances:
-            __instances[key] = class_(*args, **kwargs)
-        return __instances[key]
-
-    return wrapper
 
 @class_cache
 class VboxMachine:
@@ -61,7 +49,7 @@ class VboxMachine:
         self.set_network_adapter()
         self.vm.set_cpus(self._get_cpu_num())
         self.vm.nested_virtualization(self.vm_config.nested_virtualization)
-        self.vm.set_memory(self.vm_config.memory)
+        self.vm.set_memory(self._get_memory_num())
         self.vm.audio(self.vm_config.audio)
         self.vm.speculative_execution_control(self.vm_config.speculative_execution_control)
 
@@ -75,6 +63,12 @@ class VboxMachine:
                 adapter_name=self.vm_config.network.adapter_name,
                 connect_type=self.vm_config.network.connect_type
             )
+
+    # TODO
+    def _get_memory_num(self) -> int:
+        if HostInfo().os == 'mac':
+            return 2048
+        return self.vm_config.memory
 
     def _get_cpu_num(self) -> int:
         return self.vm_config.cpus

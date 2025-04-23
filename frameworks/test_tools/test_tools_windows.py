@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from VBoxWrapper import VirtualMachinException
+from vboxwrapper import VirtualMachinException
 from frameworks.decorators import retry, vm_data_created
 
 from .vbox_utils import VboxUtilsVista, VboxUtilsWindows

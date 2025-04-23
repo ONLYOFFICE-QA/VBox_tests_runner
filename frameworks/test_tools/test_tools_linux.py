@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from VBoxWrapper import VirtualMachinException
+from vboxwrapper import VirtualMachinException
 from ssh_wrapper import Ssh, Sftp, ServerData
 
 from frameworks.decorators import retry, vm_data_created

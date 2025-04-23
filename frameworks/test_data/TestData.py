@@ -61,4 +61,3 @@ class TestData(ABC):
                 f"from config file not exists: {file_path}"
             )
         return join(self.local_paths.tg_dir, default_filename)
-

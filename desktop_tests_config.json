@@ -5,6 +5,9 @@
   "token_file": "",
   "chat_id_file": "",
   "password": "",
+  "report_portal": {
+    "project_name": "desktopeditors"
+  },
   "hosts": [
     "Windows10",
     "Debian10",

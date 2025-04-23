@@ -7,7 +7,6 @@ from os.path import join, isfile
 from host_tools import File
 
 from frameworks.test_data.TestData import TestData
-from .desktop_report import DesktopReport
 
 from .desktop_paths import DesktopLocalPaths
 
@@ -37,9 +36,9 @@ class DesktopTestData(TestData):
         self.desktop_testing_url = self.config['desktop_script']
         self.branch = self.config['branch']
         self.title = self.config.get('title', 'Undefined_title')
+        self.portal_project_name = self.config.get('report_portal').get('project_name')
         self.report_dir = self._get_report_dir()
         self.full_report_path = join(self.report_dir, f"{self.version}_{self.title}_desktop_tests_report.csv")
-        self.report = DesktopReport(report_path=self.full_report_path)
         self.local_paths = DesktopLocalPaths()
         self._check_package_options()
 

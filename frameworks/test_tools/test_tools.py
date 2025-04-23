@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from os.path import join, dirname, isfile
 from typing import Optional
 
-from VBoxWrapper import VirtualMachinException
+from vboxwrapper import VirtualMachinException
 from host_tools import File
 
 from frameworks.test_data import TestData

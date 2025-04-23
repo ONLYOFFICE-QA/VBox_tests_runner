@@ -3,7 +3,7 @@ import time
 from subprocess import CompletedProcess
 from typing import Optional
 
-from VBoxWrapper import FileUtils, VirtualMachine
+from vboxwrapper import FileUtils, VirtualMachine
 from rich import print
 
 from frameworks.test_data import Paths

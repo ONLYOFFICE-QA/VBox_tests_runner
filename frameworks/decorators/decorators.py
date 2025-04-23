@@ -2,9 +2,21 @@
 from functools import wraps
 from time import sleep
 
-from VBoxWrapper import VirtualMachinException
+from vboxwrapper import VirtualMachinException
 from rich import print
 
+
+def class_cache(class_):
+    __instances = {}
+
+    @wraps(class_)
+    def wrapper(*args, **kwargs):
+        key = (class_, args, frozenset(kwargs.items()))
+        if key not in __instances:
+            __instances[key] = class_(*args, **kwargs)
+        return __instances[key]
+
+    return wrapper
 
 def vm_data_created(method):
     @wraps(method)
