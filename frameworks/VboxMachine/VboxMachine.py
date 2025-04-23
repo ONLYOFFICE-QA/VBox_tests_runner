@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from functools import wraps
 
+from src.host_tools.host_tools import HostInfo
 from vboxwrapper import VirtualMachine
 
 from frameworks.decorators import vm_is_turn_on
@@ -61,7 +62,7 @@ class VboxMachine:
         self.set_network_adapter()
         self.vm.set_cpus(self._get_cpu_num())
         self.vm.nested_virtualization(self.vm_config.nested_virtualization)
-        self.vm.set_memory(self.vm_config.memory)
+        self.vm.set_memory(self._get_memory_num())
         self.vm.audio(self.vm_config.audio)
         self.vm.speculative_execution_control(self.vm_config.speculative_execution_control)
 
@@ -75,6 +76,12 @@ class VboxMachine:
                 adapter_name=self.vm_config.network.adapter_name,
                 connect_type=self.vm_config.network.connect_type
             )
+
+    # TODO
+    def _get_memory_num(self) -> int:
+        if HostInfo().os == 'mac':
+            return 2048
+        return self.vm_config.memory
 
     def _get_cpu_num(self) -> int:
         return self.vm_config.cpus
