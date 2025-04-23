@@ -800,8 +800,8 @@ rich = "*"
 [package.source]
 type = "git"
 url = "https://github.com/l8556/host_tools.git"
-reference = "master"
-resolved_reference = "5c9eeac717f84b4cc4cdde3b8cb4556abaf775c1"
+reference = "feature/add-module-for-work-with-git"
+resolved_reference = "2addc192f8f223f1ce221dc719100968b56e185b"
 
 [[package]]
 name = "idna"
@@ -2314,4 +2314,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "f9d1dfbde508b3ecfa75a023db49d7d8ccd060e7e1b8ed8fb1570610837b3f58"
+content-hash = "c85f1d6938c6bb1001193dc104c89a0b7f756857ecd247f660fa8817bc09517e"

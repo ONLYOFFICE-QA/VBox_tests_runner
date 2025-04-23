@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from host_tools.utils import File
+from host_tools.utils import File, Git
 
 from .dep_test import DepTests
 
@@ -10,13 +10,13 @@ class DocBuilder(DepTests):
     def __init__(self, version: str):
         super().__init__(version=version)
 
-    def get(self, branch: str = None) -> None:
-        self.clone_dep_tests(branch=branch)
-        self.clone_builder_samples()
+    def get(self, dep_test_branch: str = None, builder_samples_branch: str = None) -> None:
+        self.clone_dep_tests(branch=dep_test_branch)
+        self.clone_builder_samples(branch=builder_samples_branch)
         self.configure()
 
-    def clone_builder_samples(self) -> None:
-        self._git_clone(repo=self.document_builder_samples_repo, path=self.local_path.document_builder_samples)
+    def clone_builder_samples(self, branch: str) -> None:
+        Git.clone(self.document_builder_samples_repo, branch=branch, path=self.local_path.document_builder_samples)
 
     def configure(self):
         data = File.read_json(self.local_path.docbuilder_config)

@@ -65,14 +65,16 @@ class RunScript:
         return 'python3'
 
     def clone_build_tools_repo(self) -> str:
+        branch = f"{('-b ' + self.data.build_tools_branch + ' ') if self.data.build_tools_branch else ''}"
         return (
-            f"git clone {self.build_tools_repo} "
+            f"git clone {branch}{self.build_tools_repo} "
             f"{join(self._path.remote.script_dir, splitext(basename(self.build_tools_repo))[0])}"
         )
 
     def clone_office_js_api_repo(self) -> str:
+        branch = f"{('-b ' + self.data.office_js_api_branch + ' ') if self.data.office_js_api_branch else ''}"
         return (
-            f"git clone {self.office_js_api} "
+            f"git clone {branch}{self.office_js_api} "
             f"{join(self._path.remote.script_dir, splitext(basename(self.office_js_api))[0])}"
         )
 

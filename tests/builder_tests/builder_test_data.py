@@ -20,8 +20,10 @@ class BuilderTestData(TestData):
 
     def __post_init__(self):
         super().__post_init__()
-        self.dep_test_branch = self.config.get('branch')
+        self.dep_test_branch = self.config.get('dep_test_branch')
+        self.build_tools_branch = self.config.get('build_tools_branch')
         self.portal_project_name = self.config.get('report_portal').get('project_name')
+        self.office_js_api_branch = self.config.get('office_js_api_branch')
         self.full_report_path = self._get_full_report_path()
         self.report = BuilderReport(self.full_report_path)
 
