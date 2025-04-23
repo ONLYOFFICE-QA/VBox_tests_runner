@@ -3,13 +3,12 @@ from dataclasses import dataclass
 from os.path import isfile, join
 from typing import Dict, List
 
-from host_tools import File
+from host_tools import File, HostInfo
 
 from frameworks.test_data import TestData
 from tests.builder_tests.builder_paths import BuilderLocalPaths
 
 from .builder_report import BuilderReport
-from .builder_report_sender import BuilderReportSender
 
 
 @dataclass
@@ -45,7 +44,9 @@ class BuilderTestData(TestData):
 
     @property
     def vm_names(self) -> List[str]:
-        return self.config.get('hosts', [])
+        if HostInfo().os == 'mac':
+            return [name for name in self.config.get('hosts', []) if 'arm64' in name.lower()]
+        return [name for name in self.config.get('hosts', []) if 'arm64' not in name.lower()]
 
     def _read_config(self) -> Dict:
         if not isfile(self.config_path):
