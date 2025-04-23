@@ -2,7 +2,7 @@
 import time
 from os.path import join, isfile
 
-from VBoxWrapper import VirtualMachinException
+from vboxwrapper import VirtualMachinException
 from host_tools import File
 from rich import print
 

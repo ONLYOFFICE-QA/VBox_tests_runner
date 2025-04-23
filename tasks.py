@@ -9,7 +9,7 @@ from invoke import task
 from rich.prompt import Prompt
 from rich import print
 
-from VBoxWrapper import VirtualMachine, Vbox
+from vboxwrapper import VirtualMachine, Vbox
 
 from frameworks.DepTests import DocBuilder
 from tests.builder_tests import BuilderTests, BuilderTestData

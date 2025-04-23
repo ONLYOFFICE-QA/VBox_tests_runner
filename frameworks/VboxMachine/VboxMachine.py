@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from functools import wraps
 
-from VBoxWrapper import VirtualMachine
+from vboxwrapper import VirtualMachine
 
 from frameworks.decorators import vm_is_turn_on
 from .vm_data import VmData

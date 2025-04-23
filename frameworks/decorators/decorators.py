@@ -2,7 +2,7 @@
 from functools import wraps
 from time import sleep
 
-from VBoxWrapper import VirtualMachinException
+from vboxwrapper import VirtualMachinException
 from rich import print
 
 
