@@ -9,7 +9,7 @@ from host_tools import File
 from frameworks.test_data.TestData import TestData
 
 from .desktop_paths import DesktopLocalPaths
-from .. import DesktopReport
+from .desktop_report import DesktopReport
 
 
 @dataclass
