@@ -4,22 +4,10 @@ from functools import wraps
 from host_tools import HostInfo
 from vboxwrapper import VirtualMachine
 
-from frameworks.decorators import vm_is_turn_on
+from frameworks.decorators import vm_is_turn_on, class_cache
 from .vm_data import VmData
 from .configs import VmConfig
 
-
-def class_cache(class_):
-    __instances = {}
-
-    @wraps(class_)
-    def wrapper(*args, **kwargs):
-        key = (class_, args, frozenset(kwargs.items()))
-        if key not in __instances:
-            __instances[key] = class_(*args, **kwargs)
-        return __instances[key]
-
-    return wrapper
 
 @class_cache
 class VboxMachine:
