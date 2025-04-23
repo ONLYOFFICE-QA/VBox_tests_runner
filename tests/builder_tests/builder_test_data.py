@@ -24,6 +24,7 @@ class BuilderTestData(TestData):
         self.build_tools_branch = self.config.get('build_tools_branch')
         self.portal_project_name = self.config.get('report_portal').get('project_name')
         self.office_js_api_branch = self.config.get('office_js_api_branch')
+        self.document_builder_samples = self.config.get('document_builder_samples')
         self.full_report_path = self._get_full_report_path()
         self.report = BuilderReport(self.full_report_path)
 

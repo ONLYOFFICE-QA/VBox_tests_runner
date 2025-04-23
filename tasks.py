@@ -87,7 +87,7 @@ def builder_test(
     )
 
     builder = DocBuilder(version=data.version)
-    builder.get(branch=data.dep_test_branch)
+    builder.get(dep_test_branch=data.dep_test_branch, builder_samples_branch=data.document_builder_samples)
     builder.compress_dep_tests(delete=False)
     Dir.delete(builder.local_path.dep_test_path)
 
