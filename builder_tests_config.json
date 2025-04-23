@@ -6,7 +6,8 @@
   "hosts": [
     "Windows11",
     "Ubuntu22",
-    "Windows10_x32"
+    "Windows10_x32",
+    "Debian12_arm64"
   ],
   "report_portal": {
     "project_name": "documentbuilder"
