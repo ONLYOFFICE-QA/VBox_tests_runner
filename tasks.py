@@ -51,7 +51,7 @@ def desktop_test(
         retest=retest
     )
 
-    if num_processes > 1 and not name:
+    if num_processes > 1 and not name or len(data.vm_names) == 1 and not name:
         data.status_bar = False
         multiprocess.run(DesktopTest, data, num_processes, 10, headless)
     else:
@@ -85,18 +85,19 @@ def builder_test(
         version=version or Prompt.ask('[red]Please enter version'),
         config_path=join(getcwd(), "builder_tests_config.json")
     )
+
     builder = DocBuilder(version=data.version)
     builder.get(branch=data.dep_test_branch)
     builder.compress_dep_tests(delete=False)
+    Dir.delete(builder.local_path.dep_test_path)
 
-    if num_processes > 1 and not name:
+    if num_processes > 1 and not name or len(data.vm_names) == 1 and not name:
         data.status_bar = False
         multiprocess.run(BuilderTests, data, num_processes, 10, headless)
     else:
         data.status_bar = True
         for vm in Vbox().check_vm_names([name] if name else data.vm_names):
             BuilderTests(vm, data).run(headless=headless)
-    Dir.delete(builder.local_path.dep_test_path)
 
     data.report.get_full(data.version)
     report_sender = BuilderReportSender(report_path=data.report.path)

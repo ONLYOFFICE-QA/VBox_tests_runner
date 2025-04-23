@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from functools import wraps
 
-from src.host_tools.host_tools import HostInfo
+from host_tools import HostInfo
 from vboxwrapper import VirtualMachine
 
 from frameworks.decorators import vm_is_turn_on
