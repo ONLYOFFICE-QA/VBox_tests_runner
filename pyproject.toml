@@ -45,7 +45,7 @@ pandas = "^2"
 elevate = "^0.1.3"
 host-tools = { git = "https://github.com/l8556/host_tools.git", branch = "master" }
 telegram = { git = "https://github.com/l8556/TelegramApi.git", branch = "master" }
-vboxwrapper = { git = "https://github.com/l8556/VBoxWrapper.git", branch = "master" }
+vboxwrapper = { git = "https://github.com/l8556/VBoxWrapper.git", branch = "feature/minor-refactoring" }
 ssh-wrapper = { git = "https://github.com/l8556/SshWrapper.git", branch = "master" }
 report-portal = { git = "https://github.com/l8556/report_portal.git", branch = "feature/refactoring" }
 ruff = "^0.11.6"

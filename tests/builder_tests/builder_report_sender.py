@@ -71,7 +71,7 @@ class BuilderReportSender:
 
 
     def to_report_portal(self, project_name: str):
-        print(f"[green]|INFO| Starting sending to report portal for version: {self.version}...")
+        self.console.print(f"[green]|INFO| Start sending results to report portal for version: {self.version}...")
         df = self.df.dropna(how='all')
 
         if df.empty:
@@ -81,7 +81,7 @@ class BuilderReportSender:
             self._create_suites(df, launch)
 
             with self.console.status('') as status:
-                with concurrent.futures.ThreadPoolExecutor() as executor:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                     futures = [executor.submit(self._process_row, row, launch) for _, row in df.iterrows()]
                     for future in concurrent.futures.as_completed(futures):
                         future.add_done_callback(lambda *_: status.update(self._get_thread_result(future)))
@@ -117,10 +117,10 @@ class BuilderReportSender:
             )
             return ''
 
-        return f"[cyan]|INFO|[{'green'}][{row['Os']}] {row['Test_name']} finished with exit code {ret_code}"
+        return f"[cyan]|INFO|[{'green'}]{row['Os']}|{row['Test_name']} finished with exit code {ret_code}"
 
     def _create_suites(self, df: pd.DataFrame, launch: PortalManager):
-        with self.console.status('') as status:
+        with self.console.status('[cyan]|INFO| Start creating suites') as status:
             for _, row in df.iterrows():
                 status.update(
                     f"[cyan]|INFO| Created suite {row['Os']} and {row['Builder_samples']} "

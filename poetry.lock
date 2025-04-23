@@ -2188,8 +2188,8 @@ rich = "*"
 [package.source]
 type = "git"
 url = "https://github.com/l8556/VBoxWrapper.git"
-reference = "master"
-resolved_reference = "6d2a77f9f283995403fb312f99dacd65c9d2a6d0"
+reference = "feature/minor-refactoring"
+resolved_reference = "e4c8af38b48fba891bc4d7b01f8a7101d7465dbc"
 
 [[package]]
 name = "yarl"
@@ -2314,4 +2314,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "e3e06d1d2f66432dd3ed01443c2db0682f74b8392d534bf86858adf22d561b7b"
+content-hash = "f9d1dfbde508b3ecfa75a023db49d7d8ccd060e7e1b8ed8fb1570610837b3f58"
