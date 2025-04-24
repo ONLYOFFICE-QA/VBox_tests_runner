@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from os import getcwd, system
-from os.path import join, isfile
+from os.path import join
 from host_tools import Process, Service
 from elevate import elevate
 from host_tools.utils import Dir
