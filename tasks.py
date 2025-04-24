@@ -51,7 +51,7 @@ def desktop_test(
         retest=retest
     )
 
-    if num_processes > 1 and not name or len(data.vm_names) == 1 and not name:
+    if num_processes > 1 and not name and len(data.vm_names) > 1:
         data.status_bar = False
         multiprocess.run(DesktopTest, data, num_processes, 10, headless)
     else:
@@ -62,7 +62,7 @@ def desktop_test(
     report = DesktopReport(report_path=data.full_report_path)
     report.get_full(data.version)
     report.send_to_tg(data=data) if not name else None
-    report.send_to_report_portal(data.portal_project_name) if connect_portal else None
+    report.send_to_report_portal(data.portal_project_name, data.package_name) if connect_portal else None
 
     error_vms = report.get_error_vm_list()
     if len(error_vms) > 0:
@@ -87,11 +87,11 @@ def builder_test(
     )
 
     builder = DocBuilder(version=data.version)
-    builder.get(branch=data.dep_test_branch)
+    builder.get(dep_test_branch=data.dep_test_branch, builder_samples_branch=data.document_builder_samples)
     builder.compress_dep_tests(delete=False)
     Dir.delete(builder.local_path.dep_test_path)
 
-    if num_processes > 1 and not name or len(data.vm_names) == 1 and not name:
+    if num_processes > 1 and not name and len(data.vm_names) > 1:
         data.status_bar = False
         multiprocess.run(BuilderTests, data, num_processes, 10, headless)
     else:

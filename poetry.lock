@@ -801,7 +801,7 @@ rich = "*"
 type = "git"
 url = "https://github.com/l8556/host_tools.git"
 reference = "master"
-resolved_reference = "5c9eeac717f84b4cc4cdde3b8cb4556abaf775c1"
+resolved_reference = "aae1e71efad30f20a88916f9496af229848743f5"
 
 [[package]]
 name = "idna"
@@ -1947,8 +1947,8 @@ reportportal-client = ">=5.6.4"
 [package.source]
 type = "git"
 url = "https://github.com/l8556/report_portal.git"
-reference = "feature/refactoring"
-resolved_reference = "b44fefc844087b6c7ac0d7b10ca17cb532093ec7"
+reference = "master"
+resolved_reference = "d1b495869fa865a1902660dec6df99bd1fc7a5b9"
 
 [[package]]
 name = "reportportal-client"
@@ -2188,8 +2188,8 @@ rich = "*"
 [package.source]
 type = "git"
 url = "https://github.com/l8556/VBoxWrapper.git"
-reference = "feature/minor-refactoring"
-resolved_reference = "e4c8af38b48fba891bc4d7b01f8a7101d7465dbc"
+reference = "master"
+resolved_reference = "cb502f208cbcb47c299acd965f6f4690bd9a5236"
 
 [[package]]
 name = "yarl"
@@ -2314,4 +2314,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "f9d1dfbde508b3ecfa75a023db49d7d8ccd060e7e1b8ed8fb1570610837b3f58"
+content-hash = "04ad2c484427f7e14de593063380fea7bbe52cc1832f7c8d7e9ba400967bbbe6"

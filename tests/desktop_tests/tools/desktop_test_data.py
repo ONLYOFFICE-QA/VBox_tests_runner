@@ -9,6 +9,8 @@ from host_tools import File
 from frameworks.test_data.TestData import TestData
 
 from .desktop_paths import DesktopLocalPaths
+from .desktop_report import DesktopReport
+
 
 @dataclass
 class DesktopTestData(TestData):
@@ -52,8 +54,21 @@ class DesktopTestData(TestData):
     @property
     def vm_names(self) -> List[str]:
         if self.retest:
-            return self.report.get_error_vm_list()
+            return DesktopReport(self.full_report_path).get_error_vm_list()
         return self.config.get('hosts', [])
+
+    @property
+    def package_name(self) -> str:
+        if self.snap:
+            return "Snap Packages"
+
+        if self.appimage:
+            return "AppImages"
+
+        if self.flatpak:
+            return "FlatPak"
+
+        return "Default Packages"
 
     def _check_package_options(self):
         if sum([self.snap, self.appimage, self.flatpak]) > 1:
@@ -72,3 +87,4 @@ class DesktopTestData(TestData):
         if not isfile(self.config_path):
             raise FileNotFoundError(f"[red]|ERROR| Configuration file not found: {self.config_path}")
         return File.read_json(self.config_path)
+

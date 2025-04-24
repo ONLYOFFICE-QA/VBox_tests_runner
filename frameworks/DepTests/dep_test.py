@@ -3,6 +3,7 @@ import subprocess
 from os.path import isfile
 
 from host_tools import File
+from host_tools.utils import Git
 
 from frameworks.VersionHandler import VersionHandler
 from tests.builder_tests.builder_paths import BuilderLocalPaths
@@ -19,7 +20,7 @@ class DepTests:
         self.clone_dep_tests()
 
     def clone_dep_tests(self, branch: str = None) -> None:
-        self._git_clone(repo=self.repo, branch=branch, path=self.local_path.dep_test_path)
+        Git.clone(repo=self.repo, branch=branch, path=self.local_path.dep_test_path)
 
     def compress_dep_tests(self, delete: bool = True) -> None:
         if isfile(self.local_path.dep_test_archive):
@@ -31,10 +32,6 @@ class DepTests:
             delete=delete,
             progress_bar=False
         )
-
-    def _git_clone(self, repo: str, branch: str = None, path: str = None) -> None:
-        branch = f"{('-b ' + branch + ' ') if branch else ''}"
-        self._run_cmd(f"git clone {branch}{repo} {path or ''}".strip())
 
     @staticmethod
     def _run_cmd(cmd: str) -> int:
