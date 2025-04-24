@@ -800,8 +800,8 @@ rich = "*"
 [package.source]
 type = "git"
 url = "https://github.com/l8556/host_tools.git"
-reference = "fix/imports"
-resolved_reference = "553465dbdc2da029b5c21fe4146f6159a9970d94"
+reference = "master"
+resolved_reference = "aae1e71efad30f20a88916f9496af229848743f5"
 
 [[package]]
 name = "idna"
@@ -2188,8 +2188,8 @@ rich = "*"
 [package.source]
 type = "git"
 url = "https://github.com/l8556/VBoxWrapper.git"
-reference = "feature/minor-refactoring"
-resolved_reference = "e4c8af38b48fba891bc4d7b01f8a7101d7465dbc"
+reference = "master"
+resolved_reference = "cb502f208cbcb47c299acd965f6f4690bd9a5236"
 
 [[package]]
 name = "yarl"
@@ -2314,4 +2314,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "99b6b8d23bd4157dd2bfe5fc4dfbd09e899edfb90bc1e314b64bdf563a89f5df"
+content-hash = "e3e06d1d2f66432dd3ed01443c2db0682f74b8392d534bf86858adf22d561b7b"
