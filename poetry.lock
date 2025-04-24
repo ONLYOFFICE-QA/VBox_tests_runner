@@ -1947,8 +1947,8 @@ reportportal-client = ">=5.6.4"
 [package.source]
 type = "git"
 url = "https://github.com/l8556/report_portal.git"
-reference = "feature/refactoring"
-resolved_reference = "b44fefc844087b6c7ac0d7b10ca17cb532093ec7"
+reference = "master"
+resolved_reference = "d1b495869fa865a1902660dec6df99bd1fc7a5b9"
 
 [[package]]
 name = "reportportal-client"
@@ -2314,4 +2314,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "e3e06d1d2f66432dd3ed01443c2db0682f74b8392d534bf86858adf22d561b7b"
+content-hash = "04ad2c484427f7e14de593063380fea7bbe52cc1832f7c8d7e9ba400967bbbe6"
