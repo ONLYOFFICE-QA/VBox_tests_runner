@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from os import getcwd, system
-from os.path import join
+from os.path import join, isfile
 from host_tools import Process, Service
 from elevate import elevate
 from host_tools.utils import Dir
@@ -51,7 +51,7 @@ def desktop_test(
         retest=retest
     )
 
-    if num_processes > 1 and not name or len(data.vm_names) == 1 and not name:
+    if num_processes > 1 and not name and len(data.vm_names) > 1:
         data.status_bar = False
         multiprocess.run(DesktopTest, data, num_processes, 10, headless)
     else:
@@ -91,7 +91,7 @@ def builder_test(
     builder.compress_dep_tests(delete=False)
     Dir.delete(builder.local_path.dep_test_path)
 
-    if num_processes > 1 and not name or len(data.vm_names) == 1 and not name:
+    if num_processes > 1 and not name and len(data.vm_names) > 1:
         data.status_bar = False
         multiprocess.run(BuilderTests, data, num_processes, 10, headless)
     else:
