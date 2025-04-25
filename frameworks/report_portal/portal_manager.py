@@ -52,15 +52,27 @@ class PortalManager:
 
     def create_suite(self, suite_name: str, parent_suite_id: Optional[str] = None):
         cache_key = f"{suite_name}_{parent_suite_id}"
+
         if cache_key not in self._suite_cache:
-            if suite_name in self.suite_names:
-                self._suite_cache[cache_key] = self.suites[self.suite_names.index(suite_name)]["uuid"]
+            suite = self.rp.suite
+            parent_id = suite.get_info(parent_suite_id).get("id") if parent_suite_id else None
+            exists_suite = self.get_exist_suite(suite_name, parent_id)
+
+            if exists_suite:
+                self._suite_cache[cache_key] = exists_suite["uuid"]
             else:
-                self._suite_cache[cache_key] = self.rp.suite.create(
+                self._suite_cache[cache_key] = suite.create(
                     suite_name=suite_name, parent_suite_id=parent_suite_id
                 )
 
         return self._suite_cache[cache_key]
+
+    def get_exist_suite(self, target_name: str, parent_id: Optional[str] = None) -> Optional[dict]:
+        matching_item = next(
+            (item for item in self.suites if item.get('name') == target_name and item.get('parent') == parent_id),
+            None
+        )
+        return matching_item
 
     def finish_launcher(self):
         self.rp.launch.finish()
