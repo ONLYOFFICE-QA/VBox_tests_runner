@@ -68,7 +68,7 @@ def desktop_test(
 
     report.get_full(data.version)
     report.send_to_tg(data=data) if not name else None
-    report.send_to_report_portal(data.portal_project_name, data.package_name) if connect_portal else None
+    report.send_to_report_portal(data.portal_project_name, data.package_name) if connect_portal or only_portal else None
 
     error_vms = report.get_error_vm_list()
     if len(error_vms) > 0:
@@ -112,7 +112,7 @@ def builder_test(
     data.report.get_full(data.version)
     report_sender = BuilderReportSender(report_path=data.report.path)
     report_sender.to_telegram() if telegram else None
-    report_sender.to_report_portal(project_name=data.portal_project_name) if connect_portal else None
+    report_sender.to_report_portal(project_name=data.portal_project_name) if connect_portal or only_portal else None
 
 
 @task
