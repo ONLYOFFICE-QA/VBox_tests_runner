@@ -35,7 +35,7 @@ def desktop_test(
         flatpak: bool = False,
         open_retries: int = None,
         retest: bool = False,
-        only_portal: bool = False,
+        only_portal: bool = False
 ):
     num_processes = int(processes) if processes else 1
 
@@ -85,25 +85,29 @@ def builder_test(
         headless: bool = False,
         connect_portal: bool = False,
         telegram: bool = False,
+        only_portal: bool = False
 ):
     num_processes = int(processes) if processes else 1
     data = BuilderTestData(
         version=version or Prompt.ask('[red]Please enter version'),
         config_path=join(getcwd(), "builder_tests_config.json")
     )
+    if not only_portal:
+        builder = DocBuilder(version=data.version)
+        builder.get(dep_test_branch=data.dep_test_branch, builder_samples_branch=data.document_builder_samples)
+        builder.compress_dep_tests(delete=False)
+        Dir.delete(builder.local_path.dep_test_path)
 
-    builder = DocBuilder(version=data.version)
-    builder.get(dep_test_branch=data.dep_test_branch, builder_samples_branch=data.document_builder_samples)
-    builder.compress_dep_tests(delete=False)
-    Dir.delete(builder.local_path.dep_test_path)
+        if num_processes > 1 and not name and len(data.vm_names) > 1:
+            data.status_bar = False
+            multiprocess.run(BuilderTests, data, num_processes, 10, headless)
+        else:
+            data.status_bar = True
+            for vm in Vbox().check_vm_names([name] if name else data.vm_names):
+                BuilderTests(vm, data).run(headless=headless)
 
-    if num_processes > 1 and not name and len(data.vm_names) > 1:
-        data.status_bar = False
-        multiprocess.run(BuilderTests, data, num_processes, 10, headless)
-    else:
-        data.status_bar = True
-        for vm in Vbox().check_vm_names([name] if name else data.vm_names):
-            BuilderTests(vm, data).run(headless=headless)
+    if only_portal and not isfile(data.full_report_path):
+        raise FileNotFoundError(f"Report file {data.full_report_path} not found")
 
     data.report.get_full(data.version)
     report_sender = BuilderReportSender(report_path=data.report.path)
