@@ -11,6 +11,7 @@ class PortalManager:
         self.rp = ReportPortal(project_name=project_name)
         self.__suites = None
         self.__suite_names = None
+        self.__tests_items = None
 
     @property
     def suites(self) -> list:
@@ -23,6 +24,12 @@ class PortalManager:
         if self.__suites is None:
             self.__suite_names = [suite.get("name") for suite in self.suites]
         return self.__suite_names
+
+    @property
+    def tests_items(self) -> list:
+        if self.__tests_items is None:
+            self.__tests_items = self.rp.get_items(item_type='TEST')
+        return self.__tests_items
 
     def __enter__(self):
         self.start_launch()

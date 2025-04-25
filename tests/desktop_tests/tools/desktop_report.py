@@ -98,12 +98,12 @@ class DesktopReport:
                     concurrent.futures.wait(futures)
 
     def _process_row(self, row: pd.Series, launch: PortalManager, packege_name: str) -> Optional[str]:
-        test = launch.start_test(test_name=row['Test_name'], suite_id=self._create_suite(row, launch, packege_name))
-
-        if not self.is_passed(row):
-            test.send_log(message=row['Exit_code'], level='ERROR')
-
-        test.finish(return_code=0 if self.is_passed(row) else 1)
+        launch.set_test_result(
+            test_name=row['Test_name'],
+            return_code=0 if self.is_passed(row) else 1,
+            log_message=row['Exit_code'] if self.is_passed(row) else None,
+            suite_uuid=self._create_suite(row, launch, packege_name)
+        )
 
         if not self.is_passed(row):
             self.console.print(
