@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from os import getcwd, system
-from os.path import join
+from os.path import join, isfile
 from host_tools import Process, Service
 from elevate import elevate
 from host_tools.utils import Dir
@@ -34,7 +34,8 @@ def desktop_test(
         appimage: bool = False,
         flatpak: bool = False,
         open_retries: int = None,
-        retest: bool = False
+        retest: bool = False,
+        only_portal: bool = False,
 ):
     num_processes = int(processes) if processes else 1
 
@@ -51,15 +52,20 @@ def desktop_test(
         retest=retest
     )
 
-    if num_processes > 1 and not name and len(data.vm_names) > 1:
-        data.status_bar = False
-        multiprocess.run(DesktopTest, data, num_processes, 10, headless)
-    else:
-        data.status_bar = True
-        for vm in Vbox().check_vm_names([name] if name else data.vm_names):
-            DesktopTest(vm, data).run(headless=headless)
+    if not only_portal:
+        if num_processes > 1 and not name and len(data.vm_names) > 1:
+            data.status_bar = False
+            multiprocess.run(DesktopTest, data, num_processes, 10, headless)
+        else:
+            data.status_bar = True
+            for vm in Vbox().check_vm_names([name] if name else data.vm_names):
+                DesktopTest(vm, data).run(headless=headless)
 
     report = DesktopReport(report_path=data.full_report_path)
+
+    if only_portal and not isfile(data.full_report_path):
+        raise FileNotFoundError(f"Report file {data.full_report_path} not found")
+
     report.get_full(data.version)
     report.send_to_tg(data=data) if not name else None
     report.send_to_report_portal(data.portal_project_name, data.package_name) if connect_portal else None
