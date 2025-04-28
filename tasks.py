@@ -67,7 +67,7 @@ def desktop_test(
         raise FileNotFoundError(f"Report file {data.full_report_path} not found")
 
     report.get_full(data.version)
-    report.send_to_tg(data=data) if not name else None
+    report.send_to_tg(data=data) if not name and not only_portal else None
     report.send_to_report_portal(data.portal_project_name, data.package_name) if connect_portal or only_portal else None
 
     error_vms = report.get_error_vm_list()
