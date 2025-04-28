@@ -16,7 +16,7 @@ class PortalManager:
     @property
     def suites(self) -> list:
         if self.__suites is None:
-            self.__suites = self.rp.suite.get_suites()
+            self.__suites = self.rp.info.suite.get_suites(launch_id=self.rp.launch.id)
         return self.__suites
 
     @property
@@ -28,7 +28,7 @@ class PortalManager:
     @property
     def tests_items(self) -> list:
         if self.__tests_items is None:
-            self.__tests_items = self.rp.get_items(item_type='TEST')
+            self.__tests_items = self.rp.info.test.get_tests(launch_id=self.rp.launch.id)
         return self.__tests_items
 
     def __enter__(self):
@@ -42,8 +42,16 @@ class PortalManager:
         self.rp.launch.start(name=self.launch_name, last_launch_connect=True)
 
     def set_test_result(self, test_name: str, return_code: int, log_message: str = None, suite_uuid: str = None):
-        test = self.rp.create_test(test_name)
-        test.start(suite_uuid=suite_uuid)
+        test = self.rp.get_launch_test()
+        suite_id = test.info.get_info(uuid=suite_uuid, cache=True).get('id')
+        exists_test = self.get_exist_item(self.tests_items, test_name, suite_id)
+        #
+        # if exists_test:
+        #     test.update(item_uuid=exists_test["uuid"])
+        # else:
+        #
+        # TODO Update not work
+        test.start(name=test_name, parent_item_id=suite_uuid)
 
         if log_message:
             test.send_log(message=log_message, level="ERROR" if return_code != 0 else "WARN")
@@ -54,22 +62,23 @@ class PortalManager:
         cache_key = f"{suite_name}_{parent_suite_id}"
 
         if cache_key not in self._suite_cache:
-            suite = self.rp.suite
-            parent_id = suite.get_info(parent_suite_id).get("id") if parent_suite_id else None
-            exists_suite = self.get_exist_suite(suite_name, parent_id)
+            suite = self.rp.get_launch_suite()
+            parent_id = suite.info.get_id(parent_suite_id) if parent_suite_id else None
+            exists_suite = self.get_exist_item(self.suites, suite_name, parent_id)
 
             if exists_suite:
                 self._suite_cache[cache_key] = exists_suite["uuid"]
             else:
                 self._suite_cache[cache_key] = suite.create(
-                    suite_name=suite_name, parent_suite_id=parent_suite_id
+                    name=suite_name, parent_item_id=parent_suite_id
                 )
 
         return self._suite_cache[cache_key]
 
-    def get_exist_suite(self, target_name: str, parent_id: Optional[str] = None) -> Optional[dict]:
+    @staticmethod
+    def get_exist_item(items: list, target_name: str, parent_id: Optional[str] = None) -> Optional[dict]:
         matching_item = next(
-            (item for item in self.suites if item.get('name') == target_name and item.get('parent') == parent_id),
+            (item for item in items if item.get('name') == target_name and item.get('parent') == parent_id),
             None
         )
         return matching_item

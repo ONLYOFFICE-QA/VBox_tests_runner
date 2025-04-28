@@ -117,7 +117,7 @@ class BuilderReportSender:
             )
             return ''
 
-        return f"[cyan]|INFO|[{'green'}]{row['Os']}|{row['Test_name']} finished with exit code {ret_code}"
+        return f"[green]|INFO|[cyan]{row['Os']}[/]|[cyan]{row['Test_name']}[/] finished with exit code [cyan]{ret_code}"
 
     def _create_suites(self, df: pd.DataFrame, launch: PortalManager):
         with self.console.status('[cyan]|INFO| Start creating suites') as status:
