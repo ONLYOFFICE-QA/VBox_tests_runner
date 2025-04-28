@@ -43,8 +43,8 @@ class PortalManager:
 
     def set_test_result(self, test_name: str, return_code: int, log_message: str = None, suite_uuid: str = None):
         test = self.rp.get_launch_test()
-        suite_id = test.info.get_info(uuid=suite_uuid, cache=True).get('id')
-        exists_test = self.get_exist_item(self.tests_items, test_name, suite_id)
+        # suite_id = test.info.get_info(uuid=suite_uuid, cache=True).get('id')
+        # exists_test = self.get_exist_item(self.tests_items, test_name, suite_id)
         #
         # if exists_test:
         #     test.update(item_uuid=exists_test["uuid"])
