@@ -15,10 +15,10 @@ class BuilderReport(Report):
         self.dir = dirname(self.path)
         Dir.create(self.dir, stdout=False)
 
-    def get_full(self, version: str) -> str:
+    def get_full(self) -> str:
         File.delete(self.path, stdout=False) if isfile(self.path) else ...
         self.merge(
-            File.get_paths(self.dir, name_include=f"{version}", extension='csv'),
+            File.get_paths(self.dir, extension='csv'),
             self.path
         )
         return self.path
