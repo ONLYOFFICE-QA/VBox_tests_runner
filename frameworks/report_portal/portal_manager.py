@@ -17,7 +17,7 @@ class PortalManager:
     @property
     def suites(self) -> list:
         if self.__suites is None:
-            self.__suites = self.rp.info.suite.get_suites(launch_id=self.rp.launch.id)
+            self.__suites = self.rp.request.suite.get_suites(launch_id=self.rp.launch.id)
         return self.__suites
 
     @property
@@ -29,7 +29,7 @@ class PortalManager:
     @property
     def tests_items(self) -> list:
         if self.__tests_items is None:
-            self.__tests_items = self.rp.info.test.get_tests(launch_id=self.rp.launch.id)
+            self.__tests_items = self.rp.request.test.get_tests(launch_id=self.rp.launch.id)
         return self.__tests_items
 
     def __enter__(self):
@@ -65,7 +65,7 @@ class PortalManager:
 
         if cache_key not in self._suite_cache:
             suite = self.rp.get_launch_suite()
-            parent_id = suite.info.get_id(parent_suite_id) if parent_suite_id else None
+            parent_id = suite.request.get_id(parent_suite_id) if parent_suite_id else None
             exists_suite = self.get_exist_item(self.suites, suite_name, parent_id)
 
             if exists_suite:
