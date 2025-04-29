@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import time
 from typing import Optional
 
 from report_portal import ReportPortal
@@ -54,6 +55,7 @@ class PortalManager:
         test.start(name=test_name, parent_item_id=suite_uuid)
 
         if log_message:
+            time.sleep(0.2)
             test.send_log(message=log_message, level="ERROR" if return_code != 0 else "WARN")
 
         test.finish(return_code=return_code)

@@ -52,6 +52,8 @@ def desktop_test(
         retest=retest
     )
 
+    report = DesktopReport(report_path=data.full_report_path)
+
     if not only_portal:
         if num_processes > 1 and not name and len(data.vm_names) > 1:
             data.status_bar = False
@@ -61,12 +63,11 @@ def desktop_test(
             for vm in Vbox().check_vm_names([name] if name else data.vm_names):
                 DesktopTest(vm, data).run(headless=headless)
 
-    report = DesktopReport(report_path=data.full_report_path)
+        report.get_full(data.version)
 
     if only_portal and not isfile(data.full_report_path):
         raise FileNotFoundError(f"Report file {data.full_report_path} not found")
 
-    report.get_full(data.version)
     report.send_to_tg(data=data) if not name and not only_portal else None
     report.send_to_report_portal(data.portal_project_name, data.package_name) if connect_portal or only_portal else None
 
@@ -106,10 +107,11 @@ def builder_test(
             for vm in Vbox().check_vm_names([name] if name else data.vm_names):
                 BuilderTests(vm, data).run(headless=headless)
 
+        data.report.get_full(data.version)
+
     if only_portal and not isfile(data.full_report_path):
         raise FileNotFoundError(f"Report file {data.full_report_path} not found")
 
-    data.report.get_full(data.version)
     report_sender = BuilderReportSender(report_path=data.report.path)
     report_sender.to_telegram() if telegram and not only_portal else None
     report_sender.to_report_portal(project_name=data.portal_project_name) if connect_portal or only_portal else None
