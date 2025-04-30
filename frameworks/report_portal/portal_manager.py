@@ -60,9 +60,14 @@ class PortalManager:
             retry=True if exist_step else False,
             uuid=exist_step["uuid"] if exist_step else None
         )
+        step.send_log(
+            message=f"Test started at {time.strftime('%Y-%m-%d %H:%M:%S')}",
+            level="INFO",
+            item_uuid=step_uuid
+        )
 
-        if log_message:
-            step.send_log(message=log_message, level="ERROR" if return_code != 0 else "WARN", item_uuid=step_uuid)
+        if str(log_message).lower() != 'nan':
+            step.send_log(message=log_message, level="WARN", item_uuid=step_uuid, print_output=True)
 
         step.finish(return_code=return_code)
 
