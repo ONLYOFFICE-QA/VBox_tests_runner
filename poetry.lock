@@ -1948,7 +1948,7 @@ reportportal-client = ">=5.6.4"
 type = "git"
 url = "https://github.com/l8556/report_portal.git"
 reference = "feature/add-methods-to-connect-launch-by-name"
-resolved_reference = "91d12e3b82744bc32264be49c51a6b5fc8fab235"
+resolved_reference = "09c6c5050d889e890743d1255db9c3a4fce8c57b"
 
 [[package]]
 name = "reportportal-client"
