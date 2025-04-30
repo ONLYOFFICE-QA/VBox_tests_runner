@@ -13,6 +13,7 @@ class PortalManager:
         self.__suites = None
         self.__suite_names = None
         self.__tests_items = None
+        self.__steps_items = None
 
     @property
     def suites(self) -> list:
@@ -25,6 +26,12 @@ class PortalManager:
         if self.__suites is None:
             self.__suite_names = [suite.get("name") for suite in self.suites]
         return self.__suite_names
+
+    @property
+    def steps_items(self) -> list:
+        if self.__steps_items is None:
+            self.__steps_items = self.rp.request.step.get_steps(launch_id=self.rp.launch.id)
+        return self.__steps_items
 
     @property
     def tests_items(self) -> list:
@@ -43,22 +50,21 @@ class PortalManager:
         self.rp.launch.start(name=self.launch_name, last_launch_connect=True)
 
     def set_test_result(self, test_name: str, return_code: int, log_message: str = None, suite_uuid: str = None):
-        test = self.rp.get_launch_test()
-        # suite_id = test.info.get_info(uuid=suite_uuid, cache=True).get('id')
-        # exists_test = self.get_exist_item(self.tests_items, test_name, suite_id)
-        #
-        # if exists_test:
-        #     test.update(item_uuid=exists_test["uuid"])
-        # else:
-        #
-        # TODO Update not work
-        test.start(name=test_name, parent_item_id=suite_uuid)
+        step = self.rp.get_launch_step()
+        suite_id = step.request.get_id(uuid=suite_uuid, cache=True)
+        exist_step = self.get_exist_item(self.steps_items, test_name, suite_id)
+
+        step_uuid = step.start(
+            name=test_name,
+            parent_item_id=suite_uuid,
+            retry=True if exist_step else False,
+            uuid=exist_step["uuid"] if exist_step else None
+        )
 
         if log_message:
-            time.sleep(0.2)
-            test.send_log(message=log_message, level="ERROR" if return_code != 0 else "WARN")
+            step.send_log(message=log_message, level="ERROR" if return_code != 0 else "WARN", item_uuid=step_uuid)
 
-        test.finish(return_code=return_code)
+        step.finish(return_code=return_code)
 
     def create_suite(self, suite_name: str, parent_suite_id: Optional[str] = None):
         cache_key = f"{suite_name}_{parent_suite_id}"
