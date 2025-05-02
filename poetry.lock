@@ -1947,8 +1947,8 @@ reportportal-client = ">=5.6.4"
 [package.source]
 type = "git"
 url = "https://github.com/l8556/report_portal.git"
-reference = "feature/add-methods-to-connect-launch-by-name"
-resolved_reference = "09c6c5050d889e890743d1255db9c3a4fce8c57b"
+reference = "master"
+resolved_reference = "ed65a8215f47e661481efc6ffba90e06a3e5898c"
 
 [[package]]
 name = "reportportal-client"
@@ -2314,4 +2314,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "0eefdf964f2156a0728492ecbdc78f899a7b063e7abfc85464b34689e3e4bbef"
+content-hash = "04ad2c484427f7e14de593063380fea7bbe52cc1832f7c8d7e9ba400967bbbe6"
