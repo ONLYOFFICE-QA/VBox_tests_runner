@@ -6,7 +6,6 @@
 * [Requirements](#requirements)
 * [Installing](#installing)
 * [VM Configuration](#vm-configuration)
-  * [vm_config.json Parameters](#vmconfigjson-parameters)
 * [Desktop Tests](#desktop-tests)
   * [desktop_tests_config.json Parameters](#desktop_tests_configjson-parameters)
   * [Desktop Test Commands](#desktop-test-commands)
@@ -17,6 +16,7 @@
   * [Builder-test Flags](#builder-test-flags)
 * [Sending Messages to Telegram](#sending-messages-to-telegram)
 * [Report Portal Connection](#report-portal-connection)
+
 ---
 
 ## Description
