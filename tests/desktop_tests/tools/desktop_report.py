@@ -90,7 +90,7 @@ class DesktopReport:
             self._create_suites(df, launch, packege_name)
 
             with self.console.status('') as status:
-                with concurrent.futures.ThreadPoolExecutor() as executor:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                     futures = [executor.submit(self._process_row, row, launch, packege_name) for _, row in df.iterrows()]
                     for future in concurrent.futures.as_completed(futures):
                         future.add_done_callback(lambda *_: status.update(self._get_thread_result(future)))
@@ -124,7 +124,7 @@ class DesktopReport:
 
     @staticmethod
     def _create_suite(row: pd.Series, launch: PortalManager, packege_name: str) -> str:
-        return launch.create_suite(row['Os'], parent_suite_id=launch.create_suite(packege_name))
+        return launch.create_suite(row['Os'], parent_suite_uuid=launch.create_suite(packege_name))
 
     def exists(self) -> bool:
         return isfile(self.path)

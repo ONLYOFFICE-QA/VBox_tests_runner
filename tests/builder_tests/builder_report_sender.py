@@ -77,11 +77,11 @@ class BuilderReportSender:
         if df.empty:
             raise ValueError(f"Report is empty: {self.report_path}")
 
-        with PortalManager(project_name=project_name, launch_name=self.version) as launch:
+        with PortalManager(project_name=project_name, launch_name='9.0.0.68') as launch:
             self._create_suites(df, launch)
 
             with self.console.status('') as status:
-                with concurrent.futures.ThreadPoolExecutor(max_workers=None) as executor:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                     futures = [executor.submit(self._process_row, row, launch) for _, row in df.iterrows()]
                     for future in concurrent.futures.as_completed(futures):
                         future.add_done_callback(lambda *_: status.update(self._get_thread_result(future)))
