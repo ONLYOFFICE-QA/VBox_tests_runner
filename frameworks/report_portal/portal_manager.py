@@ -62,7 +62,7 @@ class PortalManager:
 
         if str(log_message).lower() != 'nan':
             step.send_log(
-                message=f"Test {test_name} log:\n{log_message}",
+                message=log_message,
                 level="ERROR" if return_code != 0 else "WARN",
                 item_uuid=step_uuid,
                 print_output=True
