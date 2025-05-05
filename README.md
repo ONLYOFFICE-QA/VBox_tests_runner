@@ -174,6 +174,8 @@ Amount threads to run tests in multithreaded mode (default: `1`).
 - `--name` or `-n` *(optional)*:
 Name of the virtual machine to selectively run tests.
 
+---
+
 ## Sending Messages to Telegram
 
 To enable Telegram notifications (e.g. script termination reports), you need to create the following files in the `~/.telegram` directory:
