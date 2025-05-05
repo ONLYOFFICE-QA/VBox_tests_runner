@@ -108,7 +108,7 @@ def builder_test(
             for vm in Vbox().check_vm_names([name] if name else data.vm_names):
                 BuilderTests(vm, data).run(headless=headless)
 
-        data.report.get_full(data.version)
+        data.report.get_full()
 
     if only_portal and not isfile(data.full_report_path):
         raise FileNotFoundError(f"Report file {data.full_report_path} not found")
