@@ -2195,7 +2195,7 @@ rich = "*"
 type = "git"
 url = "https://github.com/l8556/VBoxWrapper.git"
 reference = "master"
-resolved_reference = "cb502f208cbcb47c299acd965f6f4690bd9a5236"
+resolved_reference = "130d730b604cfc6a0fabf6d143916f56e8456ea8"
 
 [[package]]
 name = "yarl"

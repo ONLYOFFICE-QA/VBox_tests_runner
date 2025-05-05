@@ -1162,7 +1162,7 @@ dependencies = [
 
 [[package]]
 name = "reportportal-client"
-version = "5.6.4"
+version = "5.6.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aenum" },
@@ -1170,9 +1170,9 @@ dependencies = [
     { name = "certifi" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/39/d2/da1dc420471ed345dc67eec59ebc99c4276d130afff18822e37caa3f16a9/reportportal_client-5.6.4.tar.gz", hash = "sha256:0fe7c8fb203b5688b327b2a0ab3aea7a1fcc3f523ad34bdce7fd06e78c8b4f9c", size = 61226 }
+sdist = { url = "https://files.pythonhosted.org/packages/c6/ba/b5c68832fdc31f6a6a42fb0081bc6ab2421ef952355fdee97ccd458859b3/reportportal_client-5.6.5.tar.gz", hash = "sha256:c927f745e3e4b9f1e146207adf9709651318fcf05e577ffdddb00998262704be", size = 61192 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/aa/5f/9973f0dc88d239eeda73c522a5f180862139aafc3640eab03e1dc643d472/reportportal_client-5.6.4-py2.py3-none-any.whl", hash = "sha256:d4571098eb0bbb6f42368178a3efff5b597627b075682fb9386f7c9ba57d909e", size = 80910 },
+    { url = "https://files.pythonhosted.org/packages/54/db/34d03623a1cc571f207cb5baa706f4360d5f26e06ba1f1aa057ba256a4b0/reportportal_client-5.6.5-py2.py3-none-any.whl", hash = "sha256:b3cc3c71c3748f1759b9893ee660176134f34650d1733fed45a5920806d239fe", size = 80896 },
 ]
 
 [[package]]
@@ -1342,7 +1342,7 @@ requires-dist = [
 [[package]]
 name = "vboxwrapper"
 version = "0.1.0"
-source = { git = "https://github.com/l8556/VBoxWrapper.git?branch=master#cb502f208cbcb47c299acd965f6f4690bd9a5236" }
+source = { git = "https://github.com/l8556/VBoxWrapper.git?branch=master#130d730b604cfc6a0fabf6d143916f56e8456ea8" }
 dependencies = [
     { name = "rich" },
 ]
