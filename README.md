@@ -16,7 +16,6 @@
   - [builder_tests_config.json Parameters](#builder_tests_configjson-parameters)
   - [Builder Test Commands](#builder-test-commands)
   - [Builder-test Flags](#builder-test-flags)
-- [Notes](#notes)
 
 ---
 
@@ -26,13 +25,14 @@ A project for running tests inside VirtualBox virtual machines.
 
 ## Requirements
 
-- Python 3.11  
-- VirtualBox 7  
+- Python 3.11
+- VirtualBox 7
 - [Python package manager: uv](https://docs.astral.sh/uv/)
 
 ## Installation
 
 1. Install the Python package manager `uv`:
+
     ```bash
     pip install uv
     ```
@@ -162,7 +162,7 @@ Specifies the version of DocBuilder.
 Runs virtual machines in the background (headless mode).
 
 - `--processes` or `-p` *(optional)*:
-Number of threads to run tests in multithreaded mode (default: `1`).
+Amount threads to run tests in multithreaded mode (default: `1`).
 
 - `--name` or `-n` *(optional)*:
 Name of the virtual machine to selectively run tests.
