@@ -39,7 +39,7 @@ A project for running tests inside VirtualBox virtual machines.
 
 2. Download or create VirtualBox virtual machines for testing.
 
-3. Configure the VM settings in `./vm_configs/vm_config.json`:
+3. Set up [VM Configuration](#vm-configuration):
    * Make sure to specify the name of your network adapter.
 
 4. *(Optional)* Set up
