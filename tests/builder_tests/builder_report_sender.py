@@ -102,13 +102,14 @@ class BuilderReportSender:
 
     def _process_row(self, row: pd.Series, launch: PortalManager) -> Optional[str]:
         ret_code = self._get_exit_code(row)
-        os_suite_id = launch.create_suite(row['Os'])
-        samples_suite_id = launch.create_suite(row['Builder_samples'], parent_suite_id=os_suite_id)
+        os_suite_uuid = launch.create_suite(row['Os'])
+        samples_suite_uuid = launch.create_suite(row['Builder_samples'], parent_suite_uuid=os_suite_uuid)
+
         launch.set_test_result(
             test_name=row['Test_name'],
             log_message=row['ConsoleLog'],
             return_code=ret_code,
-            suite_uuid=samples_suite_id
+            suite_uuid=samples_suite_uuid
         )
 
         if ret_code != 0:
@@ -128,7 +129,7 @@ class BuilderReportSender:
                 )
 
                 os_suite_id = launch.create_suite(row['Os'])
-                launch.create_suite(row['Builder_samples'], parent_suite_id=os_suite_id)
+                launch.create_suite(row['Builder_samples'], parent_suite_uuid=os_suite_id)
 
     @staticmethod
     def _get_exit_code(row: pd.Series) -> int:
