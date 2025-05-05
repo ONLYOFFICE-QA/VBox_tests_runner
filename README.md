@@ -40,6 +40,7 @@ A project for running tests inside VirtualBox virtual machines.
 2. Download or create VirtualBox virtual machines for testing.
 
 3. Configure `vm_configs/vm_config.json`.
+   - Specify the name of your adapter
 
 ---
 
