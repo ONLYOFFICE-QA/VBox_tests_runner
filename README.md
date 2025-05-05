@@ -39,8 +39,14 @@ A project for running tests inside VirtualBox virtual machines.
 
 2. Download or create VirtualBox virtual machines for testing.
 
-3. Configure `./vm_configs/vm_config.json`.
-   * Specify the name of your adapter
+3. Configure the VM settings in `./vm_configs/vm_config.json`:
+   * Make sure to specify the name of your network adapter.
+
+4. *(Optional)* Set up
+[Sending Messages to Telegram](#sending-messages-to-telegram)
+
+5. *(Optional)* Set up
+[Report Portal Connection](#report-portal-connection)
 
 ---
 
