@@ -12,7 +12,7 @@ A project for running tests inside Vbox virtual machines
 
 ## Installing
 
-- install package manager uv
+- install python package manager uv
 ```
 pip install uv
 ```
