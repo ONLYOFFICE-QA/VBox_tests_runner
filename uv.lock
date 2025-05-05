@@ -1155,7 +1155,7 @@ wheels = [
 [[package]]
 name = "report-portal"
 version = "0.1.0"
-source = { git = "https://github.com/l8556/report_portal.git?branch=fix%2Frefactoring#1aa8737ae4c9d734f4aa9a467a0a0ae9f2785cae" }
+source = { git = "https://github.com/l8556/report_portal.git?branch=master#de5473d83e10be94a26b126e821f4103203c842c" }
 dependencies = [
     { name = "reportportal-client" },
 ]
@@ -1331,7 +1331,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=2" },
     { name = "paramiko", specifier = ">=3" },
     { name = "pydantic", specifier = ">=2" },
-    { name = "report-portal", git = "https://github.com/l8556/report_portal.git?branch=fix%2Frefactoring" },
+    { name = "report-portal", git = "https://github.com/l8556/report_portal.git?branch=master" },
     { name = "rich", specifier = ">=14" },
     { name = "ruff", specifier = ">=0.11" },
     { name = "ssh-wrapper", git = "https://github.com/l8556/SshWrapper.git?branch=master" },
