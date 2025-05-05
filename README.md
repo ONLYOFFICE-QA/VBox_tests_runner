@@ -6,17 +6,16 @@
 * [Requirements](#requirements)
 * [Installing](#installing)
 * [VM Configuration](#vm-configuration)
-  * [vm\_config.json Parameters](#vm_configjson-parameters)
+  * [vm_config.json Parameters](#vmconfigjson-parameters)
 * [Desktop Tests](#desktop-tests)
-  * [desktop\_tests\_config.json Parameters](#desktop_tests_configjson-parameters)
+  * [desktop_tests_config.json Parameters](#desktop_tests_configjson-parameters)
   * [Desktop Test Commands](#desktop-test-commands)
   * [Desktop-test Flags](#desktop-test-flags)
 * [Builder Tests](#builder-tests)
-  * [builder\_tests\_config.json Parameters](#builder_tests_configjson-parameters)
+  * [builder_tests_config.json Parameters](#builder_tests_configjson-parameters)
   * [Builder Test Commands](#builder-test-commands)
   * [Builder-test Flags](#builder-test-flags)
 * [Sending Messages to Telegram](#sending-messages-to-telegram)
-
 ---
 
 ## Description
@@ -197,3 +196,7 @@ To send messages via a proxy, create an additional file at
   "port": ""
 }
 ```
+
+## Report portal connection
+
+
