@@ -26,6 +26,7 @@ def desktop_test(
         update_from_version: str = None,
         name: str = None,
         processes: int = None,
+        telegram: bool = False,
         detailed_telegram: bool = False,
         connect_portal: bool = False,
         custom_config: bool = False,
@@ -68,7 +69,7 @@ def desktop_test(
     if only_portal and not isfile(data.full_report_path):
         raise FileNotFoundError(f"Report file {data.full_report_path} not found")
 
-    report.send_to_tg(data=data) if not name and not only_portal else None
+    report.send_to_tg(data=data) if not name and not only_portal and telegram else None
     report.send_to_report_portal(data.portal_project_name, data.package_name) if connect_portal or only_portal else None
 
     error_vms = report.get_error_vm_list()
