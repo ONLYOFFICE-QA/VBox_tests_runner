@@ -2,20 +2,23 @@
 
 ## 📚 Table of Contents
 
-- [Description](#description)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [vm_config.json Parameters](#vm_configjson-parameters)
-  - [Base Specifications](#base-specifications)
-  - [Network Configuration](#network-configuration)
-- [Desktop Tests](#desktop-tests)
-  - [desktop_tests_config.json Parameters](#desktop_tests_configjson-parameters)
-  - [Desktop Test Commands](#desktop-test-commands)
-  - [Desktop-test Flags](#desktop-test-flags)
-- [Builder Tests](#builder-tests)
-  - [builder_tests_config.json Parameters](#builder_tests_configjson-parameters)
-  - [Builder Test Commands](#builder-test-commands)
-  - [Builder-test Flags](#builder-test-flags)
+* [Description](#description)
+* [Requirements](#requirements)
+* [Installing](#installing)
+* [VM Configuration](#vm-configuration)
+
+  * [vm\_config.json Parameters](#vm_configjson-parameters)
+* [Desktop Tests](#desktop-tests)
+
+  * [desktop\_tests\_config.json Parameters](#desktop_tests_configjson-parameters)
+  * [Desktop Test Commands](#desktop-test-commands)
+  * [Desktop-test Flags](#desktop-test-flags)
+* [Builder Tests](#builder-tests)
+
+  * [builder\_tests\_config.json Parameters](#builder_tests_configjson-parameters)
+  * [Builder Test Commands](#builder-test-commands)
+  * [Builder-test Flags](#builder-test-flags)
+* [Sending Messages to Telegram](#sending-messages-to-telegram)
 
 ---
 
@@ -29,24 +32,26 @@ A project for running tests inside VirtualBox virtual machines.
 - VirtualBox 7.1.6
 - [Python package manager: uv](https://docs.astral.sh/uv/)
 
-## Installation
+## Installing
 
-1. Install the Python package manager `uv`:
+1. Install the `uv` package manager:
 
-    ```bash
-    pip install uv
-    ```
+   ```bash
+   pip install uv
+   ```
 
 2. Download or create VirtualBox virtual machines for testing.
 
-3. Configure `vm_configs/vm_config.json`.
+3. Configure `./vm_configs/vm_config.json`.
    - Specify the name of your adapter
 
 ---
 
-## vm_config.json Parameters
+## VM Configuration
 
-### Base Specifications
+### Configure the file `./vm_configs/vm_config.json`
+
+#### Base Specifications
 
 - **cpus** *(optional)*:
 Number of virtual CPUs allocated to the VM.
@@ -64,7 +69,7 @@ Enables nested virtualization, allowing the VM to run other virtual machines.
 Enables protection against speculative execution
 vulnerabilities (e.g., Spectre, Meltdown).
 
-### Network Configuration
+#### Network Configuration
 
 - **connect_type** *(optional)*:
 Network connection type (e.g., `bridged`).
@@ -77,10 +82,7 @@ bridge with. Required for proper network connectivity.
 
 ## Desktop Tests
 
-### desktop_tests_config.json Parameters
-
-- **desktop_script** *(required)*:
-Link to the repository containing the script to run inside the virtual machine.
+### desktop\_tests\_config.json Parameters
 
 - **branch** *(optional)*:
 Git branch to download the script from (default: `master`).
@@ -175,8 +177,22 @@ Amount threads to run tests in multithreaded mode (default: `1`).
 - `--name` or `-n` *(optional)*:
 Name of the virtual machine to selectively run tests.
 
-- `--connect-portal` or `-c` *(optional)*:
-Enables report upload to Report Portal.
+## Sending Messages to Telegram
 
-- `--telegram` or `-t` *(optional)*:
-Sends the test report via Telegram.
+To enable Telegram notifications (e.g. script termination reports), you need to create the following files in the `~/.telegram` directory:
+
+* `token` — contains the Telegram bot token.
+* `chat` — contains the Telegram chat ID (channel or user).
+
+### Using a Proxy
+
+To send messages via a proxy, create an additional file at `~/.telegram/proxy.json` with the following content:
+
+```json
+{
+  "login": "",
+  "password": "",
+  "ip": "",
+  "port": ""
+}
+```
