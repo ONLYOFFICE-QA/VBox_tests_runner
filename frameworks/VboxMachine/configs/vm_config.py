@@ -50,8 +50,6 @@ class SystemConfigModel(BaseModel):
 
 @singleton
 class VmConfig:
-    vm_config_path = str(Path(__file__).resolve().parents[3] / "vm_configs" / "vm_config.json")
-
     """
     Configuration class for system settings.
 
@@ -63,6 +61,8 @@ class VmConfig:
         speculative_execution_control (bool): Whether speculative execution control is enabled.
         network (NetworkConfigModel): Network configuration.
     """
+    vm_config_path = str(Path(__file__).resolve().parents[3] / "vm_configs" / "vm_config.json")
+
     def __init__(self, config_path: str = None):
         self.config_path = config_path or self.vm_config_path
         self._config = self._load_config(self.config_path)
@@ -73,6 +73,14 @@ class VmConfig:
         self.speculative_execution_control = self._config.speculative_execution_control
         self.network = self._config.network
         self.host_adapters = self._get_valid_host_adapters_names()
+        self._check_specified_adapter()
+
+    def _check_specified_adapter(self):
+        if self.network.adapter_name and self.network.adapter_name not in self.host_adapters:
+            raise ValueError(
+                f"[red]|ERROR| Adapter '{self.network.adapter_name}' not found on host or not supported. "
+                f"The adapter may have the status 'Up' and not be wireless."
+            )
 
     @staticmethod
     def _load_config(file_path: str) -> SystemConfigModel:
