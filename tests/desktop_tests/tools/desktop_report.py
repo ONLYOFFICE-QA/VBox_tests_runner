@@ -101,7 +101,7 @@ class DesktopReport:
         launch.set_test_result(
             test_name=row['Test_name'],
             return_code=0 if self.is_passed(row) else 1,
-            log_message=row['Exit_code'] if self.is_passed(row) else None,
+            log_message=row['Exit_code'] if not self.is_passed(row) else None,
             suite_uuid=self._create_suite(row, launch, packege_name)
         )
 

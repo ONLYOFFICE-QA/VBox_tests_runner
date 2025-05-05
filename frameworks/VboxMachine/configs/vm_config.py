@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 import json
 from pathlib import Path
+from typing import List
 
 from rich import print
 from pydantic import BaseModel, conint, constr, field_validator
 from host_tools import singleton
+from vboxwrapper import VirtualMachine
+
 
 class NetworkConfigModel(BaseModel):
     """
@@ -37,7 +40,6 @@ class SystemConfigModel(BaseModel):
         speculative_execution_control (bool): Whether speculative execution control is enabled.
         network (NetworkConfigModel): Network configuration.
     """
-
     cpus: conint(ge=1)
     memory: conint(ge=512)
     audio: bool
@@ -48,8 +50,6 @@ class SystemConfigModel(BaseModel):
 
 @singleton
 class VmConfig:
-    vm_config_path = str(Path(__file__).resolve().parents[3] / "vm_configs" / "vm_config.json")
-
     """
     Configuration class for system settings.
 
@@ -61,6 +61,8 @@ class VmConfig:
         speculative_execution_control (bool): Whether speculative execution control is enabled.
         network (NetworkConfigModel): Network configuration.
     """
+    vm_config_path = str(Path(__file__).resolve().parents[3] / "vm_configs" / "vm_config.json")
+
     def __init__(self, config_path: str = None):
         self.config_path = config_path or self.vm_config_path
         self._config = self._load_config(self.config_path)
@@ -70,6 +72,23 @@ class VmConfig:
         self.nested_virtualization = self._config.nested_virtualization
         self.speculative_execution_control = self._config.speculative_execution_control
         self.network = self._config.network
+        self.host_adapters = self._get_valid_host_adapters_names()
+        self._check_specified_adapter()
+
+    def _check_specified_adapter(self):
+        """
+        Validates the specified network adapter against available host adapters.
+
+        Raises:
+            ValueError: If the adapter specified in the network configuration is not
+            found among the valid host adapters. This may occur if the adapter is
+            disconnected, not supported, or does not meet criteria (e.g., wireless and not 'Up' status).
+        """
+        if self.network.adapter_name and self.network.adapter_name not in self.host_adapters:
+            raise ValueError(
+                f"[red]|ERROR| Adapter '{self.network.adapter_name}' not found on host or not supported. "
+                f"The adapter may have the status 'Up' and not be wireless."
+            )
 
     @staticmethod
     def _load_config(file_path: str) -> SystemConfigModel:
@@ -96,6 +115,14 @@ class VmConfig:
             f"  Network Adapter: {self.network.adapter_name}\n"
             f"  Network Connection Type: {self.network.connect_type}"
         )
+
+    @staticmethod
+    def _get_valid_host_adapters_names() -> List[str]:
+        adapters = VirtualMachine("").network.get_bridged_interfaces()
+        return [
+            adapter.get('Name') for adapter in adapters
+            if adapter.get('Wireless') == 'No' and adapter.get('Status') == 'Up'
+        ]
 
     def update_config(self, **kwargs):
         """
