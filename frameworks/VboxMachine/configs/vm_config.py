@@ -76,6 +76,14 @@ class VmConfig:
         self._check_specified_adapter()
 
     def _check_specified_adapter(self):
+        """
+        Validates the specified network adapter against available host adapters.
+
+        Raises:
+            ValueError: If the adapter specified in the network configuration is not
+            found among the valid host adapters. This may occur if the adapter is
+            disconnected, not supported, or does not meet criteria (e.g., wireless and not 'Up' status).
+        """
         if self.network.adapter_name and self.network.adapter_name not in self.host_adapters:
             raise ValueError(
                 f"[red]|ERROR| Adapter '{self.network.adapter_name}' not found on host or not supported. "
