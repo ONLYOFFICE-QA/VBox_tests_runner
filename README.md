@@ -6,15 +6,12 @@
 * [Requirements](#requirements)
 * [Installing](#installing)
 * [VM Configuration](#vm-configuration)
-
   * [vm\_config.json Parameters](#vm_configjson-parameters)
 * [Desktop Tests](#desktop-tests)
-
   * [desktop\_tests\_config.json Parameters](#desktop_tests_configjson-parameters)
   * [Desktop Test Commands](#desktop-test-commands)
   * [Desktop-test Flags](#desktop-test-flags)
 * [Builder Tests](#builder-tests)
-
   * [builder\_tests\_config.json Parameters](#builder_tests_configjson-parameters)
   * [Builder Test Commands](#builder-test-commands)
   * [Builder-test Flags](#builder-test-flags)
