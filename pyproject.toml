@@ -49,4 +49,4 @@ vboxwrapper = { git = "https://github.com/l8556/VBoxWrapper.git", branch = "mast
 ssh-wrapper = { git = "https://github.com/l8556/SshWrapper.git", branch = "master" }
 report-portal = { git = "https://github.com/l8556/report_portal.git", branch = "fix/refactoring" }
 ruff = "^0.11.8"
-pydantic = "^2.11.3"
+pydantic = "^2.11.4"
