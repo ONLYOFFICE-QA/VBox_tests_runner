@@ -90,7 +90,7 @@ class DesktopReport:
             self._create_suites(df, launch, packege_name)
 
             with self.console.status('') as status:
-                with concurrent.futures.ThreadPoolExecutor() as executor:
+                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                     futures = [executor.submit(self._process_row, row, launch, packege_name) for _, row in df.iterrows()]
                     for future in concurrent.futures.as_completed(futures):
                         future.add_done_callback(lambda *_: status.update(self._get_thread_result(future)))
@@ -98,12 +98,12 @@ class DesktopReport:
                     concurrent.futures.wait(futures)
 
     def _process_row(self, row: pd.Series, launch: PortalManager, packege_name: str) -> Optional[str]:
-        test = launch.start_test(test_name=row['Test_name'], suite_id=self._create_suite(row, launch, packege_name))
-
-        if not self.is_passed(row):
-            test.send_log(message=row['Exit_code'], level='ERROR')
-
-        test.finish(return_code=0 if self.is_passed(row) else 1)
+        launch.set_test_result(
+            test_name=row['Test_name'],
+            return_code=0 if self.is_passed(row) else 1,
+            log_message=row['Exit_code'] if self.is_passed(row) else None,
+            suite_uuid=self._create_suite(row, launch, packege_name)
+        )
 
         if not self.is_passed(row):
             self.console.print(
@@ -124,7 +124,7 @@ class DesktopReport:
 
     @staticmethod
     def _create_suite(row: pd.Series, launch: PortalManager, packege_name: str) -> str:
-        return launch.create_suite(row['Os'], parent_suite_id=launch.create_suite(packege_name))
+        return launch.create_suite(row['Os'], parent_suite_uuid=launch.create_suite(packege_name))
 
     def exists(self) -> bool:
         return isfile(self.path)

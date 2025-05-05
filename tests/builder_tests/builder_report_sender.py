@@ -102,14 +102,15 @@ class BuilderReportSender:
 
     def _process_row(self, row: pd.Series, launch: PortalManager) -> Optional[str]:
         ret_code = self._get_exit_code(row)
-        os_suite_id = launch.create_suite(row['Os'])
-        samples_suite_id = launch.create_suite(row['Builder_samples'], parent_suite_id=os_suite_id)
-        test = launch.start_test(test_name=row['Test_name'], suite_id=samples_suite_id)
+        os_suite_uuid = launch.create_suite(row['Os'])
+        samples_suite_uuid = launch.create_suite(row['Builder_samples'], parent_suite_uuid=os_suite_uuid)
 
-        if row['ConsoleLog']:
-            test.send_log(message=row['ConsoleLog'], level='ERROR' if ret_code != 0 else 'INFO')
-
-        test.finish(return_code=ret_code)
+        launch.set_test_result(
+            test_name=row['Test_name'],
+            log_message=row['ConsoleLog'],
+            return_code=ret_code,
+            suite_uuid=samples_suite_uuid
+        )
 
         if ret_code != 0:
             self.console.print(
@@ -117,7 +118,7 @@ class BuilderReportSender:
             )
             return ''
 
-        return f"[cyan]|INFO|[{'green'}]{row['Os']}|{row['Test_name']} finished with exit code {ret_code}"
+        return f"[green]|INFO|[cyan]{row['Os']}[/]|[cyan]{row['Test_name']}[/] finished with exit code [cyan]{ret_code}"
 
     def _create_suites(self, df: pd.DataFrame, launch: PortalManager):
         with self.console.status('[cyan]|INFO| Start creating suites') as status:
@@ -126,8 +127,9 @@ class BuilderReportSender:
                     f"[cyan]|INFO| Created suite {row['Os']} and {row['Builder_samples']} "
                     f"launchers for {row['Version']} test."
                 )
+
                 os_suite_id = launch.create_suite(row['Os'])
-                launch.create_suite(row['Builder_samples'], parent_suite_id=os_suite_id)
+                launch.create_suite(row['Builder_samples'], parent_suite_uuid=os_suite_id)
 
     @staticmethod
     def _get_exit_code(row: pd.Series) -> int:
