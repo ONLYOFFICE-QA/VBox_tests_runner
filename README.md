@@ -16,6 +16,7 @@
   * [Builder Test Commands](#builder-test-commands)
   * [Builder-test Flags](#builder-test-flags)
 * [Sending Messages to Telegram](#sending-messages-to-telegram)
+* [Report Portal Connection](#report-portal-connection)
 ---
 
 ## Description
@@ -197,6 +198,18 @@ To send messages via a proxy, create an additional file at
 }
 ```
 
-## Report portal connection
+---
 
+## Report Portal Connection
 
+To enable integration with Report Portal,
+you need to create a configuration file at the following path:
+`~/.report_portal/config.json`
+
+The file should have the following structure:
+
+```json
+{
+  "endpoint": "https://reports.<your-host>.com",
+  "api_key": "your_api_key"
+}
