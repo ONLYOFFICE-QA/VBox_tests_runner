@@ -1954,7 +1954,7 @@ reportportal-client = ">=5.6.4"
 type = "git"
 url = "https://github.com/l8556/report_portal.git"
 reference = "master"
-resolved_reference = "de5473d83e10be94a26b126e821f4103203c842c"
+resolved_reference = "a53ef9fce6a3818316249545ffd639423ecfff8a"
 
 [[package]]
 name = "reportportal-client"
