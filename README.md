@@ -25,8 +25,8 @@ A project for running tests inside VirtualBox virtual machines.
 
 ## Requirements
 
-- Python 3.11
-- VirtualBox 7
+- Python 3.12
+- VirtualBox 7.1.6
 - [Python package manager: uv](https://docs.astral.sh/uv/)
 
 ## Installation
