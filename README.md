@@ -10,11 +10,43 @@ A project for running tests inside Vbox virtual machines
 * VBox 7
 * [Python package manager: uv](https://docs.astral.sh/uv/)
 
-## Installing uv
+## Installing
 
+- install package manager uv
 ```
 pip install uv
 ```
+
+- Download or create vbox virtual machines for tests
+
+- Configurate `vm_configs/vm_config.json`
+
+
+### vm_config.json parameters
+
+#### Base Specifications
+
+- **CPUs** [optional]: Allocates virtual CPUs to the VM.
+
+- **Memory** [optional]: Amount of RAM
+
+- **Audio** [optional]: Disabled 
+Audio devices are disabled to reduce overhead and improve VM security.
+
+- **Nested Virtualization** [optional]: Enabled  
+  Allows the VM to run other virtual machines inside it. Useful for testing hypervisors or container-based tools.
+
+- **Speculative Execution Control** [optional]: Enabled  
+  Provides protection against speculative execution vulnerabilities such as Spectre and Meltdown.
+
+#### Network Configuration
+
+- **Adapter Type** [optional]: Bridged  
+  The VM will appear as a separate device on the same network as the host machine, allowing direct access to LAN resources.
+
+- **Adapter Name** [required]:
+  Please specify the host network interface to bridge with. This is required for proper network connectivity.
+
 
 ## Desktop tests
 
