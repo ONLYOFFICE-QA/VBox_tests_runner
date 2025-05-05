@@ -95,7 +95,7 @@ def builder_test(
     )
     if not only_portal:
         builder = DocBuilder(version=data.version)
-        builder.get(dep_test_branch=data.dep_test_branch, builder_samples_branch=data.document_builder_samples)
+        builder.get(dep_test_branch=data.dep_test_branch, builder_samples_branch=data.document_builder_samples_branch)
         builder.compress_dep_tests(delete=False)
         Dir.delete(builder.local_path.dep_test_path)
 
