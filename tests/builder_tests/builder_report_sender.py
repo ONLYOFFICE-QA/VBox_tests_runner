@@ -77,7 +77,7 @@ class BuilderReportSender:
         if df.empty:
             raise ValueError(f"Report is empty: {self.report_path}")
 
-        with PortalManager(project_name=project_name, launch_name='9.0.0.68') as launch:
+        with PortalManager(project_name=project_name, launch_name=self.version) as launch:
             self._create_suites(df, launch)
 
             with self.console.status('') as status:
