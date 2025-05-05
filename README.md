@@ -9,7 +9,7 @@
   - [Base Specifications](#base-specifications)
   - [Network Configuration](#network-configuration)
 - [Desktop Tests](#desktop-tests)
-  - [desktop_tests_config.json Parameters](#desktoptests_configjson-parameters)
+  - [desktop_tests_config.json Parameters](#desktop_tests_configjson-parameters)
   - [Desktop Test Commands](#desktop-test-commands)
   - [Desktop-test Flags](#desktop-test-flags)
 - [Builder Tests](#builder-tests)
@@ -60,7 +60,8 @@ Set to `false` to disable audio devices and reduce overhead.
 Enables nested virtualization, allowing the VM to run other virtual machines.
 
 - **speculative_execution_control** *(optional)*:
-Enables protection against speculative execution vulnerabilities (e.g., Spectre, Meltdown).
+Enables protection against speculative execution
+vulnerabilities (e.g., Spectre, Meltdown).
 
 ### Network Configuration
 
@@ -68,7 +69,8 @@ Enables protection against speculative execution vulnerabilities (e.g., Spectre,
 Network connection type (e.g., `bridged`).
 
 - **adapter_name** *(required)*:
-Name of the host network interface to bridge with. Required for proper network connectivity.
+Name of the host network interface to
+bridge with. Required for proper network connectivity.
 
 ---
 
@@ -83,10 +85,12 @@ Link to the repository containing the script to run inside the virtual machine.
 Git branch to download the script from (default: `master`).
 
 - **token_file** *(optional)*:
-File name containing the Telegram token, located in the `~/.telegram` directory (default: `token`).
+File name containing the Telegram token,
+located in the `~/.telegram` directory (default: `token`).
 
 - **chat_id_file** *(optional)*:
-File name containing the Telegram chat ID, located in the `~/.telegram` directory (default: `chat`).
+File name containing the Telegram chat ID,
+located in the `~/.telegram` directory (default: `chat`).
 
 - **password** *(optional)*:
 Password for the virtual machine user.
@@ -124,7 +128,8 @@ Enables report upload to Report Portal.
 ### `builder_tests_config.json` Parameters
 
 - **dep_test_branch** *(optional)*:
-Git branch from which the `dep_test` script will be downloaded (default: `master`).
+Git branch from which the `dep_test`
+script will be downloaded (default: `master`).
 
 - **build_tools_branch** *(optional)*:
 Git branch for downloading `build_tools` scripts (default: `master`).
@@ -136,10 +141,12 @@ Git branch for downloading `office_js_api` scripts (default: `master`).
 Git branch for downloading `document_builder_samples` (default: `master`).
 
 - **token_file** *(optional)*:
-File name containing the Telegram token, located in the `~/.telegram` folder (default: `token`).
+File name containing the Telegram token,
+located in the `~/.telegram` folder (default: `token`).
 
 - **chat_id_file** *(optional)*:
-File name containing the Telegram chat ID, located in the `~/.telegram` folder (default: `chat`).
+File name containing the Telegram chat ID,
+located in the `~/.telegram` folder (default: `chat`).
 
 - **password** *(optional)*:
 Password for the virtual machine user.
