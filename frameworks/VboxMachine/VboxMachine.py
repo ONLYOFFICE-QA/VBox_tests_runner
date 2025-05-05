@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from host_tools import HostInfo
 from vboxwrapper import VirtualMachine
 
@@ -17,6 +16,7 @@ class VboxMachine:
         self.name = name
         self.data = None
         self.__os_type = None
+        self.__adapter_name = None
 
     @vm_is_turn_on
     def create_data(self):
@@ -28,10 +28,15 @@ class VboxMachine:
         )
 
     @property
+    def adapter_name(self) -> str:
+        if self.__adapter_name is None:
+            self.__adapter_name = self.vm.get_parameter('bridgeadapter1')
+        return self.__adapter_name
+
+    @property
     def os_type(self) -> str:
         if self.__os_type is None:
             self.__os_type = self.vm.get_os_type().lower()
-
         return self.__os_type
 
     def run(self, headless: bool = True, status_bar: bool = False, timeout: int = 600):
@@ -57,10 +62,20 @@ class VboxMachine:
         self.vm.stop()
 
     def set_network_adapter(self) -> None:
-        if self.vm_config.network.adapter_name and self.vm_config.network.connect_type:
+        specified = self.vm_config.network.adapter_name
+        host_adapters = self.vm_config.host_adapters
+        target_adapter = None
+
+        if specified and specified != self.adapter_name:
+            target_adapter = specified
+        elif not specified:
+            if host_adapters and self.adapter_name not in host_adapters:
+                target_adapter = host_adapters[0]
+
+        if target_adapter:
             self.vm.network.set_adapter(
                 turn=True,
-                adapter_name=self.vm_config.network.adapter_name,
+                adapter_name=target_adapter,
                 connect_type=self.vm_config.network.connect_type
             )
 

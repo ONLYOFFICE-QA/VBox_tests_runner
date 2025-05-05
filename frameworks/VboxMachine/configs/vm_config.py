@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 import json
 from pathlib import Path
+from typing import List
 
 from rich import print
 from pydantic import BaseModel, conint, constr, field_validator
 from host_tools import singleton
+from vboxwrapper import VirtualMachine
+
 
 class NetworkConfigModel(BaseModel):
     """
@@ -37,7 +40,6 @@ class SystemConfigModel(BaseModel):
         speculative_execution_control (bool): Whether speculative execution control is enabled.
         network (NetworkConfigModel): Network configuration.
     """
-
     cpus: conint(ge=1)
     memory: conint(ge=512)
     audio: bool
@@ -70,6 +72,7 @@ class VmConfig:
         self.nested_virtualization = self._config.nested_virtualization
         self.speculative_execution_control = self._config.speculative_execution_control
         self.network = self._config.network
+        self.host_adapters = self._get_valid_host_adapters_names()
 
     @staticmethod
     def _load_config(file_path: str) -> SystemConfigModel:
@@ -96,6 +99,14 @@ class VmConfig:
             f"  Network Adapter: {self.network.adapter_name}\n"
             f"  Network Connection Type: {self.network.connect_type}"
         )
+
+    @staticmethod
+    def _get_valid_host_adapters_names() -> List[str]:
+        adapters = VirtualMachine("").network.get_bridged_interfaces()
+        return [
+            adapter.get('Name') for adapter in adapters
+            if adapter.get('Wireless') == 'No' and adapter.get('Status') == 'Up'
+        ]
 
     def update_config(self, **kwargs):
         """
