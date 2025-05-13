@@ -180,6 +180,9 @@ Amount threads to run tests in multithreaded mode (default: `1`).
 * `--name` or `-n` *(optional)*:
 Name of the virtual machine to selectively run tests.
 
+* `--connect-portal` or `-c` *(optional)*:
+Enables report upload to Report Portal.
+
 ---
 
 ## Sending Messages to Telegram
