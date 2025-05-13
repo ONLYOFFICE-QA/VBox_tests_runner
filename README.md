@@ -127,6 +127,9 @@ Name of a specific virtual machine to selectively run tests.
 * `--connect-portal` or `-c` *(optional)*:
 Enables report upload to Report Portal.
 
+* `--telegram` or `-t` *(optional)*:
+Send the report to Telegram.
+
 ---
 
 ## Builder Tests
@@ -179,6 +182,12 @@ Amount threads to run tests in multithreaded mode (default: `1`).
 
 * `--name` or `-n` *(optional)*:
 Name of the virtual machine to selectively run tests.
+
+* `--connect-portal` or `-c` *(optional)*:
+Enables report upload to Report Portal.
+
+* `--telegram` or `-t` *(optional)*:
+Send the report to Telegram.
 
 ---
 
