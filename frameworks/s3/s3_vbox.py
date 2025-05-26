@@ -99,7 +99,8 @@ class S3Vbox:
         :return: A success message.
         """
         if self._exists_object(download_path, s3_object_key):
-            return f"[cyan]|INFO| Object {s3_object_key} already exists"
+            self.console.print(f"[cyan]|INFO| Object {s3_object_key} already exists")
+            return ""
 
         self.console.print(f"[green]|INFO| Downloading file [cyan]{s3_object_key}[/] to [cyan]{download_path}[/]")
         Dir.create(dirname(download_path), stdout=False)
