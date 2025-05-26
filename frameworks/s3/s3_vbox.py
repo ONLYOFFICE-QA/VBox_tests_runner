@@ -52,7 +52,7 @@ class S3Vbox:
                 ]
                 status.update(self._process_results(futures))
 
-    def download(self, download_dir: str = None, download_files: list = None):
+    def download(self, download_dir: str = None, download_files: list = None) -> None:
         """
         Downloads specified files or all available files from S3 to a local directory.
 
