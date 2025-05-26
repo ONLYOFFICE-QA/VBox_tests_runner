@@ -64,7 +64,7 @@ class S3Vbox:
         Dir.create(download_dir, stdout=False)
         s3_files = [file for file in self.s3_files if file in download_files] if download_files else self.s3_files
 
-        with self.console.status('[cyan]Downloading files...') as status:
+        with self.console.status('[cyan]Downloading files...'):
             with concurrent.futures.ThreadPoolExecutor(max_workers=self.cores) as executor:
                 futures = [
                     executor.submit(
