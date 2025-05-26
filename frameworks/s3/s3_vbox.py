@@ -59,6 +59,8 @@ class S3Vbox:
         :param download_dir: The local directory to download files to. Uses default if not provided.
         :param download_files: A list of specific files to download. Downloads all if not specified.
         """
+        download_dir = download_dir or self.config.download_dir
+
         Dir.create(download_dir, stdout=False)
         s3_files = [file for file in self.s3_files if file in download_files] if download_files else self.s3_files
 
@@ -68,7 +70,7 @@ class S3Vbox:
                     executor.submit(
                         self.download_file,
                         s3_file,
-                        join(download_dir or self.config.download_dir, basename(s3_file)))
+                        join(download_dir, basename(s3_file)))
                     for s3_file in s3_files
                 ]
                 status.update(self._process_results(futures))

@@ -11,7 +11,7 @@ from rich import print
 
 from vboxwrapper import VirtualMachine, Vbox
 
-from frameworks.DepTests import DocBuilder
+from frameworks import DocBuilder, VmManager
 from tests.builder_tests import BuilderTests, BuilderTestData
 from tests.builder_tests.builder_report_sender import BuilderReportSender
 
@@ -192,3 +192,7 @@ def reset_last_snapshot(c, group_name: str = None):
 
     for vm_name in vm_list(c, group_name=group_name):
         VirtualMachine(vm_id=vm_name[0]).snapshot.restore()
+
+@task
+def download_os(c, cores: int = None):
+    VmManager().download_vm_images(cores=cores)
