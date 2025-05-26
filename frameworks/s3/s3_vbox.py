@@ -73,7 +73,7 @@ class S3Vbox:
                         join(download_dir, basename(s3_file)))
                     for s3_file in s3_files
                 ]
-                status.update(self._process_results(futures))
+                self._process_results(futures)
 
     def upload_file(self, upload_file: str, object_key: str) -> str:
         """
