@@ -16,6 +16,7 @@
   * [Builder-test Flags](#builder-test-flags)
 * [Sending Messages to Telegram](#sending-messages-to-telegram)
 * [Report Portal Connection](#report-portal-connection)
+* [Downloading Virtual Machines](#downloading-virtual-machines)
 
 ---
 
@@ -37,7 +38,8 @@ A project for running tests inside VirtualBox virtual machines.
    pip install uv
    ```
 
-2. Download or create VirtualBox virtual machines for testing.
+2. [Downloading](#downloading-virtual-machines)
+or create VirtualBox virtual machines for testing.
 
 3. Set up [VM Configuration](#vm-configuration):
    * Make sure to specify the name of your network adapter.
@@ -228,3 +230,40 @@ The file should have the following structure:
   "endpoint": "https://reports.<your-host>.com",
   "api_key": "your_api_key"
 }
+```
+
+## Downloading Virtual Machines
+
+### S3 Authentication
+
+By default, S3Wrapper will look for your
+AWS credentials in the `~/.s3` directory:
+
+* `~/.s3/key` - contains your AWS Access Key ID
+* `~/.s3/private_key` - contains your AWS Secret Access Key
+
+### Usage
+
+To automatically download virtual machine .zip
+images from your configured S3 bucket, you can use the download-os task.
+
+```bash
+uv run inv download-os
+```
+
+### Download-os Flags
+
+* `--cores` or `-c` *(optional)* Amount threads to run
+tests in multithreaded mode.
+
+### `s3_config.json` Parameters
+
+* **bucket_name** *(required)*:
+The name of the S3 bucket that contains VM image archives (.zip files).
+
+* **region** *(required)*:
+AWS region where the S3 bucket is located.
+
+* **download_dir** *(optional)*:
+Local directory path where downloaded images should be saved.
+(default location: `Project_dir/downloads`)
