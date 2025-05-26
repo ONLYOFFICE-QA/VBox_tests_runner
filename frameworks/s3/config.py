@@ -29,7 +29,7 @@ class Config(BaseModel):
         return values
 
     @classmethod
-    def load_from_file(cls, path: str | Path = join(os.getcwd(), 's3_config.json')) -> "Config":
+    def load_from_file(cls, path: str | Path = None) -> "Config":
         """
         Load configuration from a JSON file.
 
@@ -40,6 +40,6 @@ class Config(BaseModel):
         :raises json.JSONDecodeError: If the file is not valid JSON.
         :raises pydantic.ValidationError: If the data is invalid.
         """
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path or join(os.getcwd(), 's3_config.json'), "r", encoding="utf-8") as f:
             data = json.load(f)
         return cls(**data)

@@ -19,13 +19,14 @@ class S3Vbox:
     Handles uploading and downloading files to and from an S3 bucket using multithreading.
     """
 
-    def __init__(self, cores: int = None):
+    def __init__(self, cores: int = None, s3_config_path: str = None):
         """
         Initializes the S3Vbox object with optional core count.
 
         :param cores: Number of CPU cores to use for parallel execution. Defaults to half the available cores.
+        :param s3_config_path: Optional path to a JSON config file. If not provided, a default path is used.
         """
-        self.config = Config.load_from_file()
+        self.config = Config.load_from_file(path=s3_config_path)
         self.cores = cores or cpu_count() // 2
         self.s3 = S3Wrapper(bucket_name=self.config.bucket_name, region=self.config.region)
         self.s3_files = self.s3.get_files()
