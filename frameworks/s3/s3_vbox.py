@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import concurrent.futures
 from os import cpu_count
-from os.path import basename, join
+from os.path import basename, join, isfile, getsize, dirname
 from typing import Any
 
 from rich.console import Console
@@ -83,7 +83,11 @@ class S3Vbox:
         :param object_key: S3 object key under which to store the file.
         :return: A success message.
         """
-        self.s3.upload(file_path=upload_file, object_key=object_key)
+        self.console.print(
+            f"[cyan]|INFO| Uploading file [cyan]{upload_file}[/] to [cyan]{self.config.bucket_name}/{object_key}[/]"
+        )
+
+        self.s3.upload(file_path=upload_file, object_key=object_key, stdout=False)
         return f'[green]|INFO| File [cyan]{upload_file}[/] to [cyan]{self.config.bucket_name}/{object_key}[/] uploaded'
 
     def download_file(self, s3_object_key: str, download_path: str) -> str:
@@ -94,7 +98,12 @@ class S3Vbox:
         :param download_path: Local path to save the downloaded file.
         :return: A success message.
         """
-        self.s3.download(object_key=s3_object_key, download_path=download_path)
+        if self._exists_object(download_path, s3_object_key):
+            return f"[cyan]|INFO| Object {s3_object_key} already exists"
+
+        self.console.print(f"[green]|INFO| Downloading file [cyan]{s3_object_key}[/] to [cyan]{download_path}[/]")
+        Dir.create(dirname(download_path), stdout=False)
+        self.s3.download(object_key=s3_object_key, download_path=download_path, stdout=False)
         return f"[green]|INFO| File [cyan]{s3_object_key}[/] downloaded to [cyan]{download_path}[/]"
 
     def delete_files_from_s3(self, files: list) -> None:
@@ -124,3 +133,16 @@ class S3Vbox:
                 return None
 
         return None
+
+    def _exists_object(self, download_path: str, obj_key: str) -> bool:
+        """
+        Checks if the downloaded object exists and optionally verifies its integrity.
+        :param download_path: The path where the object is downloaded.
+        :param obj_key: The key of the object in the S3 bucket.
+        :return: True if the object exists and passes integrity checks, False otherwise.
+        """
+        if not isfile(download_path):
+            return False
+        if getsize(download_path) != self.s3.get_size(obj_key):
+            return False
+        return True
