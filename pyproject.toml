@@ -52,4 +52,4 @@ ssh-wrapper = { git = "https://github.com/l8556/SshWrapper.git", branch = "maste
 report-portal = { git = "https://github.com/l8556/report_portal.git", branch = "master" }
 s3wrapper = { git = "https://github.com/l8556/S3Wrapper.git", branch = "master" }
 ruff = "^0.11.10"
-pydantic = "^2.11.4"
+pydantic = "^2.11.5"
