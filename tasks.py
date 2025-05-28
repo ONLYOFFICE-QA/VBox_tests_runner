@@ -4,18 +4,14 @@ from os.path import join, isfile
 from host_tools import Process, Service
 from elevate import elevate
 from host_tools.utils import Dir
-
 from invoke import task
 from rich.prompt import Prompt
 from rich import print
-
 from vboxwrapper import VirtualMachine, Vbox
 
-from frameworks import DocBuilder, VmManager
-from tests.builder_tests import BuilderTests, BuilderTestData
-from tests.builder_tests.builder_report_sender import BuilderReportSender
+from frameworks import DocBuilder, VmManager, PackageURLChecker
+from tests import *
 
-from tests.desktop_tests import DesktopTest, DesktopTestData, DesktopReport
 import tests.multiprocessing as multiprocess
 
 
@@ -196,3 +192,7 @@ def reset_last_snapshot(c, group_name: str = None):
 @task
 def download_os(c, cores: int = None):
     VmManager().download_vm_images(cores=cores)
+
+@task
+def check_package(c, version: str, name: str = None):
+    PackageURLChecker(version=version).run(categories=[name] if name else None, stdout=True)
