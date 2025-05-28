@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import csv
-from os.path import join
+from os.path import join, basename
 from typing import Optional, Dict, List
 
 
@@ -51,9 +51,11 @@ class Report:
                 if category not in grouped_results:
                     grouped_results[category] = {}
 
+                result_bool = row.get("Result", "False").lower() == "true"
+
                 grouped_results[category][name] = {
                     "url": row["URL"],
-                    "result": True  # CSV содержит только успешные
+                    "result": result_bool
                 }
 
         return grouped_results
@@ -69,12 +71,17 @@ class Report:
         """
         with open(self.csv_path, mode="w", encoding="utf-8", newline="") as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(["Version", "Package_name", "Category", "URL"])
+            writer.writerow(["Version", "Package_name", "Result", "Category", "URL"])
 
             for category, packages in grouped_results.items():
-                for name, info in packages.items():
-                    if info["result"]:
-                        writer.writerow([self.version, name, category, info["url"]])
+                for info in packages.values():
+                    writer.writerow([
+                        self.version,
+                        basename(str(info["url"])),
+                        str(info["result"]),
+                        category,
+                        info["url"],
+                    ])
 
     def has_cache(
         self,
