@@ -6,4 +6,3 @@ from .DepTests import DocBuilder, DepTests
 from .package_checker import PackageURLChecker
 
 __all__ = ["MyConsole", "Report", "VmManager", "DocBuilder", "DepTests", "PackageURLChecker"]
-
