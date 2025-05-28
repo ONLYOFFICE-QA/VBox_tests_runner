@@ -1,85 +1,152 @@
 # -*- coding: utf-8 -*-
-from re import sub
-from typing import Optional
-
+import re
 
 class VersionHandler:
     """
-    Class for handling version numbers like “00.00.00.00”.
+    Class for handling version numbers like "00.00.00.00".
 
-    Provides functionality to parse version numbers and extract major, minor and build components.
-
-    Attributes:
-        _version_pattern (str): Regular expression pattern to match version numbers.
-        Version (str): Version number string.
+    Provides functionality to parse version numbers and extract major, minor, and build components.
     """
+
+    _version_pattern = re.compile(r'^(\d+)\.(\d+)\.(\d+)\.(\d+)$', re.ASCII)
 
     def __init__(self, version: str):
         """
-        Initializes the VersionHandler object.
-        :param version: Version number string.
+        Initialize the VersionHandler with a version string.
+
+        :param version: Version number string in the format 'x.x.x.x'.
         """
-        self._version_pattern = r'(\d+).(\d+).(\d+).(\d+)'
-        self.len_version = self._get_len_version(version)
+        self._components = self._parse_version(version)
         self.version = version
-
-    @property
-    def version(self) -> str:
-        """
-        Getter for the version number.
-        :return: Version number string.
-        """
-        return self.__version
-
-    @version.setter
-    def version(self, value: str) -> None:
-        """
-        Setter for the version number.
-        Validates the format of the version number.
-        :param value: Version number string..
-        """
-        if self.len_version == 4:
-            self.__version = value
-        else:
-            raise ValueError(
-                "[red]|WARNING| Version is entered incorrectly. "
-                "The version must be in the format 'x.x.x.x'"
-            )
 
     @property
     def major(self) -> str:
         """
-        Extracts the major version component from the version number.
-        :return: Major version string.
+        Extract the major version component.
+
+        :return: Major version as 'x.x'.
         """
-        return sub(self._version_pattern, r'\1.\2', self.version)
+        return f"{self._components[0]}.{self._components[1]}"
 
     @property
     def minor(self) -> str:
         """
-        Extracts the minor version component from the version number.
-        :return: Minor version string.
+        Extract the minor version component.
+
+        :return: Minor version as a string.
         """
-        return sub(self._version_pattern, r'\3', self.version)
+        return str(self._components[2])
 
     @property
-    def build(self) -> Optional[int]:
+    def build(self) -> int:
         """
-        Extracts the build number component from the version number.
-        :return: Build number integer.
+        Extract the build number component.
+
+        :return: Build number as an integer.
         """
-        if self.len_version == 4:
-            return int(sub(self._version_pattern, r'\4', self.version))
-        return None
+        return self._components[3]
 
     @property
     def without_build(self) -> str:
         """
-        Extracts the version number without the build component.
-        :return: Version number string without the build component.
+        Get the version string without the build component.
+
+        :return: Version string in the format 'x.x.x'.
         """
         return f"{self.major}.{self.minor}"
 
     @staticmethod
-    def _get_len_version(version) -> int:
-        return len([int(i) for i in version.split('.') if i])
+    def _parse_version(version: str) -> tuple[int, ...]:
+        """
+        Validate and parse the version string into components.
+
+        :param version: Version number string in the format 'x.x.x.x'.
+        :return: Tuple containing the version components as integers.
+        :raises ValueError: If the version string is not in the correct format.
+        """
+        match = VersionHandler._version_pattern.fullmatch(version)
+        if not match:
+            raise ValueError(
+                "[red]|WARNING| Version is entered incorrectly. "
+                "The version must be in the format 'x.x.x.x'"
+            )
+        return tuple(int(part) for part in match.groups())
+
+    def __str__(self):
+        """
+        Return the original version string.
+
+        :return: The version string.
+        """
+        return self.version
+
+    def __repr__(self):
+        """
+        Return the technical representation of the object.
+
+        :return: A string representation suitable for debugging.
+        """
+        return f"VersionHandler(version='{self.version}')"
+
+    def __eq__(self, other):
+        """
+        Compare two VersionHandler instances for equality.
+
+        :param other: Another VersionHandler instance.
+        :return: True if the versions are equal, otherwise False.
+        """
+        if isinstance(other, VersionHandler):
+            return self._components == other._components
+        return False
+
+    def __lt__(self, other):
+        """
+        Less-than comparison for sorting.
+
+        :param other: Another VersionHandler instance.
+        :return: True if this version is less than the other.
+        """
+        if isinstance(other, VersionHandler):
+            return self._components < other._components
+        return NotImplemented
+
+    def __le__(self, other):
+        """
+        Less-than-or-equal comparison.
+
+        :param other: Another VersionHandler instance.
+        :return: True if this version is less than or equal to the other.
+        """
+        if isinstance(other, VersionHandler):
+            return self._components <= other._components
+        return NotImplemented
+
+    def __gt__(self, other):
+        """
+        Greater-than comparison.
+
+        :param other: Another VersionHandler instance.
+        :return: True if this version is greater than the other.
+        """
+        if isinstance(other, VersionHandler):
+            return self._components > other._components
+        return NotImplemented
+
+    def __ge__(self, other):
+        """
+        Greater-than-or-equal comparison.
+
+        :param other: Another VersionHandler instance.
+        :return: True if this version is greater than or equal to the other.
+        """
+        if isinstance(other, VersionHandler):
+            return self._components >= other._components
+        return NotImplemented
+
+    def __hash__(self):
+        """
+        Return a hash of the version.
+
+        :return: Integer hash based on version components.
+        """
+        return hash(self._components)
