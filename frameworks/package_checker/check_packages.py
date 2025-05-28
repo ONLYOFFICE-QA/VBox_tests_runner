@@ -8,9 +8,10 @@ from rich import print
 import aiohttp
 from aiohttp import ClientSession
 import asyncio
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Optional
 
 from .config import Config
+from .report import Report
 from ..VersionHandler import VersionHandler
 
 
@@ -33,6 +34,7 @@ class PackageURLChecker:
         self.template_path = template_path or join(dirname(realpath(__file__)), "templates.json")
         self.version = version if isinstance(version, VersionHandler) else VersionHandler(version=version)
         self.templates = File.read_json(self.template_path)
+        self.report = Report(version=str(self.version))
 
     def generate_urls(self) -> Dict[str, Dict[str, str]]:
         """
@@ -95,16 +97,30 @@ class PackageURLChecker:
             return await asyncio.gather(*filtered_tasks)
         return None
 
-    def run(self, categories: List[str] = None, names: List[str] = None, stdout: bool = True) -> None:
+    def run(
+            self,
+            categories: List[str] = None,
+            names: List[str] = None,
+            stdout: bool = True
+    ) -> Dict[str, Dict[str, Dict[str, object]]]:
         """
         Run the checker and print results. Optionally filter by categories or names.
 
         :param stdout: Output the results to the console.
         :param categories: List of category names to check.
         :param names: List of specific name keys to check.
+        :return: Grouped results dictionary.
         """
-        results = asyncio.run(self.check_all_urls(categories=categories, names=names))
-        grouped_results = self.build_grouped_results(results)
+        if self.report.has_cache(categories, names):
+            if stdout:
+                print("Loaded results from CSV cache:")
+            grouped_results = self.report.load_results(categories, names)
+        else:
+            if stdout:
+                print("No cached results found, running checks...")
+            results = asyncio.run(self.check_all_urls(categories=categories, names=names))
+            grouped_results = self.build_grouped_results(results)
+            self.report.save_results(grouped_results)
 
         if stdout:
             self.print_results(grouped_results)
