@@ -5,16 +5,14 @@ from os.path import isfile
 from host_tools import File
 from host_tools.utils import Git
 
-from frameworks.VersionHandler import VersionHandler
 from tests.builder_tests.builder_paths import BuilderLocalPaths
 
 
 class DepTests:
     repo = "git@git.onlyoffice.com:ONLYOFFICE-QA/Dep.Tests.git"
 
-    def __init__(self, version: str):
+    def __init__(self):
         self.local_path = BuilderLocalPaths()
-        self.version = VersionHandler(version=version)
 
     def get(self) -> None:
         self.clone_dep_tests()
