@@ -65,25 +65,7 @@ class PackageURLChecker:
 
         return urls_by_category
 
-    @staticmethod
-    async def check_url(session: ClientSession, category: str, name: str, url: str) -> Tuple[str, str, str, bool]:
-        """
-        Asynchronously check if a URL exists by sending a HEAD request.
-
-        :param session: The aiohttp client session to use.
-        :param category: The category of the template (e.g., installers, builders).
-        :param name: The name of the template within the category.
-        :param url: The fully generated URL to check.
-        :return: Tuple of category, name, URL, and existence status (True if exists).
-        """
-        try:
-            async with session.head(url, timeout=5) as response:
-                return category, name, url, response.status == 200
-        except Exception as e:
-            print(f"[red]|ERROR| Exceptions occurred while checking {url}: {e}")
-            return category, name, url, False
-
-    async def check_all_urls(
+    async def check_urls(
             self,
             categories: List[str] = None,
             names: List[str] = None
@@ -101,7 +83,7 @@ class PackageURLChecker:
         async with aiohttp.ClientSession() as session:
             for category, urls in urls_by_category.items():
                 for name, url in urls.items():
-                    tasks.append(self.check_url(session, category, name, url))
+                    tasks.append(self._check_url(session, category, name, url))
 
             return await asyncio.gather(*tasks)
 
@@ -115,16 +97,16 @@ class PackageURLChecker:
         :param stdout: If True, print the results to the console.
         :return: Grouped result dictionary.
         """
-        results = asyncio.run(self.check_all_urls(categories=categories, names=names))
-        grouped = self.build_grouped_results(results)
+        results = asyncio.run(self.check_urls(categories=categories, names=names))
+        grouped = self._build_grouped_results(results)
 
         if stdout:
-            self.print_results(grouped)
+            self._print_results(grouped)
 
         return grouped
 
     @staticmethod
-    def print_results(results: Dict[str, Dict[str, Dict[str, object]]]) -> None:
+    def _print_results(results: Dict[str, Dict[str, Dict[str, object]]]) -> None:
         """
         Print the grouped URL check results.
 
@@ -137,7 +119,7 @@ class PackageURLChecker:
                 print(f"[yellow]{name}[/yellow]: {info['url']} -> {status}")
 
     @staticmethod
-    def build_grouped_results(results: List[Tuple[str, str, str, bool]]) -> Dict[str, Dict[str, Dict[str, object]]]:
+    def _build_grouped_results(results: List[Tuple[str, str, str, bool]]) -> Dict[str, Dict[str, Dict[str, object]]]:
         """
         Build a nested result dictionary from the list of URL check results.
 
@@ -155,3 +137,22 @@ class PackageURLChecker:
             }
 
         return grouped_results
+
+    @staticmethod
+    async def _check_url(session: ClientSession, category: str, name: str, url: str) -> Tuple[str, str, str, bool]:
+        """
+        Asynchronously check if a URL exists by sending a HEAD request.
+
+        :param session: The aiohttp client session to use.
+        :param category: The category of the template (e.g., installers, builders).
+        :param name: The name of the template within the category.
+        :param url: The fully generated URL to check.
+        :return: Tuple of category, name, URL, and existence status (True if exists).
+        """
+        try:
+            async with session.head(url, timeout=5) as response:
+                return category, name, url, response.status == 200
+        except Exception as e:
+            print(f"[red]|ERROR| Exceptions occurred while checking {url}: {e}")
+            return category, name, url, False
+
