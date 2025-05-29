@@ -102,8 +102,26 @@ class PackageURLChecker:
 
         if stdout:
             self._print_results(grouped)
+            if self.all_exist(grouped):
+                print("[bold green]✅ All URLs are valid.[/bold green]")
+            else:
+                print("[bold red]❌ Some URLs are missing.[/bold red]")
 
         return grouped
+
+    @staticmethod
+    def all_exist(grouped_results: Dict[str, Dict[str, Dict[str, object]]]) -> bool:
+        """
+        Check if all URLs in the grouped results exist.
+
+        :param grouped_results: Grouped results from `build_grouped_results`.
+        :return: True if all URLs returned True in 'result', else False.
+        """
+        return all(
+            info["result"]
+            for category in grouped_results.values()
+            for info in category.values()
+        )
 
     @staticmethod
     def _print_results(results: Dict[str, Dict[str, Dict[str, object]]]) -> None:
@@ -116,7 +134,7 @@ class PackageURLChecker:
             print(f"\n[bold cyan]=== {category.upper()} ===[/bold cyan]")
             for name, info in items.items():
                 status = "[green]✅ Exists[/green]" if info["result"] else "[red]❌ Not Found[/red]"
-                print(f"[yellow]{name}[/yellow]: {info['url']} -> {status}")
+                print(f"[yellow]{name}[/yellow]: {status} -> {info['url']}")
 
     @staticmethod
     def _build_grouped_results(results: List[Tuple[str, str, str, bool]]) -> Dict[str, Dict[str, Dict[str, object]]]:
