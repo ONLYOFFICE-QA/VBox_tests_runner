@@ -272,7 +272,7 @@ Local directory path where downloaded images should be saved.
 
 PackageURLChecker is a utility for validating the existence
 of software package URLs (builder, desktop, etc.)
-based on JSON templates and version.
+based on version.
 
 ### Package URL Checker Usage
 
