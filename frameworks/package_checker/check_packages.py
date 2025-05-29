@@ -8,10 +8,9 @@ from rich import print
 import aiohttp
 from aiohttp import ClientSession
 import asyncio
-from typing import Dict, Tuple, List, Optional
+from typing import Dict, Tuple, List
 
 from .config import Config
-from .report import Report
 from ..VersionHandler import VersionHandler
 
 
@@ -34,20 +33,36 @@ class PackageURLChecker:
         self.template_path = template_path or join(dirname(realpath(__file__)), "templates.json")
         self.version = version if isinstance(version, VersionHandler) else VersionHandler(version=version)
         self.templates = File.read_json(self.template_path)
-        self.report = Report(version=str(self.version))
 
-    def generate_urls(self) -> Dict[str, Dict[str, str]]:
+    def generate_urls(self, categories: List[str] = None, names: List[str] = None) -> Dict[str, Dict[str, str]]:
         """
-        Generate formatted URLs for all categories and names.
+        Generate and optionally filter formatted URLs by category and name.
 
-        :return: Dictionary of categories with name-URL mappings.
+        :param categories: List of category names to include.
+        :param names: List of name keys to include.
+        :return: Dictionary of filtered URLs {category: {name: url}}.
         """
         urls_by_category = {}
+
         for category, templates in self.templates.items():
-            urls_by_category[category] = {
-                name: tpl.format(host=self.host, version=self.version.without_build, build=self.version.build)
-                for name, tpl in templates.items()
-            }
+            if categories and category not in categories:
+                continue
+
+            filtered_urls = {}
+            for name, tpl in templates.items():
+                if names and name not in names:
+                    continue
+
+                url = tpl.format(
+                    host=self.host,
+                    version=self.version.without_build,
+                    build=self.version.build
+                )
+                filtered_urls[name] = url
+
+            if filtered_urls:
+                urls_by_category[category] = filtered_urls
+
         return urls_by_category
 
     @staticmethod
@@ -74,71 +89,52 @@ class PackageURLChecker:
             names: List[str] = None
     ) -> List[Tuple[str, str, str, bool]]:
         """
-        Asynchronously check only selected categories or specific names of URLs.
+        Asynchronously check selected URLs.
 
-        :param categories: List of category names to include (e.g., ["desktop", "core"]).
-        :param names: List of specific name keys to include (e.g., ["debian", "win-64"]).
-        :return: List of tuples (category, name, URL, result).
+        :param categories: Filter by categories.
+        :param names: Filter by template names.
+        :return: List of (category, name, url, exists).
         """
-        urls_by_category = self.generate_urls()
-        filtered_tasks = []
+        urls_by_category = self.generate_urls(categories=categories, names=names)
+        tasks = []
 
         async with aiohttp.ClientSession() as session:
             for category, urls in urls_by_category.items():
-                if categories and category not in categories:
-                    continue
                 for name, url in urls.items():
-                    if names and name not in names:
-                        continue
-                    filtered_tasks.append(
-                        self.check_url(session, category, name, url)
-                    )
+                    tasks.append(self.check_url(session, category, name, url))
 
-            return await asyncio.gather(*filtered_tasks)
-        return None
+            return await asyncio.gather(*tasks)
 
-    def run(
-            self,
-            categories: List[str] = None,
-            names: List[str] = None,
-            stdout: bool = True
-    ) -> Dict[str, Dict[str, Dict[str, object]]]:
+    def run(self, categories: List[str] = None, names: List[str] = None, stdout: bool = True) -> Dict[
+        str, Dict[str, Dict[str, object]]]:
         """
-        Run the checker and print results. Optionally filter by categories or names.
+        Run the asynchronous URL checker and return grouped results.
 
-        :param stdout: Output the results to the console.
-        :param categories: List of category names to check.
-        :param names: List of specific name keys to check.
-        :return: Grouped results dictionary.
+        :param categories: Optional list of categories to check.
+        :param names: Optional list of names to check.
+        :param stdout: If True, print the results to the console.
+        :return: Grouped result dictionary.
         """
-        if self.report.has_cache(categories, names):
-            if stdout:
-                print("Loaded results from CSV cache:")
-            grouped_results = self.report.load_results(categories, names)
-        else:
-            if stdout:
-                print("No cached results found, running checks...")
-            results = asyncio.run(self.check_all_urls(categories=categories, names=names))
-            grouped_results = self.build_grouped_results(results)
-            self.report.save_results(grouped_results)
+        results = asyncio.run(self.check_all_urls(categories=categories, names=names))
+        grouped = self.build_grouped_results(results)
 
         if stdout:
-            self.print_results(grouped_results)
+            self.print_results(grouped)
 
-        return grouped_results
+        return grouped
 
     @staticmethod
-    def print_results(grouped_results: Dict[str, Dict[str, Dict[str, object]]]) -> None:
+    def print_results(results: Dict[str, Dict[str, Dict[str, object]]]) -> None:
         """
-        Print the grouped URL check results to the console.
+        Print the grouped URL check results.
 
-        :param grouped_results: Nested dictionary of results as built by build_grouped_results.
+        :param results: Dictionary structured as {category: {name: {"url": str, "result": bool}}}
         """
-        for category, entries in grouped_results.items():
-            print(f"\n=== {category.upper()} ===")
-            for name, info in entries.items():
-                status = "✅ Exists" if info["result"] else "❌ Not Found"
-                print(f"[{name}] {info['url']} -> {status}")
+        for category, items in results.items():
+            print(f"\n[bold cyan]=== {category.upper()} ===[/bold cyan]")
+            for name, info in items.items():
+                status = "[green]✅ Exists[/green]" if info["result"] else "[red]❌ Not Found[/red]"
+                print(f"[yellow]{name}[/yellow]: {info['url']} -> {status}")
 
     @staticmethod
     def build_grouped_results(results: List[Tuple[str, str, str, bool]]) -> Dict[str, Dict[str, Dict[str, object]]]:
