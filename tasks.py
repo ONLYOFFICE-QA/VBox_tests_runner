@@ -10,7 +10,14 @@ from rich import print
 from vboxwrapper import VirtualMachine, Vbox
 
 from frameworks import DocBuilder, VmManager, PackageURLChecker
-from tests import *
+from tests import (
+    DesktopTestData,
+    DesktopReport,
+    DesktopTest,
+    BuilderTestData,
+    BuilderTests,
+    BuilderReportSender,
+)
 
 import tests.multiprocessing as multiprocess
 
