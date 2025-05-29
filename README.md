@@ -17,6 +17,7 @@
 * [Sending Messages to Telegram](#sending-messages-to-telegram)
 * [Report Portal Connection](#report-portal-connection)
 * [Downloading Virtual Machines](#downloading-virtual-machines)
+* [Package URL Checker](#package-url-checker)
 
 ---
 
