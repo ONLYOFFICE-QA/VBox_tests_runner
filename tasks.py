@@ -202,4 +202,4 @@ def download_os(c, cores: int = None):
 
 @task
 def check_package(c, version: str, name: str = None):
-    PackageURLChecker(version=version).run(categories=[name] if name else None, stdout=True)
+    PackageURLChecker(versions=version).run(categories=[name] if name else None, stdout=True)
