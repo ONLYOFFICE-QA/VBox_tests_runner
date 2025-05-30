@@ -61,6 +61,39 @@ class PackageURLChecker:
         # Setup logging
         self.logger = logging.getLogger(__name__)
 
+    async def find_latest_valid_version_with_all_packages(
+            self,
+            base_version: str,
+            max_builds: int = 100,
+            categories: Optional[List[str]] = None,
+            names: Optional[List[str]] = None
+    ) -> Optional[str]:
+        """
+        Проверяет несколько последних билдов и возвращает последнюю версию,
+        в которой все пакеты существуют (код 200).
+
+        :param base_version: Версия без build-номера, например "8.0.0"
+        :param max_builds: Количество билдов для проверки, начиная с последнего
+        :param categories: Фильтрация по категориям
+        :param names: Фильтрация по именам пакетов
+        :return: Последняя подходящая версия или None
+        """
+        for build_number in reversed(range(max_builds)):
+            version_str = f"{base_version}.{build_number}"
+            version = VersionHandler(version=version_str)
+            self.versions = [version]
+
+            results = await self.check_urls(categories=categories, names=names)
+
+            if all(r.exists is True for r in results):
+                print(f"[green]✅ Все пакеты найдены в версии {version_str}[/green]")
+                return version_str
+            else:
+                print(f"[dim]❌ Не все пакеты найдены в версии {version_str}[/dim]")
+
+        print(f"[red]❗ Не найдено ни одной версии с полным набором пакетов за последние {max_builds} билдов[/red]")
+        return None
+
     @staticmethod
     def _get_versions(
             versions: Union[str, VersionHandler, List[Union[str, VersionHandler]]]
