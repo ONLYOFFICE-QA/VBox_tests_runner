@@ -69,14 +69,14 @@ class PackageURLChecker:
             names: Optional[List[str]] = None
     ) -> Optional[str]:
         """
-        Проверяет несколько последних билдов и возвращает последнюю версию,
-        в которой все пакеты существуют (код 200).
+        Checks the last few builds and returns the most recent version
+        in which all packages exist (HTTP 200).
 
-        :param base_version: Версия без build-номера, например "8.0.0"
-        :param max_builds: Количество билдов для проверки, начиная с последнего
-        :param categories: Фильтрация по категориям
-        :param names: Фильтрация по именам пакетов
-        :return: Последняя подходящая версия или None
+        :param base_version: Version without build number, e.g. "8.0.0"
+        :param max_builds: Number of builds to check, starting from the latest
+        :param categories: Optional list of categories to filter
+        :param names: Optional list of package names to filter
+        :return: The latest valid version string or None if not found
         """
         for build_number in reversed(range(max_builds)):
             version_str = f"{base_version}.{build_number}"
@@ -86,12 +86,12 @@ class PackageURLChecker:
             results = await self.check_urls(categories=categories, names=names)
 
             if all(r.exists is True for r in results):
-                print(f"[green]✅ Все пакеты найдены в версии {version_str}[/green]")
+                print(f"[green]✅ All packages found in version {version_str}[/green]")
                 return version_str
             else:
-                print(f"[dim]❌ Не все пакеты найдены в версии {version_str}[/dim]")
+                print(f"[dim]❌ Not all packages found in version {version_str}[/dim]")
 
-        print(f"[red]❗ Не найдено ни одной версии с полным набором пакетов за последние {max_builds} билдов[/red]")
+        print(f"[red]❗ No version found with all required packages in the last {max_builds} builds[/red]")
         return None
 
     @staticmethod
@@ -176,7 +176,8 @@ class PackageURLChecker:
             else:
                 return await asyncio.gather(*tasks, return_exceptions=False)
 
-    async def _check_urls_with_progress(self, tasks: List) -> List[URLCheckResult]:
+    @staticmethod
+    async def _check_urls_with_progress(tasks: List) -> List[URLCheckResult]:
         """Process URLs in batches with progress indication."""
         results = []
         batch_size = 50
