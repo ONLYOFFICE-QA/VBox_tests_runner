@@ -248,7 +248,7 @@ class PackageURLChecker:
                         status = "[red]❌ Not Found[/red]"
                     else:
                         error_msg = info.get("error", "Unknown error")
-                        status = f"[yellow]⚠️ Error: {error_msg}[/yellow]"
+                        status = f"[red]⚠️ Error: {error_msg}[/]"
 
                     status_code = info.get("status_code")
                     status_info = f" (HTTP {status_code})" if status_code else ""
