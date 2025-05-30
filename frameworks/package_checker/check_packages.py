@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from os.path import join, dirname, realpath
+from dataclasses import dataclass, asdict
 
 from host_tools import File
 from host_tools.utils import Str
@@ -8,11 +9,26 @@ from rich import print
 import aiohttp
 from aiohttp import ClientSession
 import asyncio
-from typing import Dict, Tuple, List, Union
+from typing import Dict, List, Union
 
 from .config import Config
 from ..VersionHandler import VersionHandler
 
+
+@dataclass
+class URLCheckParams:
+    version: str
+    category: str
+    name: str
+    url: str
+
+@dataclass
+class URLCheckResult:
+    version: str
+    category: str
+    name: str
+    url: str
+    exists: bool
 
 class PackageURLChecker:
 
@@ -29,7 +45,6 @@ class PackageURLChecker:
     ) -> List[VersionHandler]:
         if not isinstance(versions, list):
             versions = [versions]
-
         return [v if isinstance(v, VersionHandler) else VersionHandler(version=v) for v in versions]
 
     def generate_urls(
@@ -37,14 +52,13 @@ class PackageURLChecker:
         version: VersionHandler,
         categories: List[str] = None,
         names: List[str] = None
-    ) -> Dict[str, Dict[str, str]]:
-        urls_by_category = {}
+    ) -> List[URLCheckParams]:
+        params_list = []
 
         for category, templates in self.templates.items():
             if categories and category not in categories:
                 continue
 
-            filtered_urls = {}
             for name, tpl in templates.items():
                 if names and name not in names:
                     continue
@@ -54,29 +68,28 @@ class PackageURLChecker:
                     version=version.without_build,
                     build=version.build
                 )
-                filtered_urls[name] = url
 
-            if filtered_urls:
-                urls_by_category[category] = filtered_urls
+                params_list.append(URLCheckParams(
+                    version=str(version),
+                    category=category,
+                    name=name,
+                    url=url
+                ))
 
-        return urls_by_category
+        return params_list
 
     async def check_urls(
             self,
             categories: List[str] = None,
             names: List[str] = None
-    ) -> List[Tuple[str, str, str, str, bool]]:
-        """
-        :return: List of (version, category, name, url, exists)
-        """
+    ) -> List[URLCheckResult]:
         tasks = []
 
         async with aiohttp.ClientSession() as session:
             for version in self.versions:
-                urls_by_category = self.generate_urls(version, categories=categories, names=names)
-                for category, urls in urls_by_category.items():
-                    for name, url in urls.items():
-                        tasks.append(self._check_url(session, str(version), category, name, url))
+                params_list = self.generate_urls(version, categories=categories, names=names)
+                for param in params_list:
+                    tasks.append(self._check_url(session, param))
 
             return await asyncio.gather(*tasks)
 
@@ -87,25 +100,23 @@ class PackageURLChecker:
             stdout: bool = True
     ) -> Dict[str, Dict[str, Dict[str, Dict[str, object]]]]:
         results = asyncio.run(self.check_urls(categories=categories, names=names))
-        grouped = self._build_grouped_results(results)
-
+        grouped = self._build_grouped_results(results=results)
         if stdout:
-            self._print_results(grouped)
-            if self.all_exist(grouped):
-                print("[bold green]✅ All URLs are valid.[/bold green]")
-            else:
-                print("[bold red]❌ Some URLs are missing.[/bold red]")
+            self._print_results(results=grouped)
 
         return grouped
 
     @staticmethod
-    def all_exist(grouped_results: Dict[str, Dict[str, Dict[str, Dict[str, object]]]]) -> bool:
-        return all(
-            info["result"]
-            for version_data in grouped_results.values()
-            for category_data in version_data.values()
-            for info in category_data.values()
-        )
+    def _build_grouped_results(results: List[URLCheckResult]) -> Dict[str, Dict[str, Dict[str, Dict[str, object]]]]:
+        grouped: Dict[str, Dict[str, Dict[str, Dict[str, object]]]] = {}
+        for result in results:
+            grouped \
+                .setdefault(result.version, {}) \
+                .setdefault(result.category, {})[result.name] = {
+                "url": result.url,
+                "result": result.exists
+            }
+        return grouped
 
     @staticmethod
     def _print_results(results: Dict[str, Dict[str, Dict[str, Dict[str, object]]]]) -> None:
@@ -118,24 +129,12 @@ class PackageURLChecker:
                     print(f"[yellow]{name}[/yellow]: {status} -> {info['url']}")
 
     @staticmethod
-    def _build_grouped_results(results: List[Tuple[str, str, str, str, bool]]) -> Dict[str, Dict[str, Dict[str, Dict[str, object]]]]:
-        """
-        :param results: (version, category, name, url, exists)
-        :return: {version: {category: {name: {"url": ..., "result": ...}}}}
-        """
-        grouped: Dict[str, Dict[str, Dict[str, Dict[str, object]]]] = {}
-        for version, category, name, url, exists in results:
-            grouped.setdefault(version, {}).setdefault(category, {})[name] = {
-                "url": url,
-                "result": exists
-            }
-        return grouped
-
-    @staticmethod
-    async def _check_url(session: ClientSession, version: str, category: str, name: str, url: str) -> Tuple[str, str, str, str, bool]:
+    async def _check_url(session: ClientSession, param: URLCheckParams) -> URLCheckResult:
         try:
-            async with session.head(url, timeout=5) as response:
-                return version, category, name, url, response.status == 200
+            async with session.head(param.url, timeout=5) as response:
+                exists = response.status == 200
         except Exception as e:
-            print(f"[red]|ERROR| Exception while checking {url}: {e}")
-            return version, category, name, url, False
+            print(f"[red]|ERROR| Exception while checking {param.url}: {e}")
+            exists = None
+
+        return URLCheckResult(**param.__dict__, exists=exists)
