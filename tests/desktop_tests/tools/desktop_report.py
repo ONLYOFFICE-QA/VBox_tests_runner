@@ -129,7 +129,7 @@ class DesktopReport:
 
     @staticmethod
     def _get_os_name(row: pd.Series) -> str:
-        return f"{row['Os']} (VM: {row['Vm_name']}"
+        return f"{row['Os']} (VM: {row['Vm_name']})"
 
     def exists(self) -> bool:
         return isfile(self.path)
