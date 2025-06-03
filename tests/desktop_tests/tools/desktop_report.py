@@ -97,12 +97,12 @@ class DesktopReport:
 
                     concurrent.futures.wait(futures)
 
-    def _process_row(self, row: pd.Series, launch: PortalManager, packege_name: str) -> Optional[str]:
+    def _process_row(self, row: pd.Series, launch: PortalManager, package_name: str) -> Optional[str]:
         launch.set_test_result(
             test_name=row['Test_name'],
             return_code=0 if self.is_passed(row) else 1,
             log_message=row['Exit_code'] if not self.is_passed(row) else None,
-            suite_uuid=self._create_suite(row, launch, packege_name)
+            suite_uuid=self._create_suite(self._get_os_name(row), launch, package_name)
         )
 
         if not self.is_passed(row):
@@ -119,12 +119,17 @@ class DesktopReport:
     def _create_suites(self, df: pd.DataFrame, launch: PortalManager, packege_name: str):
         with self.console.status('') as status:
             for _, row in df.iterrows():
-                status.update(f"[cyan]|INFO| Created suite {row['Os']} launchers for {row['Version']} test.")
-                self._create_suite(row, launch, packege_name)
+                os = self._get_os_name(row)
+                status.update(f"[cyan]|INFO| Created suite {os} launchers for {row['Version']} test.")
+                self._create_suite(os, launch, packege_name)
 
     @staticmethod
-    def _create_suite(row: pd.Series, launch: PortalManager, packege_name: str) -> str:
-        return launch.create_suite(row['Os'], parent_suite_uuid=launch.create_suite(packege_name))
+    def _create_suite(os_name: str, launch: PortalManager, packege_name: str) -> str:
+        return launch.create_suite(os_name, parent_suite_uuid=launch.create_suite(packege_name))
+
+    @staticmethod
+    def _get_os_name(row: pd.Series) -> str:
+        return f"{row['Os']} (VM: {row['Vm_name']}"
 
     def exists(self) -> bool:
         return isfile(self.path)
