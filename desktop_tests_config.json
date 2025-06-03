@@ -34,6 +34,7 @@
     "OpenSUSE15",
     "Windows8.1",
     "Ubuntu25.04",
-    "AlmaLinux9.6"
+    "AlmaLinux9.6",
+    "MXLinux23.6"
   ]
 }
