@@ -63,7 +63,6 @@ class PackageURLChecker:
     ) -> Dict[str, Dict[str, Dict[str, Dict[str, object]]]]:
         """Run URL checks and return grouped results."""
         try:
-
             results = asyncio.run(self.check_urls(versions=versions, categories=categories, names=names))
             grouped = self._build_grouped_results(results)
 
