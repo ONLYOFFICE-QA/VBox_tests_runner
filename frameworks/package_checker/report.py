@@ -72,6 +72,8 @@ class CSVReport(Report):
         if category:
             df = df[df['category'] == category]
 
+        df = df[df['exists'] == True]
+
         if df.empty:
             return None
 
