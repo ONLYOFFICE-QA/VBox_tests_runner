@@ -167,7 +167,8 @@ class PackageURLChecker:
                 else:
                     version_results = await asyncio.gather(*version_tasks, return_exceptions=False)
 
-                self.get_report(version.without_build).write_results(version_results)
+                if any(r.exists is True for r in version_results):
+                    self.get_report(version.without_build).write_results(version_results)
 
                 all_results.extend(version_results)
 
