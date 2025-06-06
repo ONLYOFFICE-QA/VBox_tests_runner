@@ -13,17 +13,24 @@ from frameworks.package_checker.urlcheck_result import URLCheckResult
 class CSVReport(Report):
     def __init__(self, path: Union[str, Path], delimiter: str = '\t', encoding='utf-8'):
         super().__init__()
+        self.__df: Optional[pd.DataFrame] = None
+        self.__cached_mtime: Optional[float] = None
+
         self.path = Path(path)
         self.fieldnames = ['version', 'category', 'name', 'url', 'exists', 'status_code', 'error']
         self.delimiter = delimiter
         self.encoding=encoding
-        self.exists_df = self.read_report()
+        self.exists_df = self.df
         self._ensure_file()
 
-    def read_report(self) -> Optional[pd.DataFrame]:
-        if self.exists:
-            return self.read(csv_file=str(self.path), delimiter=self.delimiter)
-        return None
+    @property
+    def df(self) -> Optional[pd.DataFrame]:
+        current_mtime = self.path.stat().st_mtime
+        if self.__df is None or self.__cached_mtime != current_mtime:
+            self.__df = pd.read_csv(self.path, delimiter=self.delimiter)
+            self.__cached_mtime = current_mtime
+
+        return self.__df
 
     @property
     def exists(self) -> bool:
@@ -44,16 +51,16 @@ class CSVReport(Report):
             for r in results:
                 row = asdict(r)
                 if existing_df is not None and not existing_df.empty:
-                    mask = (existing_df[keys] == pd.Series({k: row[k] for k in keys})).all(axis=1)
-                    if mask.any():
+                    if (existing_df[keys] == pd.Series({k: row[k] for k in keys})).all(axis=1).any():
                         continue
+
                 writer.writerow(row)
 
     @property
     def last_checked_version(self) -> Optional[str]:
-        if self.exists_df is None or self.exists_df.empty:
+        if self.df is None or self.df.empty:
             return None
 
-        df = self.exists_df
+        df = self.df
         df['build'] = df['version'].str.extract(r'\.(\d+)$').astype(int)
         return df.loc[df['build'].idxmax()]['version']
