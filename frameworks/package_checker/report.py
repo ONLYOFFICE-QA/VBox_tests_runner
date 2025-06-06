@@ -20,7 +20,7 @@ class CSVReport(Report):
         self.fieldnames = ['version', 'category', 'name', 'url', 'exists', 'status_code', 'error']
         self.delimiter = delimiter
         self.encoding=encoding
-        self.exists_df = self.df
+        self.exists_df = self.df if self.exists else None
         self._ensure_file()
 
     @property
