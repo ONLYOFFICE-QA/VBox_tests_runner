@@ -297,7 +297,7 @@ class PackageURLChecker:
         not_found = sum(1 for r in results if r.exists is False)
         errors = sum(1 for r in results if r.exists is None)
 
-        print(f"\n[bold]Summary:[/bold]")
+        print("\n[bold]Summary:[/bold]")
         print(f"Total URLs checked: {total}")
         print(f"[green]Found: {exists}[/green]")
         print(f"[red]Not found: {not_found}[/red]")
