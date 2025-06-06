@@ -24,10 +24,10 @@ from .urlcheck_result import URLCheckResult
 class PackageURLChecker:
     """Async URL checker for package versions with improved error handling and performance."""
     __cached_reports = {}
+    __cached_versions = {}
 
     def __init__(
             self,
-            versions: Union[str, VersionHandler, List[Union[str, VersionHandler]]],
             template_path: Optional[str] = None,
             max_concurrent: int = None,
             timeout: int = 10,
@@ -37,9 +37,7 @@ class PackageURLChecker:
         self.host = Str.delete_last_slash(self.config.host)
         self.template_path = template_path or join(dirname(realpath(__file__)), "templates.json")
         self.templates = File.read_json(self.template_path)
-        self.versions: List[VersionHandler] = self._get_versions(versions)
         self.report_dir: str = join(os.getcwd(), 'reports', 'report_checker')
-        
 
         # Performance and reliability settings
         self.max_concurrent = max_concurrent
@@ -50,9 +48,8 @@ class PackageURLChecker:
         # Setup logging
         self.logger = logging.getLogger(__name__)
 
-
-    def get_report(self, version: VersionHandler):
-        report_path = join(self.report_dir, f'{version.without_build}.csv')
+    def get_report(self, base_version: str) -> CSVReport:
+        report_path = join(self.report_dir, f'{base_version}.csv')
         if report_path not in self.__cached_reports:
             self.__cached_reports[report_path] = CSVReport(path=report_path)
         return self.__cached_reports[report_path]
@@ -65,14 +62,16 @@ class PackageURLChecker:
             names: Optional[List[str]] = None
     ) -> Optional[str]:
 
+        last_version = self.get_report(base_version=base_version).last_checked_version
+        build = self._get_version(last_version).build if last_version else 0
+
         versions = [
-            VersionHandler(version=f"{base_version}.{build}")
-            for build in reversed(range(max_builds))
+            self._get_version(version=f"{base_version}.{build}")
+            for build in reversed(range(max_builds, build, -1))
         ]
 
         async def check_version(v: VersionHandler) -> Optional[str]:
-            self.versions = [v]
-            results = await self.check_urls(categories=categories, names=names)
+            results = await self.check_urls(versions=[v], categories=categories, names=names)
 
             if all(r.exists is True for r in results):
                 print(f"[green]✅ All packages found in version {v}[/green]")
@@ -86,15 +85,19 @@ class PackageURLChecker:
         for coro in asyncio.as_completed(tasks):
             await coro
 
+    def _get_version(self, version: str) -> VersionHandler:
+        if version not in self.__cached_versions:
+            self.__cached_versions[version] = VersionHandler(version)
+        return self.__cached_versions[version]
 
-    @staticmethod
     def _get_versions(
+            self,
             versions: Union[str, VersionHandler, List[Union[str, VersionHandler]]]
     ) -> List[VersionHandler]:
         """Convert input versions to list of VersionHandler objects."""
         if not isinstance(versions, list):
-            versions = [versions]
-        return [v if isinstance(v, VersionHandler) else VersionHandler(version=v) for v in versions]
+            versions = [versions if isinstance(versions, VersionHandler) else self._get_version(version=versions)]
+        return [v if isinstance(v, VersionHandler) else self._get_version(version=v) for v in versions]
 
     def generate_urls(
             self,
@@ -147,6 +150,7 @@ class PackageURLChecker:
 
     async def check_urls(
             self,
+            versions: Union[str, VersionHandler, List[Union[str, VersionHandler]]],
             categories: Optional[List[str]] = None,
             names: Optional[List[str]] = None
     ) -> List[URLCheckResult]:
@@ -154,7 +158,7 @@ class PackageURLChecker:
         all_results = []
 
         async with self._get_session() as session:
-            for version in self.versions:
+            for version in self._get_versions(versions):
                 params_list = self.generate_urls(version, categories=categories, names=names)
                 version_tasks = [self._check_url_with_retry(session, param) for param in params_list]
 
@@ -163,8 +167,7 @@ class PackageURLChecker:
                 else:
                     version_results = await asyncio.gather(*version_tasks, return_exceptions=False)
 
-                if any(r.exists is True for r in version_results):
-                    self.get_report(version).write_results(version_results)
+                self.get_report(version.without_build).write_results(version_results)
 
                 all_results.extend(version_results)
 
@@ -225,13 +228,14 @@ class PackageURLChecker:
 
     def run(
             self,
+            versions: Union[str, VersionHandler, List[Union[str, VersionHandler]]],
             categories: Optional[List[str]] = None,
             names: Optional[List[str]] = None,
             stdout: bool = True
     ) -> Dict[str, Dict[str, Dict[str, Dict[str, object]]]]:
         """Run URL checks and return grouped results."""
         try:
-            results = asyncio.run(self.check_urls(categories=categories, names=names))
+            results = asyncio.run(self.check_urls(versions=versions, categories=categories, names=names))
             grouped = self._build_grouped_results(results)
 
             if stdout:
