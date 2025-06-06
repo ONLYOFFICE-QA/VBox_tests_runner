@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
+import os
 from os.path import join, dirname, realpath
-from dataclasses import dataclass
 from typing import Dict, List, Union, Optional
 import asyncio
 import logging
@@ -13,30 +13,17 @@ from rich import print
 from host_tools import File
 from host_tools.utils import Str
 from .config import Config
+from .report import CSVReport
 from ..VersionHandler import VersionHandler
 
+from .urlcheck_params import URLCheckParams
+from .urlcheck_result import URLCheckResult
 
-@dataclass
-class URLCheckParams:
-    version: str
-    category: str
-    name: str
-    url: str
-
-
-@dataclass
-class URLCheckResult:
-    version: str
-    category: str
-    name: str
-    url: str
-    exists: Optional[bool]
-    status_code: Optional[int] = None
-    error: Optional[str] = None
 
 
 class PackageURLChecker:
     """Async URL checker for package versions with improved error handling and performance."""
+    __cached_reports = {}
 
     def __init__(
             self,
@@ -51,6 +38,8 @@ class PackageURLChecker:
         self.template_path = template_path or join(dirname(realpath(__file__)), "templates.json")
         self.templates = File.read_json(self.template_path)
         self.versions: List[VersionHandler] = self._get_versions(versions)
+        self.report_dir: str = join(os.getcwd(), 'reports', 'report_checker')
+        
 
         # Performance and reliability settings
         self.max_concurrent = max_concurrent
@@ -61,6 +50,13 @@ class PackageURLChecker:
         # Setup logging
         self.logger = logging.getLogger(__name__)
 
+
+    def get_report(self, version: VersionHandler):
+        report_path = join(self.report_dir, f'{version.without_build}.csv')
+        if report_path not in self.__cached_reports:
+            self.__cached_reports[report_path] = CSVReport(path=report_path)
+        return self.__cached_reports[report_path]
+
     async def find_latest_valid_version_with_all_packages(
             self,
             base_version: str,
@@ -68,31 +64,28 @@ class PackageURLChecker:
             categories: Optional[List[str]] = None,
             names: Optional[List[str]] = None
     ) -> Optional[str]:
-        """
-        Checks the last few builds and returns the most recent version
-        in which all packages exist (HTTP 200).
 
-        :param base_version: Version without build number, e.g. "8.0.0"
-        :param max_builds: Number of builds to check, starting from the latest
-        :param categories: Optional list of categories to filter
-        :param names: Optional list of package names to filter
-        :return: The latest valid version string or None if not found
-        """
-        for build_number in reversed(range(max_builds)):
-            version_str = f"{base_version}.{build_number}"
-            version = VersionHandler(version=version_str)
-            self.versions = [version]
+        versions = [
+            VersionHandler(version=f"{base_version}.{build}")
+            for build in reversed(range(max_builds))
+        ]
 
+        async def check_version(v: VersionHandler) -> Optional[str]:
+            self.versions = [v]
             results = await self.check_urls(categories=categories, names=names)
 
             if all(r.exists is True for r in results):
-                print(f"[green]✅ All packages found in version {version_str}[/green]")
-                return version_str
+                print(f"[green]✅ All packages found in version {v}[/green]")
+                return str(v)
             else:
-                print(f"[dim]❌ Not all packages found in version {version_str}[/dim]")
+                print(f"[dim]❌ Not all packages found in version {v}[/dim]")
+                return None
 
-        print(f"[red]❗ No version found with all required packages in the last {max_builds} builds[/red]")
-        return None
+        tasks = [check_version(v) for v in versions]
+
+        for coro in asyncio.as_completed(tasks):
+            await coro
+
 
     @staticmethod
     def _get_versions(
@@ -149,11 +142,7 @@ class PackageURLChecker:
             enable_cleanup_closed=True
         )
 
-        async with ClientSession(
-                timeout=timeout,
-                connector=connector,
-                headers={'User-Agent': 'PackageURLChecker/1.0'}
-        ) as session:
+        async with ClientSession(timeout=timeout, connector=connector) as session:
             yield session
 
     async def check_urls(
@@ -161,20 +150,25 @@ class PackageURLChecker:
             categories: Optional[List[str]] = None,
             names: Optional[List[str]] = None
     ) -> List[URLCheckResult]:
-        """Check URLs asynchronously with proper session management."""
-        tasks = []
+        """Check URLs asynchronously with proper session management and record to CSV."""
+        all_results = []
 
         async with self._get_session() as session:
             for version in self.versions:
                 params_list = self.generate_urls(version, categories=categories, names=names)
-                for param in params_list:
-                    tasks.append(self._check_url_with_retry(session, param))
+                version_tasks = [self._check_url_with_retry(session, param) for param in params_list]
 
-            # Process with progress tracking if many URLs
-            if len(tasks) > 100:
-                return await self._check_urls_with_progress(tasks)
-            else:
-                return await asyncio.gather(*tasks, return_exceptions=False)
+                if len(version_tasks) > 100:
+                    version_results = await self._check_urls_with_progress(version_tasks)
+                else:
+                    version_results = await asyncio.gather(*version_tasks, return_exceptions=False)
+
+                if any(r.exists is True for r in version_results):
+                    self.get_report(version).write_results(version_results)
+
+                all_results.extend(version_results)
+
+        return all_results
 
     @staticmethod
     async def _check_urls_with_progress(tasks: List) -> List[URLCheckResult]:
