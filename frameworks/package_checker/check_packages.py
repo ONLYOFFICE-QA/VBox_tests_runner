@@ -76,7 +76,7 @@ class PackageURLChecker:
             self.logger.error(f"Error during URL checking: {e}")
             raise
 
-    async def find_latest_valid_version_with_all_packages(
+    async def find_latest_valid_version(
             self,
             base_version: str,
             max_builds: int = 200,

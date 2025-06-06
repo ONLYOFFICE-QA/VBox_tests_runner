@@ -45,7 +45,7 @@ class CSVReport(Report):
 
     def write_results(self, results: List[URLCheckResult]):
         existing_df = self.exists_df
-        keys = ['version', 'category', 'name', 'url']
+        keys = ['version', 'category', 'name']
         new_rows = [asdict(r) for r in results]
 
         if existing_df is not None and not existing_df.empty:
