@@ -17,7 +17,7 @@ class CSVReport(Report):
         self.__cached_mtime: Optional[float] = None
 
         self.path = Path(path)
-        self.fieldnames = ['version', 'category', 'name', 'url', 'exists', 'status_code', 'error']
+        self.fieldnames = ['version', 'build', 'category', 'name', 'url', 'exists', 'status_code', 'error']
         self.delimiter = delimiter
         self.encoding=encoding
         self.exists_df = self.df if self.exists else None
@@ -46,21 +46,25 @@ class CSVReport(Report):
     def write_results(self, results: List[URLCheckResult]):
         existing_df = self.exists_df
         keys = ['version', 'category', 'name', 'url']
-        with self.path.open('a', newline='', encoding=self.encoding) as f:
-            writer = csv.DictWriter(f, fieldnames=self.fieldnames, delimiter=self.delimiter)
-            for r in results:
-                row = asdict(r)
-                if existing_df is not None and not existing_df.empty:
-                    if (existing_df[keys] == pd.Series({k: row[k] for k in keys})).all(axis=1).any():
-                        continue
+        new_rows = [asdict(r) for r in results]
 
-                writer.writerow(row)
+        if existing_df is not None and not existing_df.empty:
+            new_df = pd.DataFrame(new_rows)
+            merged = new_df.merge(existing_df[keys], on=keys, how='left', indicator=True)
+            filtered_rows = new_df[merged['_merge'] == 'left_only']
+        else:
+            filtered_rows = pd.DataFrame(new_rows)
+
+        if not filtered_rows.empty:
+            with self.path.open('a', newline='', encoding=self.encoding) as f:
+                writer = csv.DictWriter(f, fieldnames=self.fieldnames, delimiter=self.delimiter)
+                writer.writerows(filtered_rows.to_dict(orient='records'))
 
     def get_last_exists_version(self, name: str = None, category: str = None) -> Optional[str]:
         if self.df is None or self.df.empty:
             return None
 
-        df = self.df
+        df = self.df.copy()
 
         if name:
             df = df[df['name'] == name]
@@ -71,8 +75,6 @@ class CSVReport(Report):
         if df.empty:
             return None
 
-        df = df.copy()
-        df['build'] = df['version'].str.extract(r'\.(\d+)$').astype(int)
         return df.loc[df['build'].idxmax()]['version']
     
 
@@ -81,6 +83,5 @@ class CSVReport(Report):
         if self.df is None or self.df.empty:
             return None
 
-        df = self.df
-        df['build'] = df['version'].str.extract(r'\.(\d+)$').astype(int)
+        df = self.df.copy()
         return df.loc[df['build'].idxmax()]['version']
