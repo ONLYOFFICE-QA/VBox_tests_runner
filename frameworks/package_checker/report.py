@@ -56,6 +56,26 @@ class CSVReport(Report):
 
                 writer.writerow(row)
 
+    def get_last_exists_version(self, name: str = None, category: str = None) -> Optional[str]:
+        if self.df is None or self.df.empty:
+            return None
+
+        df = self.df
+
+        if name:
+            df = df[df['name'] == name]
+
+        if category:
+            df = df[df['category'] == category]
+
+        if df.empty:
+            return None
+
+        df = df.copy()
+        df['build'] = df['version'].str.extract(r'\.(\d+)$').astype(int)
+        return df.loc[df['build'].idxmax()]['version']
+    
+
     @property
     def last_checked_version(self) -> Optional[str]:
         if self.df is None or self.df.empty:

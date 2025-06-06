@@ -54,6 +54,28 @@ class PackageURLChecker:
             self.__cached_reports[report_path] = CSVReport(path=report_path)
         return self.__cached_reports[report_path]
 
+    def run(
+            self,
+            versions: Union[str, VersionHandler, List[Union[str, VersionHandler]]],
+            categories: Optional[List[str]] = None,
+            names: Optional[List[str]] = None,
+            stdout: bool = True
+    ) -> Dict[str, Dict[str, Dict[str, Dict[str, object]]]]:
+        """Run URL checks and return grouped results."""
+        try:
+
+            results = asyncio.run(self.check_urls(versions=versions, categories=categories, names=names))
+            grouped = self._build_grouped_results(results)
+
+            if stdout:
+                self._print_results(grouped)
+                self._print_summary(results)
+
+            return grouped
+        except Exception as e:
+            self.logger.error(f"Error during URL checking: {e}")
+            raise
+
     async def find_latest_valid_version_with_all_packages(
             self,
             base_version: str,
@@ -226,27 +248,6 @@ class PackageURLChecker:
         except Exception as e:
             self.logger.debug(f"Unexpected error for {param.url}: {e}")
             return URLCheckResult(**param.__dict__, exists=None, error=str(e))
-
-    def run(
-            self,
-            versions: Union[str, VersionHandler, List[Union[str, VersionHandler]]],
-            categories: Optional[List[str]] = None,
-            names: Optional[List[str]] = None,
-            stdout: bool = True
-    ) -> Dict[str, Dict[str, Dict[str, Dict[str, object]]]]:
-        """Run URL checks and return grouped results."""
-        try:
-            results = asyncio.run(self.check_urls(versions=versions, categories=categories, names=names))
-            grouped = self._build_grouped_results(results)
-
-            if stdout:
-                self._print_results(grouped)
-                self._print_summary(results)
-
-            return grouped
-        except Exception as e:
-            self.logger.error(f"Error during URL checking: {e}")
-            raise
 
     @staticmethod
     def _build_grouped_results(results: List[URLCheckResult]) -> Dict[str, Dict[str, Dict[str, Dict[str, object]]]]:
