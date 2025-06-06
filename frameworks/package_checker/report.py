@@ -67,12 +67,12 @@ class CSVReport(Report):
         df = self.df.copy()
 
         if name:
-            df = df[df['name'] == name]
+            df = df[df['name'] == name.lower()]
 
         if category:
-            df = df[df['category'] == category]
+            df = df[df['category'] == category.lower()]
 
-        df = df[df['exists']]
+        df = df[df['exists'].astype(bool)]
 
         if df.empty:
             return None
