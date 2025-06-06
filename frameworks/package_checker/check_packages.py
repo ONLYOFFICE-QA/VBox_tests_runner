@@ -60,7 +60,7 @@ class PackageURLChecker:
     async def find_latest_valid_version_with_all_packages(
             self,
             base_version: str,
-            max_builds: int = 100,
+            max_builds: int = 200,
             categories: Optional[List[str]] = None,
             names: Optional[List[str]] = None
     ) -> Optional[str]:
