@@ -6,6 +6,7 @@ from typing import Optional
 @dataclass
 class URLCheckResult:
     version: str
+    build: int
     category: str
     name: str
     url: str

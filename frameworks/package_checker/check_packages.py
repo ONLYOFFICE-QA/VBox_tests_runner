@@ -146,6 +146,7 @@ class PackageURLChecker:
                     )
                     params_list.append(URLCheckParams(
                         version=str(version),
+                        build=version.build,
                         category=category,
                         name=name,
                         url=url
