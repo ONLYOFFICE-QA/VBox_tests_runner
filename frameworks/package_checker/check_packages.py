@@ -183,6 +183,7 @@ class PackageURLChecker:
 
         async with self._get_session() as session:
             for version in self._get_versions(versions):
+                report = self.get_report(base_version=version.without_build)
                 params_list = self.generate_urls(version, categories=categories, names=names)
                 version_tasks = [self._check_url_with_retry(session, param) for param in params_list]
 
@@ -192,7 +193,7 @@ class PackageURLChecker:
                     version_results = await asyncio.gather(*version_tasks, return_exceptions=False)
 
                 if any(r.exists is True for r in version_results):
-                    self.get_report(version.without_build).write_results(version_results)
+                    report.write_results(version_results)
 
                 all_results.extend(version_results)
 
