@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import asyncio
 from os import getcwd, system
 from os.path import join, isfile
 from host_tools import Process, Service
@@ -202,4 +203,12 @@ def download_os(c, cores: int = None):
 
 @task
 def check_package(c, version: str, name: str = None):
-    PackageURLChecker(versions=version).run(categories=[name] if name else None, stdout=True)
+    PackageURLChecker().run(versions=version, categories=[name] if name else None, stdout=True)
+
+@task
+def get_versions(c, version: str, name: str = None, max_builds: int = 200):
+    checker = PackageURLChecker()
+    asyncio.run(checker.find_latest_valid_version(base_version=version, max_builds=max_builds))
+    last_version = checker.get_report(base_version=version).get_last_exists_version(category=name)
+    print(last_version)
+    return last_version
