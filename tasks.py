@@ -206,9 +206,9 @@ def check_package(c, version: str, name: str = None):
     PackageURLChecker().run(versions=version, categories=[name] if name else None, stdout=True)
 
 @task
-def get_versions(c, version: str, name: str = None, max_builds: int = 200):
+def get_versions(c, version_base: str, name: str = None, max_builds: int = 200):
     checker = PackageURLChecker()
-    asyncio.run(checker.find_latest_valid_version(base_version=version, max_builds=max_builds))
-    last_version = checker.get_report(base_version=version).get_last_exists_version(category=name)
+    asyncio.run(checker.find_latest_valid_version(base_version=version_base, max_builds=max_builds))
+    last_version = checker.get_report(base_version=version_base).get_last_exists_version(category=name)
     print(last_version)
     return last_version
