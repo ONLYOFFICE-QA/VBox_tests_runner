@@ -1,21 +1,25 @@
 # -*- coding: utf-8 -*-
+import asyncio
 from os import getcwd, system
 from os.path import join, isfile
 from host_tools import Process, Service
 from elevate import elevate
 from host_tools.utils import Dir
-
 from invoke import task
 from rich.prompt import Prompt
 from rich import print
-
 from vboxwrapper import VirtualMachine, Vbox
 
-from frameworks import DocBuilder, VmManager
-from tests.builder_tests import BuilderTests, BuilderTestData
-from tests.builder_tests.builder_report_sender import BuilderReportSender
+from frameworks import DocBuilder, VmManager, PackageURLChecker
+from tests import (
+    DesktopTestData,
+    DesktopReport,
+    DesktopTest,
+    BuilderTestData,
+    BuilderTests,
+    BuilderReportSender,
+)
 
-from tests.desktop_tests import DesktopTest, DesktopTestData, DesktopReport
 import tests.multiprocessing as multiprocess
 
 
@@ -196,3 +200,15 @@ def reset_last_snapshot(c, group_name: str = None):
 @task
 def download_os(c, cores: int = None):
     VmManager().download_vm_images(cores=cores)
+
+@task
+def check_package(c, version: str, name: str = None):
+    PackageURLChecker().run(versions=version, categories=[name] if name else None, stdout=True)
+
+@task
+def get_versions(c, version_base: str, name: str = None, max_builds: int = 200):
+    checker = PackageURLChecker()
+    asyncio.run(checker.find_latest_valid_version(base_version=version_base, max_builds=max_builds))
+    last_version = checker.get_report(base_version=version_base).get_last_exists_version(category=name)
+    print(last_version)
+    return last_version
