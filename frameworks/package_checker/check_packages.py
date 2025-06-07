@@ -97,14 +97,16 @@ class PackageURLChecker:
             if all(r.exists is True for r in results):
                 print(f"[green]✅ All packages found in version {v}[/green]")
                 return str(v)
-            else:
-                print(f"[dim]❌ Not all packages found in version {v}[/dim]")
-                return None
+            return print(f"[dim]❌ Not all packages found in version {v}[/dim]")
 
         tasks = [check_version(v) for v in versions]
 
         for coro in asyncio.as_completed(tasks):
-            await coro
+            result = await coro
+            if result:
+                return result
+
+        return None
 
     def _get_version(self, version: str) -> VersionHandler:
         if version not in self.__cached_versions:
