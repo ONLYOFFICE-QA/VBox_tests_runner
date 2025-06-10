@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
 from os.path import join
 from typing import Dict, List, Union, Optional
 import asyncio
@@ -10,7 +9,6 @@ import aiohttp
 from aiohttp import ClientSession, ClientTimeout, ClientConnectorError
 from rich import print
 
-from host_tools.utils import Str
 from .config import Config
 from .report import CSVReport
 from ..VersionHandler import VersionHandler
