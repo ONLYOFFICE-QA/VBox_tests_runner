@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-from os.path import join, dirname, realpath
+from os.path import join
 from typing import Dict, List, Union, Optional
 import asyncio
 import logging
@@ -10,7 +10,6 @@ import aiohttp
 from aiohttp import ClientSession, ClientTimeout, ClientConnectorError
 from rich import print
 
-from host_tools import File
 from host_tools.utils import Str
 from .config import Config
 from .report import CSVReport
@@ -28,16 +27,11 @@ class PackageURLChecker:
 
     def __init__(
             self,
-            template_path: Optional[str] = None,
             max_concurrent: int = None,
             timeout: int = 10,
             max_retries: int = 2
     ):
         self.config = Config()
-        self.host = Str.delete_last_slash(self.config.host)
-        self.template_path = template_path or join(dirname(realpath(__file__)), "templates.json")
-        self.templates = File.read_json(self.template_path)
-        self.report_dir: str = join(os.getcwd(), 'reports', 'report_checker')
 
         # Performance and reliability settings
         self.max_concurrent = max_concurrent
@@ -49,7 +43,7 @@ class PackageURLChecker:
         self.logger = logging.getLogger(__name__)
 
     def get_report(self, base_version: str) -> CSVReport:
-        report_path = join(self.report_dir, f'{base_version}.csv')
+        report_path = join(self.config.report_dir, f'{base_version}.csv')
         if report_path not in self.__cached_reports:
             self.__cached_reports[report_path] = CSVReport(path=report_path)
         return self.__cached_reports[report_path]
@@ -131,7 +125,7 @@ class PackageURLChecker:
         """Generate URL check parameters for given version and filters."""
         params_list = []
 
-        for category, templates in self.templates.items():
+        for category, templates in self.config.templates.items():
             if categories and category not in categories:
                 continue
 
@@ -141,7 +135,7 @@ class PackageURLChecker:
 
                 try:
                     url = tpl.format(
-                        host=self.host,
+                        host=self.config.host,
                         version=version.without_build,
                         build=version.build
                     )
