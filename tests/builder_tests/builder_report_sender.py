@@ -15,6 +15,11 @@ from frameworks.report_portal import PortalManager
 class BuilderReportSender:
 
     def __init__(self, report_path: str):
+        """
+        Initialize the BuilderReportSender class.
+
+        :param report_path: Path to the report CSV file.
+        """
         self.report = Report()
         self.tg = Telegram()
         self.report_path = report_path
@@ -26,12 +31,22 @@ class BuilderReportSender:
 
     @property
     def df(self):
+        """
+        load and return the DataFrame from the report path.
+
+        :return: The loaded DataFrame or None if not available.
+        """
         if self.__df is None and isfile(self.report_path):
             self.__df = self.report.read(self.report_path)
         return self.__df
 
     @property
     def version(self):
+        """
+        Determine and return the version from the report DataFrame.
+
+        :return: The version string or None if not found.
+        """
         if self.__version is not None:
             return self.__version
 
@@ -57,9 +72,17 @@ class BuilderReportSender:
         return self.__version
 
     def all_is_passed(self) -> bool:
+        """
+        Check if all tests passed (Exit_code == 0.0).
+
+        :return: True if all tests passed, False otherwise.
+        """
         return self.df['Exit_code'].eq(0.0).all()
 
     def to_telegram(self):
+        """
+        Send report results to Telegram, including the full and errors-only CSV.
+        """
         errors_only_df = self.df[self.df['Exit_code'] != 0.0]
         self.report.save_csv(errors_only_df, self.errors_only_report)
         result_status = "All tests passed" if self.all_is_passed() else "Some tests have errors"
@@ -71,6 +94,11 @@ class BuilderReportSender:
 
 
     def to_report_portal(self, project_name: str):
+        """
+        Send test results to the report portal.
+
+        :param project_name: The name of the report portal project.
+        """
         self.console.print(f"[green]|INFO| Start sending results to report portal for version: {self.version}...")
         columns_to_check = ['Builder_samples', 'Test_name', 'Os']
         df = self.df.dropna(subset=columns_to_check, how='any')
@@ -102,6 +130,13 @@ class BuilderReportSender:
             return f"[red]|ERROR| Exception when getting result {e}"
 
     def _process_row(self, row: pd.Series, launch: PortalManager) -> Optional[str]:
+        """
+        Process a single test row and send it to the report portal.
+
+        :param row: A row from the DataFrame containing test result data.
+        :param launch: The PortalManager instance to send results to.
+        :return: A status message string or an empty string if the test failed.
+        """
         ret_code = self._get_exit_code(row)
         os_suite_uuid = launch.create_suite(row['Os'])
         samples_suite_uuid = launch.create_suite(row['Builder_samples'], parent_suite_uuid=os_suite_uuid)
@@ -122,6 +157,12 @@ class BuilderReportSender:
         return f"[green]|INFO|[cyan]{row['Os']}[/]|[cyan]{row['Test_name']}[/] finished with exit code [cyan]{ret_code}"
 
     def _create_suites(self, df: pd.DataFrame, launch: PortalManager):
+        """
+        Create test suites in the report portal based on the DataFrame.
+
+        :param df: The DataFrame containing test results.
+        :param launch: The PortalManager instance for suite creation.
+        """
         with self.console.status('[cyan]|INFO| Start creating suites') as status:
             for _, row in df.iterrows():
                 status.update(
@@ -134,6 +175,12 @@ class BuilderReportSender:
 
     @staticmethod
     def _get_exit_code(row: pd.Series) -> int:
+        """
+        Get the exit code from the DataFrame row.
+
+        :param row: A row from the DataFrame.
+        :return: The exit code as an integer.
+        """
         try:
             return int(row['Exit_code'])
         except ValueError:
