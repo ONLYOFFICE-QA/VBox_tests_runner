@@ -72,7 +72,7 @@ class BuilderReportSender:
 
     def to_report_portal(self, project_name: str):
         self.console.print(f"[green]|INFO| Start sending results to report portal for version: {self.version}...")
-        columns_to_check = ['Test_name', 'Os', 'Version', 'Exit_code']
+        columns_to_check = ['Builder_samples', 'Test_name', 'Os']
         df = self.df.dropna(subset=columns_to_check, how='any')
 
         if df.empty:
