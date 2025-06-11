@@ -29,6 +29,13 @@ class PackageURLChecker:
             timeout: int = 10,
             max_retries: int = 2
     ):
+        """
+        Initialize the URL checker with concurrency and timeout settings.
+
+        :param max_concurrent: Maximum number of concurrent requests.
+        :param timeout: Request timeout in seconds.
+        :param max_retries: Number of retries for failed requests.
+        """
         self.config = Config()
 
         # Performance and reliability settings
@@ -41,6 +48,12 @@ class PackageURLChecker:
         self.logger = logging.getLogger(__name__)
 
     def get_report(self, base_version: str) -> CSVReport:
+        """
+        Get or create a cached CSVReport object for the given version.
+
+        :param base_version: The base version string.
+        :return: CSVReport object for that version.
+        """
         report_path = join(self.config.report_dir, f'{base_version}.csv')
         if report_path not in self.__cached_reports:
             self.__cached_reports[report_path] = CSVReport(path=report_path)
@@ -53,7 +66,15 @@ class PackageURLChecker:
             names: Optional[List[str]] = None,
             stdout: bool = True
     ) -> Dict[str, Dict[str, Dict[str, Dict[str, object]]]]:
-        """Run URL checks and return grouped results."""
+        """
+        Run URL checks and optionally print the results.
+
+        :param versions: One or more version strings or VersionHandler objects.
+        :param categories: Optional list of categories to filter.
+        :param names: Optional list of names to filter.
+        :param stdout: Whether to print results to console.
+        :return: Nested dictionary of results.
+        """
         try:
             results = asyncio.run(self.check_urls(versions=versions, categories=categories, names=names))
             grouped = self._build_grouped_results(results)
@@ -74,6 +95,15 @@ class PackageURLChecker:
             categories: Optional[List[str]] = None,
             names: Optional[List[str]] = None
     ) -> Optional[str]:
+        """
+        Find the most recent version with all required URLs present.
+
+        :param base_version: Base version string to start from.
+        :param max_builds: Maximum number of builds to check backwards.
+        :param categories: Optional list of categories to check.
+        :param names: Optional list of names to check.
+        :return: The latest valid version string or None.
+        """
 
         last_version = self.get_report(base_version=base_version).last_checked_version
         build = self._get_version(last_version).build if last_version else 0
@@ -101,6 +131,12 @@ class PackageURLChecker:
         return None
 
     def _get_version(self, version: str) -> VersionHandler:
+        """
+        Get or cache a VersionHandler instance.
+
+        :param version: Version string.
+        :return: VersionHandler instance.
+        """
         if version not in self.__cached_versions:
             self.__cached_versions[version] = VersionHandler(version)
         return self.__cached_versions[version]
@@ -109,7 +145,12 @@ class PackageURLChecker:
             self,
             versions: Union[str, VersionHandler, List[Union[str, VersionHandler]]]
     ) -> List[VersionHandler]:
-        """Convert input versions to list of VersionHandler objects."""
+        """
+        Normalize input into a list of VersionHandler instances.
+
+        :param versions: One or more versions (str or VersionHandler).
+        :return: List of VersionHandler objects.
+        """
         if not isinstance(versions, list):
             versions = [versions if isinstance(versions, VersionHandler) else self._get_version(version=versions)]
         return [v if isinstance(v, VersionHandler) else self._get_version(version=v) for v in versions]
@@ -120,7 +161,14 @@ class PackageURLChecker:
             categories: Optional[List[str]] = None,
             names: Optional[List[str]] = None
     ) -> List[URLCheckParams]:
-        """Generate URL check parameters for given version and filters."""
+        """
+        Generate URL parameters for the given version.
+
+        :param version: VersionHandler instance.
+        :param categories: Optional list of categories to include.
+        :param names: Optional list of names to include.
+        :return: List of URLCheckParams.
+        """
         params_list = []
 
         for category, templates in self.config.templates.items():
@@ -152,7 +200,11 @@ class PackageURLChecker:
 
     @asynccontextmanager
     async def _get_session(self):
-        """Create optimized aiohttp session with proper configuration."""
+        """
+        Async context manager for aiohttp session with custom settings.
+
+        :return: AIOHTTP ClientSession.
+        """
         timeout = ClientTimeout(total=self.timeout, connect=5)
         connector = aiohttp.TCPConnector(
             limit=100,  # Total connection pool size
@@ -170,7 +222,14 @@ class PackageURLChecker:
             categories: Optional[List[str]] = None,
             names: Optional[List[str]] = None
     ) -> List[URLCheckResult]:
-        """Check URLs asynchronously with proper session management and record to CSV."""
+        """
+        Check multiple URLs for multiple versions.
+
+        :param versions: One or more versions to check.
+        :param categories: Optional category filter.
+        :param names: Optional name filter.
+        :return: List of URLCheckResult instances.
+        """
         all_results = []
 
         async with self._get_session() as session:
@@ -193,7 +252,12 @@ class PackageURLChecker:
 
     @staticmethod
     async def _check_urls_with_progress(tasks: List) -> List[URLCheckResult]:
-        """Process URLs in batches with progress indication."""
+        """
+        Execute tasks with progress indication in batches.
+
+        :param tasks: List of coroutines to execute.
+        :return: List of URLCheckResult instances.
+        """
         results = []
         batch_size = 50
         total_batches = (len(tasks) + batch_size - 1) // batch_size
@@ -209,7 +273,13 @@ class PackageURLChecker:
         return results
 
     async def _check_url_with_retry(self, session: ClientSession, param: URLCheckParams) -> URLCheckResult:
-        """Check URL with retry logic and semaphore limiting."""
+        """
+        Attempt to check a URL with retries.
+
+        :param session: Active aiohttp session.
+        :param param: URLCheckParams instance.
+        :return: URLCheckResult instance.
+        """
         async with self.semaphore:
             for attempt in range(self.max_retries + 1):
                 try:
@@ -225,7 +295,13 @@ class PackageURLChecker:
         return URLCheckResult(**param.__dict__, exists=None, error="Max retries exceeded")
 
     async def _check_url(self, session: ClientSession, param: URLCheckParams) -> URLCheckResult:
-        """Check single URL with improved error handling."""
+        """
+        Perform a single HTTP HEAD request to the URL.
+
+        :param session: AIOHTTP ClientSession.
+        :param param: URLCheckParams instance.
+        :return: URLCheckResult instance.
+        """
         try:
             async with session.head(param.url) as response:
                 exists = response.status == 200
@@ -246,7 +322,12 @@ class PackageURLChecker:
 
     @staticmethod
     def _build_grouped_results(results: List[URLCheckResult]) -> Dict[str, Dict[str, Dict[str, Dict[str, object]]]]:
-        """Build nested dictionary structure from results."""
+        """
+        Convert flat list of results into grouped nested structure.
+
+        :param results: List of URLCheckResult objects.
+        :return: Nested dictionary of grouped results.
+        """
         grouped: Dict[str, Dict[str, Dict[str, Dict[str, object]]]] = {}
 
         for result in results:
@@ -263,7 +344,11 @@ class PackageURLChecker:
 
     @staticmethod
     def _print_results(results: Dict[str, Dict[str, Dict[str, Dict[str, object]]]]) -> None:
-        """Print formatted results with rich styling."""
+        """
+        Pretty-print grouped results to the console.
+
+        :param results: Grouped dictionary of results.
+        """
         for version, categories in results.items():
             print(f"\n[bold magenta]>>> Version: {version}[/bold magenta]")
 
@@ -286,7 +371,11 @@ class PackageURLChecker:
 
     @staticmethod
     def _print_summary(results: List[URLCheckResult]) -> None:
-        """Print summary statistics."""
+        """
+        Print a summary of total, found, not found, and errors.
+
+        :param results: List of URLCheckResult objects.
+        """
         total = len(results)
         exists = sum(1 for r in results if r.exists is True)
         not_found = sum(1 for r in results if r.exists is False)
@@ -297,10 +386,3 @@ class PackageURLChecker:
         print(f"[green]Found: {exists}[/green]")
         print(f"[red]Not found: {not_found}[/red]")
         print(f"[yellow]Errors: {errors}[/yellow]")
-
-    def get_failed_urls(self, results: Optional[List[URLCheckResult]] = None) -> List[URLCheckResult]:
-        """Get list of failed URL checks for debugging."""
-        if results is None:
-            results = asyncio.run(self.check_urls())
-
-        return [r for r in results if r.exists is not True]
