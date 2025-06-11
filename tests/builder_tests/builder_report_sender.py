@@ -72,7 +72,8 @@ class BuilderReportSender:
 
     def to_report_portal(self, project_name: str):
         self.console.print(f"[green]|INFO| Start sending results to report portal for version: {self.version}...")
-        df = self.df.dropna(how='all')
+        columns_to_check = ['Test_name', 'Os', 'Version', 'Exit_code']
+        df = self.df.dropna(subset=columns_to_check, how='any')
 
         if df.empty:
             raise ValueError(f"Report is empty: {self.report_path}")
