@@ -17,6 +17,7 @@
 * [Sending Messages to Telegram](#sending-messages-to-telegram)
 * [Report Portal Connection](#report-portal-connection)
 * [Downloading Virtual Machines](#downloading-virtual-machines)
+* [Package URL Checker](#package-url-checker)
 
 ---
 
@@ -242,7 +243,7 @@ AWS credentials in the `~/.s3` directory:
 * `~/.s3/key` - contains your AWS Access Key ID
 * `~/.s3/private_key` - contains your AWS Secret Access Key
 
-### Usage
+### Downloading Virtual Machines Usage
 
 To automatically download virtual machine .zip
 images from your configured S3 bucket, you can use the download-os task.
@@ -267,3 +268,25 @@ AWS region where the S3 bucket is located.
 * **download_dir** *(optional)*:
 Local directory path where downloaded images should be saved.
 (default location: `Project_dir/downloads`)
+
+## Package URL Checker
+
+PackageURLChecker is a utility for validating the existence
+of software package URLs (builder, desktop, etc.)
+based on version.
+
+### Package URL Checker Usage
+
+Run the URL checker using:
+
+```bash
+uv run inv check-package --version 9.0.0.123
+```
+
+### Package URL Checker Flags
+
+* `--version` or `-v` *(required)*:
+Specifies the version of pakages.
+
+`--name` or `-n` *(optional)*:
+Specifies a particular category to check (e.g. core, builder, desktop).
