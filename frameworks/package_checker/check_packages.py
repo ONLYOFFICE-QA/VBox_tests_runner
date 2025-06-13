@@ -99,18 +99,19 @@ class PackageURLChecker:
         Find the most recent version with all required URLs present.
 
         :param base_version: Base version string to start from.
-        :param max_builds: Maximum number of builds to check backwards.
+        :param max_builds: Maximum number of builds to check upwards.
         :param categories: Optional list of categories to check.
         :param names: Optional list of names to check.
         :return: The latest valid version string or None.
         """
 
         last_version = self.get_report(base_version=base_version).last_checked_version
-        build = self._get_version(last_version).build if last_version else 0
+        start_build = self._get_version(last_version).build if last_version else 0
+        end_build = start_build + max_builds
 
         versions = [
             self._get_version(version=f"{base_version}.{build}")
-            for build in reversed(range(max_builds, build, -1))
+            for build in range(start_build + 1, end_build + 1)
         ]
 
         async def check_version(v: VersionHandler) -> Optional[str]:
@@ -376,13 +377,8 @@ class PackageURLChecker:
 
         :param results: List of URLCheckResult objects.
         """
-        total = len(results)
-        exists = sum(1 for r in results if r.exists is True)
-        not_found = sum(1 for r in results if r.exists is False)
-        errors = sum(1 for r in results if r.exists is None)
-
         print("\n[bold]Summary:[/bold]")
-        print(f"Total URLs checked: {total}")
-        print(f"[green]Found: {exists}[/green]")
-        print(f"[red]Not found: {not_found}[/red]")
-        print(f"[yellow]Errors: {errors}[/yellow]")
+        print(f"Total URLs checked: {len(results)}")
+        print(f"[green]Found: {sum(1 for r in results if r.exists is True)}[/green]")
+        print(f"[red]Not found: {sum(1 for r in results if r.exists is False)}[/red]")
+        print(f"[yellow]Errors: {sum(1 for r in results if r.exists is None)}[/yellow]")
