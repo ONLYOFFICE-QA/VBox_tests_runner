@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from .report import TestsRunnerReport
-
+from package_checker.check_packages import PackageURLChecker
 
 class TestsRunner:
 
@@ -10,4 +10,5 @@ class TestsRunner:
         self.package_checker = PackageURLChecker()
 
     def run(self):
+
         pass

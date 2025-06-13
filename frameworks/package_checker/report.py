@@ -3,14 +3,19 @@ from pathlib import Path
 from typing import List, Union, Optional
 import pandas as pd
 
-
 from dataclasses import asdict
-
 from frameworks import Report
-from frameworks.package_checker.urlcheck_result import URLCheckResult
+
+from .urlcheck_result import URLCheckResult
 
 
 class CSVReport(Report):
+    """A class for handling CSV report generation and management for URL check results.
+
+    :param path: Path to the CSV file
+    :param delimiter: Delimiter to use in the CSV file
+    :param encoding: File encoding to use
+    """
     def __init__(self, path: Union[str, Path], delimiter: str = '\t', encoding='utf-8'):
         super().__init__()
         self.__df: Optional[pd.DataFrame] = None
@@ -25,6 +30,10 @@ class CSVReport(Report):
 
     @property
     def df(self) -> Optional[pd.DataFrame]:
+        """Get the DataFrame containing the report data.
+        
+        :return: DataFrame with report data or None if file doesn't exist
+        """
         current_mtime = self.path.stat().st_mtime
         if self.__df is None or self.__cached_mtime != current_mtime:
             self.__df = pd.read_csv(self.path, delimiter=self.delimiter)
@@ -34,9 +43,18 @@ class CSVReport(Report):
 
     @property
     def exists(self) -> bool:
+        """Check if the report file exists.
+        
+        :return: True if file exists, False otherwise
+        """
         return self.path.is_file()
 
     def _ensure_file(self):
+        """Ensure the report file and its parent directories exist.
+        Creates the file with headers if it doesn't exist.
+        
+        :raises OSError: If file/directory creation fails
+        """
         self.path.parent.mkdir(parents=True, exist_ok=True)
         if not self.path.exists():
             with self.path.open('w', newline='', encoding=self.encoding) as f:
@@ -44,6 +62,11 @@ class CSVReport(Report):
                 writer.writeheader()
 
     def write_results(self, results: List[URLCheckResult]):
+        """Write URL check results to the report file.
+        
+        :param results: List of URLCheckResult objects to write
+        :raises OSError: If file writing fails
+        """
         existing_df = self.exists_df
         keys = ['version', 'category', 'name']
         new_rows = [asdict(r) for r in results]
@@ -61,6 +84,12 @@ class CSVReport(Report):
                 writer.writerows(filtered_rows.to_dict(orient='records'))
 
     def get_last_exists_version(self, name: str = None, category: str = None) -> Optional[str]:
+        """Get the latest version where the package exists in the report.
+        
+        :param name: Name of the package to check
+        :param category: Category of the package to check
+        :return: Latest version string or None if not found
+        """
         if self.df is None or self.df.empty:
             return None
 
@@ -82,6 +111,11 @@ class CSVReport(Report):
 
     @property
     def last_checked_version(self) -> Optional[str]:
+        """Get the latest version where the package exists in the report.
+        
+        :param None: No parameters
+        :return: Latest version string or None if not found
+        """
         if self.df is None or self.df.empty:
             return None
 
