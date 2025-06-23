@@ -7,14 +7,14 @@
     "win-xp": "{host}/desktop/win/inno/ONLYOFFICE-DesktopEditors-{version}.{build}-x64-xp.exe"
   },
   "builder": {
-    "win-64": "{host}/archive/release/v{version}/{build}/builder-win-64.7z",
-    "win-32": "{host}/archive/release/v{version}/{build}/builder-win-32.7z",
-    "linux-64": "{host}/archive/release/v{version}/{build}/builder-linux-64.7z",
-    "linux-arm64": "{host}/archive/release/v{version}/{build}/builder-linux-arm64.7z"
+    "win-64": "{host}/archive/{branch}/v{version}/{build}/builder-win-64.7z",
+    "win-32": "{host}/archive/{branch}/v{version}/{build}/builder-win-32.7z",
+    "linux-64": "{host}/archive/{branch}/v{version}/{build}/builder-linux-64.7z",
+    "linux-arm64": "{host}/archive/{branch}/v{version}/{build}/builder-linux-arm64.7z"
   },
   "core": {
-    "win-64": "{host}/archive/release/v{version}/{build}/core-win-64.7z",
-    "mac-arm64": "{host}/archive/release/v{version}/{build}/core-mac-arm64.7z",
-    "linux-64": "{host}/archive/release/v{version}/{build}/core-linux-64.7z"
+    "win-64": "{host}/archive/{branch}/v{version}/{build}/core-win-64.7z",
+    "mac-arm64": "{host}/archive/{branch}/v{version}/{build}/core-mac-arm64.7z",
+    "linux-64": "{host}/archive/{branch}/v{version}/{build}/core-linux-64.7z"
   }
 }
