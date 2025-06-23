@@ -19,7 +19,7 @@ class TestsRunnerReport(Report):
         """
         Ensure the report file and its parent directories exist.
         Creates the file with headers if it doesn't exist.
-        
+
         :raises OSError: If file/directory creation fails
         """
         self.path.parent.mkdir(parents=True, exist_ok=True)

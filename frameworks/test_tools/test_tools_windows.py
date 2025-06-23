@@ -44,6 +44,6 @@ class TestToolsWindows(TestTools):
 
         self.vbox_utils = (
             VboxUtilsVista(**common_params)
-            if "vista" in self.vm.os_type
+            if "vista" in self.vm.os_name
             else VboxUtilsWindows(**common_params)
         )
