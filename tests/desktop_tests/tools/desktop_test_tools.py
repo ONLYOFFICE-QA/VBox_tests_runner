@@ -53,7 +53,7 @@ class DesktopTestTools:
 
     @vm_data_created
     def _initialize_paths(self):
-        self.paths = DesktopPaths(os_type=self.vm.os_type, remote_user_name=self.vm.data.user)
+        self.paths = DesktopPaths(os_info=self.vm.os_info, remote_user_name=self.vm.data.user)
         return self.paths
 
     @vm_data_created
@@ -84,6 +84,10 @@ class DesktopTestTools:
             return remote_test_dirs
 
         return remote_test_dirs + [self.paths.remote.github_token_dir]
+
+    def handle_package_not_exists(self):
+        print(f"[bold red]|ERROR|{self.vm.name}| Package {self.package_name} is not exists")
+        self.report.write(self.data.version, self.vm.name, "PACKAGE_NOT_EXISTS")
 
     def handle_vm_creation_failure(self):
         print(f"[bold red]|ERROR|{self.vm.name}| Failed to create a virtual machine")

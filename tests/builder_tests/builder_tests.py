@@ -75,7 +75,7 @@ class BuilderTests:
 
     @vm_data_created
     def _initialize_paths(self):
-        self.paths = BuilderPaths(os_type=self.vm.os_type, remote_user_name=self.vm.data.user)
+        self.paths = BuilderPaths(os_info=self.vm.os_info, remote_user_name=self.vm.data.user)
         return self.paths
 
     def _get_test_tools(self) -> TestTools:

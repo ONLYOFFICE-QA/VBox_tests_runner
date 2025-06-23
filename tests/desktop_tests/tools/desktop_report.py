@@ -27,7 +27,7 @@ class DesktopReport:
 
     def write(self, version: str, vm_name: str, exit_code: str) -> None:
         self._write_titles() if not isfile(self.path) else ...
-        self._writer(mode='a', message=["", vm_name, version, "", exit_code])
+        self._writer(mode='a', message=["", vm_name, str(version), "", exit_code])
 
     def get_total_count(self, column_name: str) -> int:
         return self.report.total_count(self.report.read(self.path), column_name)
@@ -35,7 +35,7 @@ class DesktopReport:
     def all_is_passed(self) -> bool:
         df = self.report.read(self.path)
         return df['Exit_code'].eq('Passed').all()
-    
+
     def get_error_vm_list(self) -> list[str]:
         if not isfile(self.path):
             raise FileNotFoundError(f"[red]|ERROR| Report not found: {self.path}")
