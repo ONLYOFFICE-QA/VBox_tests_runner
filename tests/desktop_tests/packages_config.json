@@ -1,0 +1,9 @@
+{
+    "os_family": {
+        "debian": ["debian", "ubuntu"],
+        "rhel": ["fedora", "red hat"],
+        "suse": ["opensuse"],
+        "win": ["windows 10", "windows 11", "windows 7", "windows 8.1"],
+        "win-xp": ["windows vista"]
+    }
+}
