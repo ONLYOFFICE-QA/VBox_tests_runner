@@ -88,6 +88,15 @@ class PackageURLChecker:
             self.logger.error(f"Error during URL checking: {e}")
             raise
 
+    def check_versions(self, base_version: str, max_builds: int = 200) -> None:
+        """
+        Check versions and update the report.
+
+        :param base_version: The base version string (x.x.x).
+        :param max_builds: Maximum number of builds to check upwards.
+        """
+        asyncio.run(self.find_latest_valid_version(base_version=base_version, max_builds=max_builds))
+
     async def find_latest_valid_version(
             self,
             base_version: str,
@@ -98,7 +107,7 @@ class PackageURLChecker:
         """
         Find the most recent version with all required URLs present.
 
-        :param base_version: Base version string to start from.
+        :param base_version: Base version string to start from (x.x.x).
         :param max_builds: Maximum number of builds to check upwards.
         :param categories: Optional list of categories to check.
         :param names: Optional list of names to check.
@@ -184,7 +193,8 @@ class PackageURLChecker:
                     url = tpl.format(
                         host=self.config.host,
                         version=version.without_build,
-                        build=version.build
+                        build=version.build,
+                        **({"branch": self.get_branch(version)} if "{branch}" in tpl else {})
                     )
                     params_list.append(URLCheckParams(
                         version=str(version),
@@ -198,6 +208,20 @@ class PackageURLChecker:
                     continue
 
         return params_list
+
+    def get_branch(self, version: VersionHandler) -> str:
+        """
+        Get the branch name for the given version.
+
+        :param version: VersionHandler instance.
+        :return: Branch name.
+        """
+        if version.minor == 0:
+            return "release"
+        elif '99.99.99' in str(version):
+            return "develop"
+        return "hotfix"
+
 
     @asynccontextmanager
     async def _get_session(self):
