@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import re
 from host_tools import HostInfo
 from vboxwrapper import VirtualMachine
 
@@ -17,6 +18,7 @@ class VboxMachine:
         self.data = None
         self.__os_type = None
         self.__adapter_name = None
+        self.__os_name = None
 
     @vm_is_turn_on
     def create_data(self):
@@ -36,8 +38,27 @@ class VboxMachine:
     @property
     def os_type(self) -> str:
         if self.__os_type is None:
-            self.__os_type = self.vm.get_os_type().lower()
+            type = self.vm.get_os_type().lower()
+            if 'windows' in type:
+                self.__os_type = 'windows'
+            elif 'linux' in type:
+                self.__os_type = 'linux'
+            else:
+                self.__os_type = 'unknown'
         return self.__os_type
+
+    @property
+    def os_info(self) -> dict:
+        return {
+            'type': self.os_type,
+            'name': self.os_name
+        }
+
+    @property
+    def os_name(self) -> str:
+        if self.__os_name is None:
+            self.__os_name = re.sub(r' \([^)]*bit\)', '', self.vm.get_parameter('ostype')).lower()
+        return self.__os_name
 
     def run(self, headless: bool = True, status_bar: bool = False, timeout: int = 600):
         if self.vm.power_status():

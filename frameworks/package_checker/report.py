@@ -31,7 +31,7 @@ class CSVReport(Report):
     @property
     def df(self) -> Optional[pd.DataFrame]:
         """Get the DataFrame containing the report data.
-        
+
         :return: DataFrame with report data or None if file doesn't exist
         """
         current_mtime = self.path.stat().st_mtime
@@ -44,7 +44,7 @@ class CSVReport(Report):
     @property
     def exists(self) -> bool:
         """Check if the report file exists.
-        
+
         :return: True if file exists, False otherwise
         """
         return self.path.is_file()
@@ -52,7 +52,7 @@ class CSVReport(Report):
     def _ensure_file(self):
         """Ensure the report file and its parent directories exist.
         Creates the file with headers if it doesn't exist.
-        
+
         :raises OSError: If file/directory creation fails
         """
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -63,7 +63,7 @@ class CSVReport(Report):
 
     def write_results(self, results: List[URLCheckResult]):
         """Write URL check results to the report file.
-        
+
         :param results: List of URLCheckResult objects to write
         :raises OSError: If file writing fails
         """
@@ -85,7 +85,7 @@ class CSVReport(Report):
 
     def get_last_exists_version(self, name: str = None, category: str = None) -> Optional[str]:
         """Get the latest version where the package exists in the report.
-        
+
         :param name: Name of the package to check
         :param category: Category of the package to check
         :return: Latest version string or None if not found
@@ -107,12 +107,35 @@ class CSVReport(Report):
             return None
 
         return df.loc[df['build'].idxmax()]['version']
-    
+
+    def get_result(self, version: str, name: str, category: str) -> Optional[bool]:
+        """
+        Get the results for a given version, name and category.
+
+        :param version: Version to check
+        :param name: Name of the package to check
+        :param category: Category of the package to check
+        :return: Boolean value from exists column or None if not found
+        """
+        if self.df is None or self.df.empty:
+            return None
+
+        df = self.df.copy()
+        df = df[df['version'] == str(version)]
+
+        if name:
+            df = df[df['name'] == name.lower()]
+
+        if category:
+            df = df[df['category'] == category.lower()]
+
+        return bool(df['exists'].iloc[0]) if not df.empty else None
+
 
     @property
     def last_checked_version(self) -> Optional[str]:
         """Get the latest version where the package exists in the report.
-        
+
         :param None: No parameters
         :return: Latest version string or None if not found
         """
