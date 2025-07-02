@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
 from rich import print
-from os.path import join, dirname, realpath
-from typing import Optional
-
-from host_tools import File
 from .tools import DesktopTestData, DesktopTestTools
 
 
