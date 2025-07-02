@@ -48,14 +48,16 @@ class DesktopTestTools:
         if not self.package_name:
             print(f"[bold red]|ERROR|{self.vm.name}| Package name is not found in packages_config.json")
             return True
+
         report_result = self.package_report.get_result(
             version=str(self.data.version),
             name=self.package_name,
             category="desktop"
         )
+
         if not report_result:
             result = self.package_checker.run(versions=self.data.version, names=[self.package_name], categories=["desktop"])
-            if not result[self.data.version]["desktop"][self.package_name]['result']:
+            if not result[str(self.data.version)]["desktop"][self.package_name]['result']:
                 self.handle_package_not_exists()
                 return False
         return True
@@ -142,7 +144,7 @@ class DesktopTestTools:
         :param self: DesktopTestTools instance
         :return: Packages configuration dictionary
         """
-        config_path = join(dirname(realpath(__file__)), '../packages_config.json')
+        config_path = join(dirname(realpath(__file__)), './packages_config.json')
         return File.read_json(config_path)
 
     def _get_package_name(self, packages_config: dict, os_name: str) -> Optional[str]:
