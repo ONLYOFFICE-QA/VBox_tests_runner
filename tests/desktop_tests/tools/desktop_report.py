@@ -32,9 +32,6 @@ class DesktopReport:
     def get_total_count(self, column_name: str) -> int:
         return self.report.total_count(self.report.read(self.path), column_name)
 
-    def all_is_passed(self) -> bool:
-        df = self.report.read(self.path)
-        return df['Exit_code'].eq('Passed').all()
 
     def get_error_vm_list(self) -> list[str]:
         if not isfile(self.path):
@@ -97,6 +94,10 @@ class DesktopReport:
 
                     concurrent.futures.wait(futures)
 
+    @staticmethod
+    def is_passed(row: pd.Series) -> bool:
+        return row['Exit_code'] == 'Passed'
+
     def _get_status(self, row: pd.Series) -> str:
         return 'SKIPPED' if row['Exit_code'] in ['PACKAGE_NOT_EXISTS', 'FAILED_CREATE_VM'] else None
 
@@ -115,10 +116,6 @@ class DesktopReport:
             )
             return ''
         return f"[cyan][{'green'}][{row['Os']}] {row['Test_name']} finished with exit code {row['Exit_code']}"
-
-    @staticmethod
-    def is_passed(row: pd.Series) -> bool:
-        return row['Exit_code'] == 'Passed'
 
     def _create_suites(self, df: pd.DataFrame, launch: PortalManager, packege_name: str):
         with self.console.status('') as status:
@@ -143,16 +140,44 @@ class DesktopReport:
             return print(f"[red]|ERROR| Report for sending to telegram not exists: {self.path}")
 
         update_info = f"{data.update_from} -> " if data.update_from else ""
-        result_status = "All tests passed" if self.all_is_passed() else "Some tests have errors"
+        df = self.report.read(self.path)
+
+        main_result_line = self._get_overall_result(df)
+        package_not_exists_os = self._get_package_not_exists_os(df)
 
         caption = (
             f"{data.title} desktop editor tests completed on version: `{update_info}{data.version}`\n\n"
             f"Package: `{data.package_name}`\n"
-            f"Result: `{result_status}`\n\n"
-            f"Number of tested Os: `{self.get_total_count('Exit_code')}`"
+            f"Result: `{main_result_line}`\n"
         )
+        if package_not_exists_os:
+            caption += f"Package not exists for OS: `{', '.join(package_not_exists_os)}`\n\n"
+
+        caption += f"Number of tested Os: `{self.get_total_count('Exit_code')}`"
 
         Telegram(token=data.tg_token, chat_id=data.tg_chat_id).send_document(self.path, caption=caption)
+
+    def _get_package_not_exists_os(self, df: pd.DataFrame):
+        """
+        Returns a list of OS names where Exit_code is 'PACKAGE_NOT_EXISTS'.
+        :return: List of OS names.
+        """
+        df = df.copy()
+        package_not_exists = df[df['Exit_code'] == 'PACKAGE_NOT_EXISTS']
+        if not package_not_exists.empty:
+            return list(package_not_exists['Vm_name'].unique())
+        return []
+
+    def _get_overall_result(self,  df: pd.DataFrame):
+        """
+        Returns overall test result status for all except PACKAGE_NOT_EXISTS.
+        :return: String with test result status.
+        """
+        df = df.copy()
+        results = df[df['Exit_code'] != 'PACKAGE_NOT_EXISTS']
+        if not results.empty and results['Exit_code'].eq('Passed').all():
+            return 'All tests passed'
+        return 'Some tests have errors'
 
     def _writer(self, mode: str, message: list, delimiter='\t', encoding='utf-8'):
         self.report.write(self.path, mode, message, delimiter, encoding)
