@@ -27,7 +27,7 @@ class DesktopReport:
 
     def write(self, version: str, vm_name: str, exit_code: str) -> None:
         self._write_titles() if not isfile(self.path) else ...
-        self._writer(mode='a', message=["", vm_name, str(version), "", exit_code])
+        self._writer(mode='a', message=[vm_name, vm_name, str(version), 'NONE', exit_code, exit_code])
 
     def get_total_count(self, column_name: str) -> int:
         return self.report.total_count(self.report.read(self.path), column_name)
@@ -97,12 +97,16 @@ class DesktopReport:
 
                     concurrent.futures.wait(futures)
 
+    def _get_status(self, row: pd.Series) -> str:
+        return 'SKIPPED' if row['Exit_code'] in ['PACKAGE_NOT_EXISTS', 'FAILED_CREATE_VM'] else None
+
     def _process_row(self, row: pd.Series, launch: PortalManager, package_name: str) -> Optional[str]:
         launch.set_test_result(
             test_name=row['Test_name'],
             return_code=0 if self.is_passed(row) else 1,
             log_message=row['Exit_code'] if not self.is_passed(row) else None,
-            suite_uuid=self._create_suite(self._get_os_name(row), launch, package_name)
+            suite_uuid=self._create_suite(self._get_os_name(row), launch, package_name),
+            status=self._get_status(row)
         )
 
         if not self.is_passed(row):
@@ -154,7 +158,7 @@ class DesktopReport:
         self.report.write(self.path, mode, message, delimiter, encoding)
 
     def _write_titles(self):
-        self._writer(mode='w', message=['Os', 'Vm_name', 'Version', 'Package_name', 'Exit_code'])
+        self._writer(mode='w', message=['Os', 'Vm_name', 'Version', 'Test_name', 'Package_name', 'Exit_code'])
 
     @staticmethod
     def _get_thread_result(future):
