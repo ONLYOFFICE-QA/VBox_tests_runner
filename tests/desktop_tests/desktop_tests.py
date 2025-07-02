@@ -27,10 +27,10 @@ class DesktopTest:
         :param max_attempts: Maximum number of retry attempts
         :param interval: Delay between retries in seconds
         """
-        if not self.test_tools.check_package_exists():
+        if not self.test_tools.is_incompatible_package():
             return
 
-        if not self.test_tools.is_incompatible_package():
+        if not self.test_tools.check_package_exists():
             return
 
         for attempt in range(1, max_attempts + 1):
