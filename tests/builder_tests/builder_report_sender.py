@@ -73,17 +73,18 @@ class BuilderReportSender:
 
     def all_is_passed(self) -> bool:
         """
-        Check if all tests passed (Exit_code == 0.0).
+        Check if all tests passed (Exit_code == 0.0 and Stderr is empty or NaN).
 
         :return: True if all tests passed, False otherwise.
         """
-        return self.df['Exit_code'].eq(0.0).all()
+        return self.df['Exit_code'].eq(0).all() and self.df['Stderr'].isna().all()
 
     def to_telegram(self):
         """
         Send report results to Telegram, including the full and errors-only CSV.
         """
-        errors_only_df = self.df[self.df['Exit_code'] != 0.0]
+        # Filter rows where Exit_code is not 0 or Stderr is not NaN
+        errors_only_df = self.df[(self.df['Exit_code'] != 0) | (self.df['Stderr'].notna())]
         self.report.save_csv(errors_only_df, self.errors_only_report)
         result_status = "All tests passed" if self.all_is_passed() else "Some tests have errors"
         caption = (
@@ -141,20 +142,25 @@ class BuilderReportSender:
         os_suite_uuid = launch.create_suite(row['Os'])
         samples_suite_uuid = launch.create_suite(row['Builder_samples'], parent_suite_uuid=os_suite_uuid)
 
+        log = self._get_log(row)
+
         launch.set_test_result(
             test_name=row['Test_name'],
-            log_message=row['ConsoleLog'],
+            log_message=log,
             return_code=ret_code,
             suite_uuid=samples_suite_uuid
         )
 
         if ret_code != 0:
             self.console.print(
-                f"[bold red]|ERROR| {row['Test_name']} failed. Exit Code: {ret_code}\nConsole log: {row['ConsoleLog']}"
+                f"[bold red]|ERROR| {row['Test_name']} failed. Exit Code: {ret_code}\nConsole log: {log}"
             )
             return ''
 
-        return f"[green]|INFO|[cyan]{row['Os']}[/]|[cyan]{row['Test_name']}[/] finished with exit code [cyan]{ret_code}"
+        return (
+            f"[green]|INFO|[cyan]{row['Os']}[/]|[cyan]{row['Test_name']}[/] "
+            f"finished with exit code [cyan]{ret_code}"
+        )
 
     def _create_suites(self, df: pd.DataFrame, launch: PortalManager):
         """
@@ -182,6 +188,27 @@ class BuilderReportSender:
         :return: The exit code as an integer.
         """
         try:
-            return int(row['Exit_code'])
-        except ValueError:
-            return row['Exit_code']
+            ret_code = int(row['Exit_code'])
+        except (ValueError, TypeError):
+            return 1
+
+        stderr = row.get('Stderr', '')
+        if ret_code != 0 or (pd.notna(stderr) and str(stderr).strip()):
+            return 1
+        return ret_code
+
+    def _get_log(self, row: pd.Series) -> str:
+        """
+        Generate a log string from Stderr and Stdout if they are not empty.
+
+        :param row: DataFrame row with test results.
+        :return: Log string.
+        """
+        log_parts = []
+        for col in ("Stderr", "Stdout"):
+            value = row.get(col)
+            if pd.notna(value):
+                value_str = str(value).strip()
+                if value_str:
+                    log_parts.append(value_str)
+        return "\n".join(log_parts)

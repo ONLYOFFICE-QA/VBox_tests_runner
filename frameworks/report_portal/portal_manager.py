@@ -65,7 +65,7 @@ class PortalManager:
                 message=log_message,
                 level="ERROR" if return_code != 0 else "WARN",
                 item_uuid=step_uuid,
-                print_output=True
+                print_output=False
             )
 
         step.finish(return_code=return_code)
