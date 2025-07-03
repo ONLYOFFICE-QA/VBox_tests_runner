@@ -74,7 +74,7 @@ class DesktopTestTools:
         }
         for package, is_enabled in incompatible_packages.items():
             if self.is_windows and is_enabled:
-                print(f"[cyan]|INFO|{self.vm.name}| Package {package} is compatible with Windows")
+                print(f"[cyan]|INFO|{self.vm.name}| Package {package} is not compatible with Windows")
                 return False
         return True
 
