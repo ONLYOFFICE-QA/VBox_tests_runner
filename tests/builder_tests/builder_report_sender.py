@@ -32,7 +32,7 @@ class BuilderReportSender:
     @property
     def df(self):
         """
-        load and return the DataFrame from the report path.
+        Load and return the DataFrame from the report path.
 
         :return: The loaded DataFrame or None if not available.
         """
@@ -51,18 +51,18 @@ class BuilderReportSender:
             return self.__version
 
         if self.df is None:
-            print("[red]|ERROR| Can't read report.csv. Check path: ", self.report_path)
+            self.console.print("[red]|ERROR| Can't read report.csv. Check path: ", self.report_path)
             return None
 
         if self.df.empty:
-            print("[red]|ERROR| Report is empty")
+            self.console.print("[red]|ERROR| Report is empty")
             return None
 
         if not self.df.loc[0, 'Version']:
             raise ValueError("Version is None")
 
         if self.df['Version'].nunique() > 1:
-            print("[red]|WARNING| Versions is not unique.")
+            self.console.print("[red]|WARNING| Versions is not unique.")
             self.__version = self.df['Version'].unique()[
                 self.df['Version'].nunique() - 1
             ]
@@ -77,7 +77,7 @@ class BuilderReportSender:
 
         :return: DataFrame with failed tests or None if no data
         """
-        df = self.df.copy()
+        df = self.df
         if df is None or df.empty:
             return None
 
@@ -92,7 +92,10 @@ class BuilderReportSender:
         Send report results to Telegram, including the full and errors-only CSV.
         """
         errors_only_df = self.get_errors_only_df()
-        self.report.save_csv(errors_only_df, self.errors_only_report) if errors_only_df is not None else None
+
+        if errors_only_df is not None:
+            self.report.save_csv(errors_only_df, self.errors_only_report)
+
         self.tg.send_media_group([self.report_path, self.errors_only_report], caption=self.get_caption(errors_only_df))
 
     def get_caption(self, errors_only_df: pd.DataFrame) -> str:
