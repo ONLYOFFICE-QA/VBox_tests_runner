@@ -70,17 +70,25 @@ class BuilderReportSender:
             self.__version = self.df.loc[0, 'Version']
 
         return self.__version
+
     def all_is_passed(self) -> bool:
         """
-        Check if all tests passed (Exit_code == 0.0 and Stderr is empty or NaN).
-
-        :return: True if all tests passed, False otherwise.
+        Check that all tests passed successfully (Exit_code == 0 or NaN and Stderr is empty or NaN).
+        :param self: Instance of BuilderReportSender
+        :return: True if all tests passed successfully, otherwise False
         """
-        failed_tests = self.df[~((self.df['Exit_code'].eq(0) | self.df['Exit_code'].isna()) &
-                                (self.df['Stderr'].isna() | (self.df['Stderr'].notna() & self.df['Stderr'].apply(lambda x: isinstance(x, str) and x.strip() == ''))))]
-        print(failed_tests)
+        df = self.df.copy()
 
-        return failed_tests.empty
+        if df is None or df.empty:
+            return False
+
+        failed = df[
+            (df['Exit_code'].fillna(0) != 0)
+            | (df['Stderr'].notna()
+            & df['Stderr'].astype(str).str.strip().ne(''))
+        ]
+
+        return failed.empty
 
     def to_telegram(self):
         """
