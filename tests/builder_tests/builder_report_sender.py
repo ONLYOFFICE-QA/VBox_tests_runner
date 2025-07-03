@@ -101,10 +101,12 @@ class BuilderReportSender:
 
         :return: Caption string
         """
+        total_tests = len(self.df) if self.df is not None and not self.df.empty else 0
         result_status = "All tests passed" if errors_only_df is None or errors_only_df.empty else "Some tests have errors"
         return (
             f"Builder tests completed on version: `{self.version}`\n\n"
-            f"Result: `{result_status}`"
+            f"Result: `{result_status}`\n\n"
+            f"Total tests: `{total_tests}`"
         )
 
     def to_report_portal(self, project_name: str) -> None:
