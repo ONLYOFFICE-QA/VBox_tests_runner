@@ -71,33 +71,32 @@ class BuilderReportSender:
 
         return self.__version
 
-    def all_is_passed(self) -> bool:
+
+    def get_errors_only_df(self) -> Optional[pd.DataFrame]:
         """
-        Check that all tests passed successfully (Exit_code == 0 or NaN and Stderr is empty or NaN).
-        :param self: Instance of BuilderReportSender
-        :return: True if all tests passed successfully, otherwise False
+        Get DataFrame with only failed tests (Exit_code != 0 or Stderr is not empty).
+
+        :return: DataFrame with failed tests or None if no data
         """
         df = self.df.copy()
-
         if df is None or df.empty:
-            return False
+            return None
 
         failed = df[
-            (df['Exit_code'].fillna(0) != 0)
-            | (df['Stderr'].notna()
-            & df['Stderr'].astype(str).str.strip().ne(''))
-        ]
+            (df['Exit_code'].fillna(0) != 0) |
+            (df['Stderr'].notna() & df['Stderr'].astype(str).str.strip().ne(''))
+            ]
+        return failed
 
-        return failed.empty
-
-    def to_telegram(self):
+    def to_telegram(self) -> None:
         """
         Send report results to Telegram, including the full and errors-only CSV.
         """
-        # Filter rows where Exit_code is not 0 or Stderr is not NaN
-        errors_only_df = self.df[(self.df['Exit_code'] != 0) | (self.df['Stderr'].notna())]
+        errors_only_df = self.get_errors_only_df()
+        print(errors_only_df)
+
         self.report.save_csv(errors_only_df, self.errors_only_report)
-        result_status = "All tests passed" if self.all_is_passed() else "Some tests have errors"
+        result_status = "All tests passed" if errors_only_df is None or errors_only_df.empty else "Some tests have errors"
         caption = (
             f"Builder tests completed on version: `{self.version}`\n\n"
             f"Result: `{result_status}`"
@@ -105,7 +104,7 @@ class BuilderReportSender:
         self.tg.send_media_group([self.report_path, self.errors_only_report], caption=caption)
 
 
-    def to_report_portal(self, project_name: str):
+    def to_report_portal(self, project_name: str) -> None:
         """
         Send test results to the report portal.
 
@@ -133,6 +132,7 @@ class BuilderReportSender:
     def _get_thread_result(future):
         """
         Gets the result of a thread execution.
+
         :param future: The future object representing the result of a thread.
         :return: The result of the thread execution.
         """
