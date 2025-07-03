@@ -71,7 +71,6 @@ class BuilderReportSender:
 
         return self.__version
 
-
     def get_errors_only_df(self) -> Optional[pd.DataFrame]:
         """
         Get DataFrame with only failed tests (Exit_code != 0 or Stderr is not empty).
@@ -93,16 +92,20 @@ class BuilderReportSender:
         Send report results to Telegram, including the full and errors-only CSV.
         """
         errors_only_df = self.get_errors_only_df()
-        print(errors_only_df)
+        self.report.save_csv(errors_only_df, self.errors_only_report) if errors_only_df is not None else None
+        self.tg.send_media_group([self.report_path, self.errors_only_report], caption=self.get_caption(errors_only_df))
 
-        self.report.save_csv(errors_only_df, self.errors_only_report)
+    def get_caption(self, errors_only_df: pd.DataFrame) -> str:
+        """
+        Get caption for Telegram message.
+
+        :return: Caption string
+        """
         result_status = "All tests passed" if errors_only_df is None or errors_only_df.empty else "Some tests have errors"
-        caption = (
+        return (
             f"Builder tests completed on version: `{self.version}`\n\n"
             f"Result: `{result_status}`"
         )
-        self.tg.send_media_group([self.report_path, self.errors_only_report], caption=caption)
-
 
     def to_report_portal(self, project_name: str) -> None:
         """
