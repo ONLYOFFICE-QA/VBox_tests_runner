@@ -22,9 +22,17 @@ class VboxMachine:
 
     @vm_is_turn_on
     def create_data(self):
+        ip = self.vm.network.get_ip()
+        if ip is None:
+            raise ValueError("IP address is not available")
+
+        user = self.vm.get_logged_user()
+        if user is None:
+            raise ValueError("Logged user is not available")
+
         self.data = VmData(
-            ip=self.vm.network.get_ip(),
-            user=self.vm.get_logged_user(),
+            ip=ip,
+            user=user,
             name=self.name,
             local_dir=self.vm.get_parameter('CfgFile')
         )
@@ -57,7 +65,10 @@ class VboxMachine:
     @property
     def os_name(self) -> str:
         if self.__os_name is None:
-            self.__os_name = re.sub(r' \([^)]*bit\)', '', self.vm.get_parameter('ostype')).lower()
+            os_type = self.vm.get_parameter('ostype')
+            if os_type is None:
+                raise ValueError("OS type is not available")
+            self.__os_name = re.sub(r' \([^)]*bit\)', '', os_type).lower()
         return self.__os_name
 
     def run(self, headless: bool = True, status_bar: bool = False, timeout: int = 600):

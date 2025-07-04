@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from os import getcwd, system
 from os.path import isfile, join
+from typing import Optional
 
 from elevate import elevate
 from host_tools import Process, Service
@@ -25,10 +26,10 @@ from tests import (
 @task
 def desktop_test(
     c,
-    version: str = None,
-    update_from_version: str = None,
-    name: str = None,
-    processes: int = None,
+    version: Optional[str] = None,
+    update_from_version: Optional[str] = None,
+    name: Optional[str] = None,
+    processes: Optional[int] = None,
     telegram: bool = False,
     detailed_telegram: bool = False,
     connect_portal: bool = False,
@@ -37,7 +38,7 @@ def desktop_test(
     snap: bool = False,
     appimage: bool = False,
     flatpak: bool = False,
-    open_retries: int = None,
+    open_retries: Optional[int] = None,
     retest: bool = False,
     only_portal: bool = False,
 ):
@@ -72,7 +73,7 @@ def desktop_test(
         snap=snap,
         appimage=appimage,
         flatpak=flatpak,
-        open_retries=open_retries,
+        open_retries=open_retries or 0,
         retest=retest,
     )
 
@@ -106,9 +107,9 @@ def desktop_test(
 @task
 def builder_test(
     c,
-    version: str = None,
-    processes: int = None,
-    name: str = None,
+    version: Optional[str] = None,
+    processes: Optional[int] = None,
+    name: Optional[str] = None,
     headless: bool = False,
     connect_portal: bool = False,
     telegram: bool = False,
@@ -153,7 +154,7 @@ def builder_test(
     if only_portal and not isfile(report_path):
         raise FileNotFoundError(f"Report file {report_path} not found")
 
-    report_sender = BuilderReportSender(report_path=data.report.path)
+    report_sender = BuilderReportSender(test_data=data)
 
     if telegram and not only_portal:
         report_sender.to_telegram()
@@ -181,7 +182,7 @@ def run_vm(c, name: str = "", headless=False):
 
 
 @task
-def stop_vm(c, name: str = None, group_name: str = None):
+def stop_vm(c, name: Optional[str] = None, group_name: Optional[str] = None):
     """
     Stop a virtual machine or a group of virtual machines.
 
@@ -211,7 +212,7 @@ def stop_vm(c, name: str = None, group_name: str = None):
 
 
 @task
-def vm_list(c, group_name: str = None):
+def vm_list(c, group_name: Optional[str] = None):
     """
     List virtual machines or virtual machines in a group.
 
@@ -276,7 +277,7 @@ def reset_vbox(c):
 
 
 @task
-def reset_last_snapshot(c, group_name: str = None):
+def reset_last_snapshot(c, group_name: Optional[str] = None):
     """
     Restore the last snapshot for all VMs in a group.
 
@@ -294,7 +295,7 @@ def reset_last_snapshot(c, group_name: str = None):
 
 
 @task
-def download_os(c, cores: int = None):
+def download_os(c, cores: Optional[int] = None):
     """
     Download VM images.
 
@@ -305,7 +306,7 @@ def download_os(c, cores: int = None):
 
 
 @task
-def check_package(c, version: str, name: str = None):
+def check_package(c, version: str, name: Optional[str] = None):
     """
     Check package URLs for a given version and category.
 
@@ -319,7 +320,7 @@ def check_package(c, version: str, name: str = None):
 
 
 @task
-def get_versions(c, version_base: str, name: str = None, max_builds: int = 200):
+def get_versions(c, version_base: str, name: Optional[str] = None, max_builds: int = 200):
     """
     Get the latest available version and check its package.
 

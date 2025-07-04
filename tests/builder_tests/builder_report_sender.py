@@ -14,20 +14,33 @@ from frameworks.report_portal import PortalManager
 
 class BuilderReportSender:
 
-    def __init__(self, report_path: str):
+    def __init__(self, test_data: BuilderTestData):
         """
         Initialize the BuilderReportSender class.
 
         :param report_path: Path to the report CSV file.
         """
         self.report = Report()
-        self.tg = Telegram()
-        self.report_path = report_path
+        self.tg = Telegram(token=self._get_token(test_data.token_file), chat_id=self._get_chat_id(test_data.chat_id_file))
+        self.report_path = test_data.report.path
         self.__df = None
         self.__version = None
         self.errors_only_report = join(dirname(self.report_path), f"{self.version}_errors_only_report.csv")
         self.console = Console()
         self.launch = None
+
+    def _get_token(self, token_file_name: str) -> str:
+        """
+        Get the token from the token file.
+        """
+        return File.read(join(expanduser('~'), '.telegram', token_file_name or 'token')).strip()
+
+    def _get_chat_id(self, chat_id_file_name: str) -> str:
+        """
+        Get the chat id from the chat id file.
+        """
+        return File.read(join(expanduser('~'), '.telegram', chat_id_file_name or 'chat')).strip()
+
 
     @property
     def df(self):

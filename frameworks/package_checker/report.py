@@ -83,7 +83,7 @@ class CSVReport(Report):
                 writer = csv.DictWriter(f, fieldnames=self.fieldnames, delimiter=self.delimiter)
                 writer.writerows(filtered_rows.to_dict(orient='records'))
 
-    def get_last_exists_version(self, name: str = None, category: str = None) -> Optional[str]:
+    def get_last_exists_version(self, name: Optional[str] = None, category: Optional[str] = None) -> Optional[str]:
         """Get the latest version where the package exists in the report.
 
         :param name: Name of the package to check
