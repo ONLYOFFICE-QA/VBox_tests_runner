@@ -10,6 +10,7 @@ from telegram import Telegram
 
 from frameworks import Report
 from frameworks.report_portal import PortalManager
+from tests.builder_tests.builder_test_data import BuilderTestData
 
 
 class BuilderReportSender:
