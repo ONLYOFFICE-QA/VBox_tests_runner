@@ -4,6 +4,7 @@ from os.path import join, dirname, isfile
 from typing import Optional
 from rich import print
 from rich.console import Console
+from host import File
 
 import pandas as pd
 from telegram import Telegram
