@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from os.path import join, isfile
 from host_tools import File
 
+from frameworks.VersionHandler import VersionHandler
 from frameworks.test_data.TestData import TestData
 
 from .desktop_paths import DesktopLocalPaths
@@ -14,7 +15,7 @@ from .desktop_report import DesktopReport
 
 @dataclass
 class DesktopTestData(TestData):
-    version: str
+    version: Union[str, VersionHandler]
     config_path: str
     status_bar: bool = True
     telegram: bool = False
@@ -35,6 +36,9 @@ class DesktopTestData(TestData):
     __config: Optional[Dict] = None
 
     def __post_init__(self):
+        if not isinstance(self.version, VersionHandler):
+            self.version = VersionHandler(version=self.version)
+
         self.desktop_testing_url = self.config['desktop_script']
         self.branch = self.config['branch']
         self.title = self.config.get('title', 'Undefined_title')
@@ -87,4 +91,3 @@ class DesktopTestData(TestData):
         if not isfile(self.config_path):
             raise FileNotFoundError(f"[red]|ERROR| Configuration file not found: {self.config_path}")
         return File.read_json(self.config_path)
-

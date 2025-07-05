@@ -42,7 +42,14 @@ class PortalManager:
     def start_launch(self):
         self.rp.launch.start(name=self.launch_name, last_launch_connect=True)
 
-    def set_test_result(self, test_name: str, return_code: int, log_message: str = None, suite_uuid: str = None):
+    def set_test_result(
+            self,
+            test_name: str,
+            return_code: int,
+            log_message: str = None,
+            suite_uuid: str = None,
+            status: str = None
+    ):
         step = self.rp.get_launch_step()
         suite_id = self.rp.launch.rp_client.get_id(item_type='suite', uuid=suite_uuid, cache=True)
         exist_step = self.get_exist_item(self.steps_items, test_name, suite_id)
@@ -68,7 +75,7 @@ class PortalManager:
                 print_output=False
             )
 
-        step.finish(return_code=return_code)
+        step.finish(return_code=return_code, status=status)
 
     def create_suite(self, suite_name: str, parent_suite_uuid: Optional[str] = None):
         cache_key = f"{suite_name}_{parent_suite_uuid}"

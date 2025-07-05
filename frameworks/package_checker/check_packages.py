@@ -88,6 +88,15 @@ class PackageURLChecker:
             self.logger.error(f"Error during URL checking: {e}")
             raise
 
+    def check_versions(self, base_version: str, max_builds: int = 200) -> None:
+        """
+        Check versions and update the report.
+
+        :param base_version: The base version string (x.x.x).
+        :param max_builds: Maximum number of builds to check upwards.
+        """
+        asyncio.run(self.find_latest_valid_version(base_version=base_version, max_builds=max_builds))
+
     async def find_latest_valid_version(
             self,
             base_version: str,
@@ -98,19 +107,20 @@ class PackageURLChecker:
         """
         Find the most recent version with all required URLs present.
 
-        :param base_version: Base version string to start from.
-        :param max_builds: Maximum number of builds to check backwards.
+        :param base_version: Base version string to start from (x.x.x).
+        :param max_builds: Maximum number of builds to check upwards.
         :param categories: Optional list of categories to check.
         :param names: Optional list of names to check.
         :return: The latest valid version string or None.
         """
 
         last_version = self.get_report(base_version=base_version).last_checked_version
-        build = self._get_version(last_version).build if last_version else 0
+        start_build = self._get_version(last_version).build if last_version else 0
+        end_build = start_build + max_builds
 
         versions = [
             self._get_version(version=f"{base_version}.{build}")
-            for build in reversed(range(max_builds, build, -1))
+            for build in range(start_build + 1, end_build + 1)
         ]
 
         async def check_version(v: VersionHandler) -> Optional[str]:
@@ -183,7 +193,8 @@ class PackageURLChecker:
                     url = tpl.format(
                         host=self.config.host,
                         version=version.without_build,
-                        build=version.build
+                        build=version.build,
+                        **({"branch": self.get_branch(version)} if "{branch}" in tpl else {})
                     )
                     params_list.append(URLCheckParams(
                         version=str(version),
@@ -197,6 +208,20 @@ class PackageURLChecker:
                     continue
 
         return params_list
+
+    def get_branch(self, version: VersionHandler) -> str:
+        """
+        Get the branch name for the given version.
+
+        :param version: VersionHandler instance.
+        :return: Branch name.
+        """
+        if version.minor == 0:
+            return "release"
+        elif '99.99.99' in str(version):
+            return "develop"
+        return "hotfix"
+
 
     @asynccontextmanager
     async def _get_session(self):
@@ -376,13 +401,8 @@ class PackageURLChecker:
 
         :param results: List of URLCheckResult objects.
         """
-        total = len(results)
-        exists = sum(1 for r in results if r.exists is True)
-        not_found = sum(1 for r in results if r.exists is False)
-        errors = sum(1 for r in results if r.exists is None)
-
         print("\n[bold]Summary:[/bold]")
-        print(f"Total URLs checked: {total}")
-        print(f"[green]Found: {exists}[/green]")
-        print(f"[red]Not found: {not_found}[/red]")
-        print(f"[yellow]Errors: {errors}[/yellow]")
+        print(f"Total URLs checked: {len(results)}")
+        print(f"[green]Found: {sum(1 for r in results if r.exists is True)}[/green]")
+        print(f"[red]Not found: {sum(1 for r in results if r.exists is False)}[/red]")
+        print(f"[yellow]Errors: {sum(1 for r in results if r.exists is None)}[/yellow]")

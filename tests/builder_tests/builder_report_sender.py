@@ -1,38 +1,53 @@
 # -*- coding: utf-8 -*-
 import concurrent.futures
-from os.path import join, dirname, isfile
+from os.path import join, dirname, isfile, expanduser
 from typing import Optional
 from rich import print
 from rich.console import Console
+from host_tools import File
 
 import pandas as pd
 from telegram import Telegram
 
 from frameworks import Report
 from frameworks.report_portal import PortalManager
+from tests.builder_tests.builder_test_data import BuilderTestData
 
 
 class BuilderReportSender:
 
-    def __init__(self, report_path: str):
+    def __init__(self, test_data: BuilderTestData):
         """
         Initialize the BuilderReportSender class.
 
         :param report_path: Path to the report CSV file.
         """
         self.report = Report()
-        self.tg = Telegram()
-        self.report_path = report_path
+        self.tg = Telegram(token=self._get_token(test_data.token_file), chat_id=self._get_chat_id(test_data.chat_id_file))
+        self.report_path = test_data.report.path
         self.__df = None
         self.__version = None
         self.errors_only_report = join(dirname(self.report_path), f"{self.version}_errors_only_report.csv")
         self.console = Console()
         self.launch = None
 
+    def _get_token(self, token_file_name: str) -> str:
+        """
+        Get the token from the token file.
+        """
+        return File.read(join(expanduser('~'), '.telegram', token_file_name or 'token')).strip()
+
+    def _get_chat_id(self, chat_id_file_name: str) -> str:
+        """
+        Get the chat id from the chat id file.
+        """
+        return File.read(join(expanduser('~'), '.telegram', chat_id_file_name or 'chat')).strip()
+
+
     @property
     def df(self):
         """
-        load and return the DataFrame from the report path.
+        Load and return the DataFrame from the report path.
 
         :return: The loaded DataFrame or None if not available.
         """
@@ -51,18 +66,18 @@ class BuilderReportSender:
             return self.__version
 
         if self.df is None:
-            print("[red]|ERROR| Can't read report.csv. Check path: ", self.report_path)
+            self.console.print("[red]|ERROR| Can't read report.csv. Check path: ", self.report_path)
             return None
 
         if self.df.empty:
-            print("[red]|ERROR| Report is empty")
+            self.console.print("[red]|ERROR| Report is empty")
             return None
 
         if not self.df.loc[0, 'Version']:
             raise ValueError("Version is None")
 
         if self.df['Version'].nunique() > 1:
-            print("[red]|WARNING| Versions is not unique.")
+            self.console.print("[red]|WARNING| Versions is not unique.")
             self.__version = self.df['Version'].unique()[
                 self.df['Version'].nunique() - 1
             ]
@@ -70,34 +85,49 @@ class BuilderReportSender:
             self.__version = self.df.loc[0, 'Version']
 
         return self.__version
-    def all_is_passed(self) -> bool:
+
+    def get_errors_only_df(self) -> Optional[pd.DataFrame]:
         """
-        Check if all tests passed (Exit_code == 0.0 and Stderr is empty or NaN).
+        Get DataFrame with only failed tests (Exit_code != 0 or Stderr is not empty).
 
-        :return: True if all tests passed, False otherwise.
+        :return: DataFrame with failed tests or None if no data
         """
-        failed_tests = self.df[~((self.df['Exit_code'].eq(0) | self.df['Exit_code'].isna()) &
-                                (self.df['Stderr'].isna() | (self.df['Stderr'].notna() & self.df['Stderr'].apply(lambda x: isinstance(x, str) and x.strip() == ''))))]
-        print(failed_tests)
+        df = self.df
+        if df is None or df.empty:
+            return None
 
-        return failed_tests.empty
+        failed = df[
+            (df['Exit_code'].fillna(0) != 0) |
+            (df['Stderr'].notna() & df['Stderr'].astype(str).str.strip().ne(''))
+            ]
+        return failed
 
-    def to_telegram(self):
+    def to_telegram(self) -> None:
         """
         Send report results to Telegram, including the full and errors-only CSV.
         """
-        # Filter rows where Exit_code is not 0 or Stderr is not NaN
-        errors_only_df = self.df[(self.df['Exit_code'] != 0) | (self.df['Stderr'].notna())]
-        self.report.save_csv(errors_only_df, self.errors_only_report)
-        result_status = "All tests passed" if self.all_is_passed() else "Some tests have errors"
-        caption = (
+        errors_only_df = self.get_errors_only_df()
+
+        if errors_only_df is not None:
+            self.report.save_csv(errors_only_df, self.errors_only_report)
+
+        self.tg.send_media_group([self.report_path, self.errors_only_report], caption=self.get_caption(errors_only_df))
+
+    def get_caption(self, errors_only_df: pd.DataFrame) -> str:
+        """
+        Get caption for Telegram message.
+
+        :return: Caption string
+        """
+        total_tests = len(self.df) if self.df is not None and not self.df.empty else 0
+        result_status = "All tests passed" if errors_only_df is None or errors_only_df.empty else "Some tests have errors"
+        return (
             f"Builder tests completed on version: `{self.version}`\n\n"
-            f"Result: `{result_status}`"
+            f"Result: `{result_status}`\n\n"
+            f"Total tests: `{total_tests}`"
         )
-        self.tg.send_media_group([self.report_path, self.errors_only_report], caption=caption)
 
-
-    def to_report_portal(self, project_name: str):
+    def to_report_portal(self, project_name: str) -> None:
         """
         Send test results to the report portal.
 
@@ -125,6 +155,7 @@ class BuilderReportSender:
     def _get_thread_result(future):
         """
         Gets the result of a thread execution.
+
         :param future: The future object representing the result of a thread.
         :return: The result of the thread execution.
         """
