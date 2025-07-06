@@ -9,6 +9,7 @@ from host_tools.utils import Dir
 
 from frameworks.VboxMachine import VboxMachine
 from frameworks.decorators import vm_data_created
+from frameworks.package_checker.report import CSVReport
 from frameworks.test_tools import TestTools, TestToolsWindows, TestToolsLinux
 from frameworks.package_checker.check_packages import PackageURLChecker
 
@@ -26,10 +27,28 @@ class DesktopTestTools:
         self.vm = VboxMachine(vm_name)
         self.test_tools = self._get_test_tools()
         self._initialize_report()
-        self.packages_config = self._load_packages_config()
         self.package_checker = PackageURLChecker()
-        self.package_name = self._get_package_name(self.packages_config, self.vm.os_name)
-        self.package_report = self.package_checker.get_report(self.data.version.without_build)
+        self.__package_name: Optional[str] = None
+        self.__package_report: Optional[CSVReport] = None
+        self.__packages_config: Optional[dict] = None
+
+    @property
+    def packages_config(self) -> dict:
+        if self.__packages_config is None:
+            self.__packages_config = self._load_packages_config()
+        return self.__packages_config
+
+    @property
+    def package_name(self) -> str:
+        if self.__package_name is None:
+            self.__package_name = self._get_package_name(os_name=self.vm.os_name)
+        return self.__package_name
+
+    @property
+    def package_report(self) ->  CSVReport:
+        if self.__package_report is None:
+            self.__package_report = self.package_checker.get_report(self.data.version.without_build)
+        return self.__package_report
 
     def run_test(self, headless: bool) -> None:
         self.test_tools.run_vm(headless=headless)
@@ -147,14 +166,14 @@ class DesktopTestTools:
         config_path = join(dirname(realpath(__file__)), './packages_config.json')
         return File.read_json(config_path)
 
-    def _get_package_name(self, packages_config: dict, os_name: str) -> Optional[str]:
+    def _get_package_name(self, os_name: str) -> Optional[str]:
         """
         Get the package name for the current OS
         :param packages_config: Packages configuration dictionary
         :param os_name: Name of the OS
         :return: Package name string
         """
-        for os_family, os_list in packages_config.get('os_family', {}).items():
+        for os_family, os_list in self.packages_config.get('os_family', {}).items():
             if os_name in os_list:
                 return os_family
         return None
