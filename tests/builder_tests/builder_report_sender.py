@@ -22,13 +22,13 @@ class BuilderReportSender:
 
         :param report_path: Path to the report CSV file.
         """
+        self.console = Console()
         self.report = Report()
         self.tg = Telegram(token=self._get_token(test_data.token_file), chat_id=self._get_chat_id(test_data.chat_id_file))
         self.report_path = test_data.report.path
         self.__df = None
         self.__version = None
         self.errors_only_report = join(dirname(self.report_path), f"{self.version}_errors_only_report.csv")
-        self.console = Console()
         self.launch = None
 
     def _get_token(self, token_file_name: str) -> str:
