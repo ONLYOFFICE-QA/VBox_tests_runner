@@ -20,7 +20,11 @@ def sender():
     with open(temp_config_path, 'w') as f:
         f.write('{"report_portal": {"project_name": "default_project"}}')
 
-    token_file_path = join(expanduser('~'), '.telegram', 'token')
+    telegram_dir = join(expanduser('~'), '.telegram')
+    if not os.path.exists(telegram_dir):
+        os.makedirs(telegram_dir)
+
+    token_file_path = join(telegram_dir, 'token')
     if not os.path.isfile(token_file_path):
         with open(token_file_path, 'w') as f:
             f.write('fake_token')
