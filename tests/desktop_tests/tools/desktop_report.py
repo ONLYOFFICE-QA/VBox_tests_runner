@@ -142,41 +142,43 @@ class DesktopReport:
         df = self.report.read(self.path)
 
         main_result_line = self._get_overall_result(df)
-        package_not_exists_os = self._get_package_not_exists_os(df)
+        package_not_exists_os = self._get_os_list_by_status(df, self.portal_data.test_status.not_exists_package)
+        failed_create_vm_os = self._get_os_list_by_status(df, self.portal_data.test_status.failed_create_vm)
 
-        caption = (
-            f"{data.title} desktop editor tests completed on version: `{update_info}{data.version}`\n\n"
-            f"Package: `{data.package_name}`\n"
+        caption_parts = [
+            f"{data.title} desktop editor tests completed on version: `{update_info}{data.version}`\n\n",
+            f"Package: `{data.package_name}`\n",
             f"Result: `{main_result_line}`\n"
-        )
+        ]
         if package_not_exists_os:
-            caption += f"Package not exists for OS: `{', '.join(package_not_exists_os)}`\n\n"
+            caption_parts.append(f"Package not exists for OS: `{', '.join(package_not_exists_os)}`\n\n")
 
-        caption += f"Number of tested Os: `{self.get_total_count('Exit_code')}`"
+        if failed_create_vm_os:
+            caption_parts.append(f"Failed to create VM for OS: `{', '.join(failed_create_vm_os)}`\n\n")
 
+        caption_parts.append(f"Number of tested Os: `{self.get_total_count('Exit_code')}`")
+        caption = ''.join(caption_parts)
         Telegram(token=data.tg_token, chat_id=data.tg_chat_id).send_document(self.path, caption=caption)
 
-    def _get_package_not_exists_os(self, df: pd.DataFrame):
+    def _get_os_list_by_status(self, df: pd.DataFrame, status: str):
         """
-        Returns a list of OS names where Exit_code is 'PACKAGE_NOT_EXISTS'.
+        Returns a list of OS names where Exit_code matches the given status.
+        :param status: The status to filter by.
         :return: List of OS names.
         """
-        df = df.copy()
-        package_not_exists = df[df['Exit_code'] == 'PACKAGE_NOT_EXISTS']
-        if not package_not_exists.empty:
-            return list(package_not_exists['Vm_name'].unique())
-        return []
+        filtered_df = df[df['Exit_code'] == status]
+        return list(filtered_df['Vm_name'].unique()) if not filtered_df.empty else []
 
-    def _get_overall_result(self,  df: pd.DataFrame):
+    def _get_overall_result(self, df: pd.DataFrame):
         """
         Returns overall test result status for all except PACKAGE_NOT_EXISTS.
         :return: String with test result status.
         """
-        df = df.copy()
-        results = df[df['Exit_code'] != 'PACKAGE_NOT_EXISTS']
-        if not results.empty and results['Exit_code'].eq('Passed').all():
-            return 'All tests passed'
-        return 'Some tests have errors'
+        results = df[
+            (df['Exit_code'] != self.portal_data.test_status.not_exists_package) &
+            (df['Exit_code'] != self.portal_data.test_status.failed_create_vm)
+        ]
+        return 'All tests passed' if not results.empty and results['Exit_code'].eq('Passed').all() else 'Some tests have errors'
 
     def _writer(self, mode: str, message: list, delimiter='\t', encoding='utf-8'):
         self.report.write(self.path, mode, message, delimiter, encoding)

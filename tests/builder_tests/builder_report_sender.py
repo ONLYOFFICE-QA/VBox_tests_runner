@@ -32,7 +32,6 @@ class BuilderReportSender:
         self.__df = None
         self.__version = None
         self.errors_only_report = join(dirname(self.report_path), f"{self.version}_errors_only_report.csv")
-        self.launch = None
 
     def _get_token(self, token_file_name: str) -> str:
         """
@@ -54,8 +53,11 @@ class BuilderReportSender:
 
         :return: The loaded DataFrame or None if not available.
         """
-        if self.__df is None and isfile(self.report_path):
-            self.__df = self.report.read(self.report_path)
+        if self.__df is None:
+            if isfile(self.report_path):
+                self.__df = self.report.read(self.report_path)
+            else:
+                self.console.print("[red]|ERROR| Can't read report.csv. Check path: ", self.report_path)
         return self.__df
 
     @property
@@ -69,7 +71,6 @@ class BuilderReportSender:
             return self.__version
 
         if self.df is None:
-            self.console.print("[red]|ERROR| Can't read report.csv. Check path: ", self.report_path)
             return None
 
         if self.df.empty:
@@ -116,6 +117,11 @@ class BuilderReportSender:
 
         self.tg.send_media_group([self.report_path, self.errors_only_report], caption=self.get_caption(errors_only_df))
 
+    def _get_os_list_by_status(self, status: str):
+        df = self.df.copy()
+        filtered_df = df[df['Stdout'] == status]
+        return list(filtered_df['Os'].unique()) if not filtered_df.empty else []
+
     def get_caption(self, errors_only_df: pd.DataFrame) -> str:
         """
         Get caption for Telegram message.
@@ -123,12 +129,24 @@ class BuilderReportSender:
         :return: Caption string
         """
         total_tests = len(self.df) if self.df is not None and not self.df.empty else 0
+        package_not_exists_os = self._get_os_list_by_status(self.portal_data.test_status.not_exists_package)
+        failed_create_vm_os = self._get_os_list_by_status(self.portal_data.test_status.failed_create_vm)
+
         result_status = "All tests passed" if errors_only_df is None or errors_only_df.empty else "Some tests have errors"
-        return (
-            f"Builder tests completed on version: `{self.version}`\n\n"
-            f"Result: `{result_status}`\n\n"
-            f"Total tests: `{total_tests}`"
-        )
+        caption_parts = [
+            f"Builder tests completed on version: `{self.version}`\n\n",
+            f"Result: `{result_status}`\n\n",
+        ]
+
+        if package_not_exists_os:
+            caption_parts.append(f"Package not exists for OS: `{', '.join(package_not_exists_os)}`\n\n")
+
+        if failed_create_vm_os:
+            caption_parts.append(f"Failed to create VM for OS: `{', '.join(failed_create_vm_os)}`\n\n")
+
+        caption_parts.append(f"Total tests: `{total_tests}`")
+
+        return ''.join(caption_parts)
 
     def to_report_portal(self, project_name: str) -> None:
         """
@@ -246,7 +264,7 @@ class BuilderReportSender:
         for col in ("Stderr", "Stdout"):
             value = row.get(col)
             if pd.notna(value):
-                value_str = str(value).strip()
+                value_str = f"{col}: {value}".strip()
                 if value_str:
                     log_parts.append(value_str)
         return "\n".join(log_parts)
