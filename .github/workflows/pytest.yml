@@ -22,6 +22,9 @@ jobs:
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
 
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+
       - name: Run tests
         run: |
           uv run pytest ./tests/unit
