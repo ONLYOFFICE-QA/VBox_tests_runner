@@ -21,6 +21,11 @@ from .run_script import RunScript
 class BuilderTests:
 
     def __init__(self, vm_name: str, test_data: BuilderTestData):
+        """
+        Initializes the BuilderTests class with a virtual machine name and test data.
+        :param vm_name: The name of the virtual machine to use for testing.
+        :param test_data: The test data to use for the tests.
+        """
         self.data = test_data
         self.vm = VboxMachine(vm_name)
         self.test_tools = self._get_test_tools()
@@ -31,6 +36,12 @@ class BuilderTests:
         self.__packages_config: Optional[dict] = None
 
     def run(self, headless: bool = False, max_attempts: int = 5, interval: int = 5):
+        """
+        Runs the builder tests on the virtual machine.
+        :param headless: Whether to run the tests in headless mode.
+        :param max_attempts: Maximum number of attempts to run the tests.
+        :param interval: Interval between attempts in seconds.
+        """
         if not self.check_package_exists():
             return
 
@@ -58,23 +69,39 @@ class BuilderTests:
 
     @property
     def packages_config(self) -> dict:
+        """
+        Returns the packages configuration.
+        :return: A dictionary containing the packages configuration.
+        """
         if self.__packages_config is None:
             self.__packages_config = self._load_packages_config()
         return self.__packages_config
 
     @property
     def package_name(self) -> str:
+        """
+        Returns the package name for the current OS.
+        :return: The package name as a string.
+        """
         if self.__package_name is None:
             self.__package_name = self._get_package_name()
         return self.__package_name
 
     @property
     def package_report(self) -> CSVReport:
+        """
+        Returns the package report for the current version.
+        :return: A CSVReport object containing the package report.
+        """
         if self.__package_report is None:
             self.__package_report = self.package_checker.get_report(VersionHandler(self.data.version).without_build)
         return self.__package_report
 
     def _run_test(self, headless: bool) -> None:
+        """
+        Runs a single test on the virtual machine.
+        :param headless: Whether to run the test in headless mode.
+        """
         self.test_tools.run_vm(headless=headless)
         self._initialize_libs()
         self.test_tools.run_test_on_vm(upload_files=self.get_upload_files(), create_test_dir=self.get_test_dirs())
@@ -83,14 +110,21 @@ class BuilderTests:
         if not isfile(self.report.path) or self.report.column_is_empty('Os'):
             raise VirtualMachinException
 
-    def _initialize_libs(self):
+    def _initialize_libs(self) -> None:
+        """
+        Initializes the libraries required for the tests.
+        """
         self._initialize_paths()
         self.test_tools.initialize_libs(
             report=self.report,
             paths=self.paths
         )
 
-    def _initialize_report(self):
+    def _initialize_report(self) -> BuilderReport:
+        """
+        Initializes the report for the builder tests.
+        :return: The initialized BuilderReport object.
+        """
         report_file = join(
             BuilderLocalPaths.builder_report_dir,
             self.data.version,
@@ -101,16 +135,27 @@ class BuilderTests:
         return self.report
 
     @vm_data_created
-    def _initialize_paths(self):
+    def _initialize_paths(self) -> BuilderPaths:
+        """
+        Initializes the paths required for the tests.
+        :return: The initialized BuilderPaths object.
+        """
         self.paths = BuilderPaths(os_info=self.vm.os_info, remote_user_name=self.vm.data.user)
         return self.paths
 
     def _get_test_tools(self) -> TestTools:
+        """
+        Returns the appropriate test tools based on the OS type.
+        :return: A TestTools object for the current OS.
+        """
         if 'windows' in self.vm.os_type:
             return TestToolsWindows(vm=self.vm, test_data=self.data)
         return TestToolsLinux(vm=self.vm, test_data=self.data)
 
-    def handle_vm_creation_failure(self):
+    def handle_vm_creation_failure(self) -> None:
+        """
+        Handles the failure of virtual machine creation.
+        """
         print(f"[bold red]|ERROR|{self.vm.name}| Failed to create a virtual machine")
         self.report.write(
             version=self.data.version,
@@ -120,7 +165,11 @@ class BuilderTests:
         )
 
     @vm_data_created
-    def get_upload_files(self) -> list:
+    def get_upload_files(self) -> list[tuple[str, str]]:
+        """
+        Returns a list of files to upload to the virtual machine.
+        :return: A list of tuples containing local and remote file paths.
+        """
         files = [
             (self.data.token_file, self.paths.remote.tg_token_file),
             (self.data.chat_id_file, self.paths.remote.tg_chat_id_file),
@@ -130,7 +179,11 @@ class BuilderTests:
 
         return [file for file in files if all(file)]
 
-    def get_test_dirs(self) -> list:
+    def get_test_dirs(self) -> list[str]:
+        """
+        Returns a list of directories to create on the virtual machine for testing.
+        :return: A list of remote directory paths.
+        """
         remote_test_dirs = [
             self.paths.remote.script_dir,
             self.paths.remote.tg_dir,
@@ -140,8 +193,8 @@ class BuilderTests:
 
     def check_package_exists(self) -> bool:
         """
-        Check if package exists and handle if not
-        :return: True if package exists, False otherwise
+        Checks if the package exists and handles the case if it does not.
+        :return: True if the package exists, False otherwise.
         """
         if not self.package_name:
             print(f"[bold red]|ERROR|{self.vm.name}| Package name is not found in packages_config.json")
@@ -160,7 +213,10 @@ class BuilderTests:
                 return False
         return True
 
-    def handle_package_not_exists(self):
+    def handle_package_not_exists(self) -> None:
+        """
+        Handles the case when the package does not exist.
+        """
         print(f"[bold red]|ERROR|{self.vm.name}| Package {self.package_name} is not exists")
         self.report.write(
             version=self.data.version,
@@ -171,21 +227,18 @@ class BuilderTests:
 
     def _get_package_name(self) -> Optional[str]:
         """
-        Get the package name for the current OS
-        :param packages_config: Packages configuration dictionary
-        :param os_name: Name of the OS
-        :return: Package name string
+        Gets the package name for the current OS.
+        :return: The package name as a string, or None if not found.
         """
         for os_family, os_list in self.packages_config.get('os_family', {}).items():
             if self.vm.name in os_list:
                 return os_family
         return None
 
-    def _load_packages_config(self) -> dict:
+    def _load_packages_config(self) -> dict[str, Any]:
         """
-        Load packages configuration from JSON file
-        :param self: DesktopTestTools instance
-        :return: Packages configuration dictionary
+        Loads the packages configuration from a JSON file.
+        :return: A dictionary containing the packages configuration.
         """
         config_path = join(dirname(realpath(__file__)), './packages_config.json')
         return File.read_json(config_path)
