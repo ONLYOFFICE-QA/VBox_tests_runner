@@ -1,4 +1,3 @@
-from ntpath import isfile
 from tests.builder_tests.builder_report_sender import BuilderReportSender
 import pytest
 import pandas as pd
