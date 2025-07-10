@@ -3,6 +3,7 @@ import pytest
 import pandas as pd
 from tests.builder_tests.builder_test_data import BuilderTestData
 import os
+from os.path import join, expanduser
 
 
 class DummyReport:
@@ -19,11 +20,18 @@ def sender():
     with open(temp_config_path, 'w') as f:
         f.write('{"report_portal": {"project_name": "default_project"}}')
 
+    token_file_path = join(expanduser('~'), '.telegram', 'token')
+    if not os.path.isfile(token_file_path):
+        with open(token_file_path, 'w') as f:
+            f.write('fake_token')
+
     test_data = BuilderTestData(version='1.0.0.0', config_path=temp_config_path)
     sender = BuilderReportSender(test_data)
     sender.report = DummyReport()
 
     os.remove(temp_config_path)
+    if os.path.isfile(token_file_path):
+        os.remove(token_file_path)
     return sender
 
 def test_get_errors_only_df_all_passed(sender):
