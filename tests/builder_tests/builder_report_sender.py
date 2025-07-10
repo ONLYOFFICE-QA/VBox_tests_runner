@@ -204,7 +204,7 @@ class BuilderReportSender:
         :param row: A row from the DataFrame.
         :return: The status of the test result.
         """
-        return 'SKIPPED' if row['Exit_code'] in ['PACKAGE_NOT_EXISTS', 'FAILED_CREATE_VM'] else None
+        return 'SKIPPED' if row['Stdout'] in ['PACKAGE_NOT_EXISTS', 'FAILED_CREATE_VM'] else None
 
     def _create_suites(self, df: pd.DataFrame, launch: PortalManager):
         """

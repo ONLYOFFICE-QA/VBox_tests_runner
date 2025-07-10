@@ -161,7 +161,7 @@ class BuilderTests:
             version=self.data.version,
             vm_name=self.vm.name,
             exit_code=1,
-            stderr="FAILED_CREATE_VM"
+            stdout="FAILED_CREATE_VM"
         )
 
     @vm_data_created
@@ -222,7 +222,7 @@ class BuilderTests:
             version=self.data.version,
             vm_name=self.vm.name,
             exit_code=1,
-            stderr="PACKAGE_NOT_EXISTS"
+            stdout="PACKAGE_NOT_EXISTS"
         )
 
     def _get_package_name(self) -> Optional[str]:
@@ -235,7 +235,7 @@ class BuilderTests:
                 return os_family
         return None
 
-    def _load_packages_config(self) -> dict[str, Any]:
+    def _load_packages_config(self) -> dict[str, list[str]]:
         """
         Loads the packages configuration from a JSON file.
         :return: A dictionary containing the packages configuration.
