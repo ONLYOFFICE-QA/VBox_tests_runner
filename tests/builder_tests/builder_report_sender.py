@@ -2,7 +2,6 @@
 import concurrent.futures
 from os.path import join, dirname, isfile, expanduser
 from typing import Optional
-from rich import print
 from rich.console import Console
 from host_tools import File
 
