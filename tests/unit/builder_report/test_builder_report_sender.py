@@ -1,3 +1,4 @@
+from ntpath import isfile
 from tests.builder_tests.builder_report_sender import BuilderReportSender
 import pytest
 import pandas as pd
@@ -29,7 +30,6 @@ def sender():
         with open(token_file_path, 'w') as f:
             f.write('fake_token')
 
-
     chat_file_path = join(telegram_dir, 'chat')
     if not os.path.isfile(chat_file_path):
         with open(chat_file_path, 'w') as f:
@@ -39,12 +39,9 @@ def sender():
     sender = BuilderReportSender(test_data)
     sender.report = DummyReport()
 
-    os.remove(temp_config_path)
-    if os.path.isfile(token_file_path):
-        os.remove(token_file_path)
+    if os.path.isfile(temp_config_path):
+        os.remove(temp_config_path)
 
-    if os.path.isfile(chat_file_path):
-        os.remove(chat_file_path)
     return sender
 
 def test_get_errors_only_df_all_passed(sender):
