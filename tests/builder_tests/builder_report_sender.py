@@ -182,7 +182,8 @@ class BuilderReportSender:
             test_name=row['Test_name'],
             log_message=log,
             return_code=ret_code,
-            suite_uuid=samples_suite_uuid
+            suite_uuid=samples_suite_uuid,
+            status=self._get_status(row)
         )
 
         if ret_code != 0:
@@ -195,6 +196,15 @@ class BuilderReportSender:
             f"[green]|INFO|[cyan]{row['Os']}[/]|[cyan]{row['Test_name']}[/] "
             f"finished with exit code [cyan]{ret_code}"
         )
+
+    def _get_status(self, row: pd.Series) -> Optional[str]:
+        """
+        Get the status of a test result.
+
+        :param row: A row from the DataFrame.
+        :return: The status of the test result.
+        """
+        return 'SKIPPED' if row['Exit_code'] in ['PACKAGE_NOT_EXISTS', 'FAILED_CREATE_VM'] else None
 
     def _create_suites(self, df: pd.DataFrame, launch: PortalManager):
         """

@@ -34,7 +34,6 @@ class BuilderTests:
         if not self.check_package_exists():
             return
 
-
         attempt = 0
         while attempt < max_attempts:
             try:
@@ -113,7 +112,12 @@ class BuilderTests:
 
     def handle_vm_creation_failure(self):
         print(f"[bold red]|ERROR|{self.vm.name}| Failed to create a virtual machine")
-        self.report.writer(mode='a', message=[self.data.version, self.vm.name, "FAILED_CREATE_VM"])
+        self.report.write(
+            version=self.data.version,
+            vm_name=self.vm.name,
+            exit_code=1,
+            stderr="FAILED_CREATE_VM"
+        )
 
     @vm_data_created
     def get_upload_files(self) -> list:
@@ -158,7 +162,12 @@ class BuilderTests:
 
     def handle_package_not_exists(self):
         print(f"[bold red]|ERROR|{self.vm.name}| Package {self.package_name} is not exists")
-        self.report.writer(mode='a', message=[self.data.version, self.vm.name, "PACKAGE_NOT_EXISTS"])
+        self.report.write(
+            version=self.data.version,
+            vm_name=self.vm.name,
+            exit_code=1,
+            stderr="PACKAGE_NOT_EXISTS"
+        )
 
     def _get_package_name(self) -> Optional[str]:
         """
