@@ -14,6 +14,7 @@ from frameworks.report import Report
 from telegram import Telegram
 
 from frameworks.report_portal import PortalManager
+from frameworks.test_data import PortalData
 
 
 class DesktopReport:
@@ -23,6 +24,7 @@ class DesktopReport:
         self.dir = dirname(self.path)
         self.report = Report()
         self.console = Console()
+        self.portal_data = PortalData()
         Dir.create(self.dir, stdout=False)
 
     def write(self, version: str, vm_name: str, exit_code: str) -> None:
@@ -98,16 +100,13 @@ class DesktopReport:
     def is_passed(row: pd.Series) -> bool:
         return row['Exit_code'] == 'Passed'
 
-    def _get_status(self, row: pd.Series) -> str:
-        return 'SKIPPED' if row['Exit_code'] in ['PACKAGE_NOT_EXISTS', 'FAILED_CREATE_VM'] else None
-
     def _process_row(self, row: pd.Series, launch: PortalManager, package_name: str) -> Optional[str]:
         launch.set_test_result(
             test_name=row['Test_name'],
             return_code=0 if self.is_passed(row) else 1,
             log_message=row['Exit_code'] if not self.is_passed(row) else None,
             suite_uuid=self._create_suite(self._get_os_name(row), launch, package_name),
-            status=self._get_status(row)
+            status=self.portal_data.get_status(row['Exit_code'])
         )
 
         if not self.is_passed(row):

@@ -12,6 +12,7 @@ from frameworks.VboxMachine import VboxMachine
 from frameworks.decorators import vm_data_created
 from frameworks.package_checker.report import CSVReport
 from frameworks.test_tools import TestToolsLinux, TestToolsWindows, TestTools
+from frameworks.test_data import PortalData
 
 from .builder_paths import BuilderPaths, BuilderLocalPaths
 from .builder_report import BuilderReport
@@ -27,6 +28,7 @@ class BuilderTests:
         :param test_data: The test data to use for the tests.
         """
         self.data = test_data
+        self.portal_data = PortalData()
         self.vm = VboxMachine(vm_name)
         self.test_tools = self._get_test_tools()
         self.package_checker = PackageURLChecker()
@@ -152,17 +154,6 @@ class BuilderTests:
             return TestToolsWindows(vm=self.vm, test_data=self.data)
         return TestToolsLinux(vm=self.vm, test_data=self.data)
 
-    def handle_vm_creation_failure(self) -> None:
-        """
-        Handles the failure of virtual machine creation.
-        """
-        print(f"[bold red]|ERROR|{self.vm.name}| Failed to create a virtual machine")
-        self.report.write(
-            version=self.data.version,
-            vm_name=self.vm.name,
-            exit_code=1,
-            stdout="FAILED_CREATE_VM"
-        )
 
     @vm_data_created
     def get_upload_files(self) -> list[tuple[str, str]]:
@@ -221,8 +212,20 @@ class BuilderTests:
         self.report.write(
             version=self.data.version,
             vm_name=self.vm.name,
-            exit_code=1,
-            stdout="PACKAGE_NOT_EXISTS"
+            exit_code=0,
+            stdout=self.portal_data.test_status.not_exists_package
+        )
+
+    def handle_vm_creation_failure(self) -> None:
+        """
+        Handles the failure of virtual machine creation.
+        """
+        print(f"[bold red]|ERROR|{self.vm.name}| Failed to create a virtual machine")
+        self.report.write(
+            version=self.data.version,
+            vm_name=self.vm.name,
+            exit_code=0,
+            stdout=self.portal_data.test_status.failed_create_vm
         )
 
     def _get_package_name(self) -> Optional[str]:

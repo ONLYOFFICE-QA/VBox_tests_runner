@@ -11,6 +11,7 @@ from telegram import Telegram
 
 from frameworks import Report
 from frameworks.report_portal import PortalManager
+from frameworks.test_data import PortalData
 from tests.builder_tests.builder_test_data import BuilderTestData
 
 
@@ -22,10 +23,12 @@ class BuilderReportSender:
 
         :param report_path: Path to the report CSV file.
         """
+        self.data = test_data
+        self.portal_data = PortalData()
         self.console = Console()
         self.report = Report()
-        self.tg = Telegram(token=self._get_token(test_data.token_file), chat_id=self._get_chat_id(test_data.chat_id_file))
-        self.report_path = test_data.report.path
+        self.tg = Telegram(token=self._get_token(self.data.token_file), chat_id=self._get_chat_id(test_data.chat_id_file))
+        self.report_path = self.data.report.path
         self.__df = None
         self.__version = None
         self.errors_only_report = join(dirname(self.report_path), f"{self.version}_errors_only_report.csv")
@@ -183,7 +186,7 @@ class BuilderReportSender:
             log_message=log,
             return_code=ret_code,
             suite_uuid=samples_suite_uuid,
-            status=self._get_status(row)
+            status=self.portal_data.get_status(row['Stdout'])
         )
 
         if ret_code != 0:
@@ -196,15 +199,6 @@ class BuilderReportSender:
             f"[green]|INFO|[cyan]{row['Os']}[/]|[cyan]{row['Test_name']}[/] "
             f"finished with exit code [cyan]{ret_code}"
         )
-
-    def _get_status(self, row: pd.Series) -> Optional[str]:
-        """
-        Get the status of a test result.
-
-        :param row: A row from the DataFrame.
-        :return: The status of the test result.
-        """
-        return 'SKIPPED' if row['Stdout'] in ['PACKAGE_NOT_EXISTS', 'FAILED_CREATE_VM'] else None
 
     def _create_suites(self, df: pd.DataFrame, launch: PortalManager):
         """

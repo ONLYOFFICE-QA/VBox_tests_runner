@@ -42,7 +42,6 @@ class BuilderTestData(TestData):
     def config(self) -> dict:
         if self.__config is None:
             self.__config = self._read_config()
-
         return self.__config
 
     @property

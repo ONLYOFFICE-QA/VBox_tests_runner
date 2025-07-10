@@ -12,6 +12,7 @@ from frameworks.decorators import vm_data_created
 from frameworks.package_checker.report import CSVReport
 from frameworks.test_tools import TestTools, TestToolsWindows, TestToolsLinux
 from frameworks.package_checker.check_packages import PackageURLChecker
+from frameworks.test_data import PortalData
 
 from vboxwrapper import VirtualMachinException
 
@@ -24,6 +25,7 @@ class DesktopTestTools:
 
     def __init__(self, vm_name: str, test_data):
         self.data = test_data
+        self.portal_data = PortalData()
         self.vm = VboxMachine(vm_name)
         self.test_tools = self._get_test_tools()
         self._initialize_report()
@@ -99,11 +101,11 @@ class DesktopTestTools:
 
     def handle_package_not_exists(self):
         print(f"[bold red]|ERROR|{self.vm.name}| Package {self.package_name} is not exists")
-        self.report.write(self.data.version, self.vm.name, "PACKAGE_NOT_EXISTS")
+        self.report.write(self.data.version, self.vm.name, self.portal_data.test_status.not_exists_package)
 
     def handle_vm_creation_failure(self):
         print(f"[bold red]|ERROR|{self.vm.name}| Failed to create a virtual machine")
-        self.report.write(self.data.version, self.vm.name, "FAILED_CREATE_VM")
+        self.report.write(self.data.version, self.vm.name, self.portal_data.test_status.failed_create_vm)
 
     def get_upload_files(self) -> list:
         files = [
