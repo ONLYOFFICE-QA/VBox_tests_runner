@@ -29,6 +29,12 @@ def sender():
         with open(token_file_path, 'w') as f:
             f.write('fake_token')
 
+
+    chat_file_path = join(telegram_dir, 'chat')
+    if not os.path.isfile(chat_file_path):
+        with open(chat_file_path, 'w') as f:
+            f.write('fake_chat_id')
+
     test_data = BuilderTestData(version='1.0.0.0', config_path=temp_config_path)
     sender = BuilderReportSender(test_data)
     sender.report = DummyReport()
@@ -36,6 +42,9 @@ def sender():
     os.remove(temp_config_path)
     if os.path.isfile(token_file_path):
         os.remove(token_file_path)
+
+    if os.path.isfile(chat_file_path):
+        os.remove(chat_file_path)
     return sender
 
 def test_get_errors_only_df_all_passed(sender):
