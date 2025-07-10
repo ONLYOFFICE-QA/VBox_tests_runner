@@ -38,9 +38,9 @@ def desktop_test(
     snap: bool = False,
     appimage: bool = False,
     flatpak: bool = False,
-    open_retries: Optional[int] = None,
-    retest: bool = False,
     only_portal: bool = False,
+    open_retries: Optional[int] = None,
+    retest: bool = False
 ):
     """
     Run desktop tests and send reports.

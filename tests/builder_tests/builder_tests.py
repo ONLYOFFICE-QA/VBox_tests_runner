@@ -13,7 +13,7 @@ from frameworks.decorators import vm_data_created
 from frameworks.package_checker.report import CSVReport
 from frameworks.test_tools import TestToolsLinux, TestToolsWindows, TestTools
 
-from .builder_paths import BuilderPaths
+from .builder_paths import BuilderPaths, BuilderLocalPaths
 from .builder_report import BuilderReport
 from .builder_test_data import BuilderTestData
 from .run_script import RunScript
@@ -25,11 +25,16 @@ class BuilderTests:
         self.vm = VboxMachine(vm_name)
         self.test_tools = self._get_test_tools()
         self.package_checker = PackageURLChecker()
+        self._initialize_report()
         self.__package_name: Optional[str] = None
         self.__package_report: Optional[CSVReport] = None
         self.__packages_config: Optional[dict] = None
 
     def run(self, headless: bool = False, max_attempts: int = 5, interval: int = 5):
+        if not self.check_package_exists():
+            return
+
+
         attempt = 0
         while attempt < max_attempts:
             try:
@@ -71,9 +76,6 @@ class BuilderTests:
         return self.__package_report
 
     def _run_test(self, headless: bool) -> None:
-        if not self.check_package_exists():
-            return
-
         self.test_tools.run_vm(headless=headless)
         self._initialize_libs()
         self.test_tools.run_test_on_vm(upload_files=self.get_upload_files(), create_test_dir=self.get_test_dirs())
@@ -84,7 +86,6 @@ class BuilderTests:
 
     def _initialize_libs(self):
         self._initialize_paths()
-        self._initialize_report()
         self.test_tools.initialize_libs(
             report=self.report,
             paths=self.paths
@@ -92,7 +93,7 @@ class BuilderTests:
 
     def _initialize_report(self):
         report_file = join(
-            self.paths.local.builder_report_dir,
+            BuilderLocalPaths.builder_report_dir,
             self.data.version,
             self.vm.name,
             f"builder_report_v{self.data.version}.csv"
