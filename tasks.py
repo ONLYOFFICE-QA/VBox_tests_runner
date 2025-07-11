@@ -12,7 +12,8 @@ from rich.prompt import Prompt
 from vboxwrapper import Vbox, VirtualMachine
 
 import tests.multiprocessing as multiprocess
-from frameworks import DocBuilder, PackageURLChecker, VmManager
+from frameworks import PackageURLChecker, VmManager
+from frameworks.DepTests import DocBuilder
 from tests import (
     BuilderReportSender,
     BuilderTestData,

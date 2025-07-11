@@ -2,8 +2,7 @@
 from .console import MyConsole
 from .report import Report
 from .vm_manager import VmManager
-from .DepTests import DocBuilder, DepTests
 from .package_checker import PackageURLChecker
 from .VersionHandler import VersionHandler
 
-__all__ = ["MyConsole", "Report", "VmManager", "DocBuilder", "DepTests", "PackageURLChecker", "VersionHandler"]
+__all__ = ["MyConsole", "Report", "VmManager", "PackageURLChecker", "VersionHandler"]
