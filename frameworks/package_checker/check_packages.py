@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager, nullcontext
 
 import aiohttp
 from aiohttp import ClientSession, ClientTimeout, ClientConnectorError
+from host_tools import HostInfo
 from rich import print
 
 from .config import Config
@@ -235,7 +236,8 @@ class PackageURLChecker:
             limit=100,  # Total connection pool size
             limit_per_host=20,  # Max connections per host
             keepalive_timeout=30,
-            enable_cleanup_closed=True
+            enable_cleanup_closed=True,
+            ssl=False if HostInfo().is_mac else True
         )
 
         async with ClientSession(timeout=timeout, connector=connector) as session:
