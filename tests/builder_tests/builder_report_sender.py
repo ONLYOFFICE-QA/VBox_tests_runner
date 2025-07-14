@@ -3,7 +3,7 @@ import concurrent.futures
 from os.path import join, dirname, isfile, expanduser
 from typing import Optional
 from rich.console import Console
-from host_tools import File
+from host_tools import File, HostInfo
 
 import pandas as pd
 from telegram import Telegram
@@ -134,6 +134,7 @@ class BuilderReportSender:
         result_status = "All tests passed" if errors_only_df is None or errors_only_df.empty else "Some tests have errors"
         caption_parts = [
             f"Builder tests completed on version: `{self.version}`\n\n",
+            f"Runned on: `{HostInfo().os}`\n",
             f"Result: `{result_status}`\n\n",
         ]
 
