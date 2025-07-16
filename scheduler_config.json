@@ -1,0 +1,11 @@
+{
+    "start_hour": 14,
+    "end_hour": 15,
+    "interval_minutes": 30,
+    "base_version": "9.0.4",
+    "max_builds": 50,
+    "builder_run_cmd": "uv run inv builder-test -h -p 3 --version {version} --connect-portal --telegram",
+    "desktop_run_cmd": "uv run inv desktop-test -d -h -p 5 --version {version} --telegram",
+    "tested_versions_file": "tested_versions.json",
+    "cache_max_versions": 10
+}
