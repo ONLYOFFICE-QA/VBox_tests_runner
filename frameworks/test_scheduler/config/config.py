@@ -8,7 +8,7 @@ with validation and type safety.
 
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 import re
 from rich import print
 from pydantic import BaseModel, ConfigDict, conint, constr, field_validator
@@ -96,6 +96,7 @@ class TestSchedulerConfigModel(BaseModel):
 
     Attributes:
         scheduling (SchedulingConfigModel): Scheduling configuration.
+        test_execution_order (List[str]): Order of test execution (also defines enabled tests).
         commands (CommandConfigModel): Command configuration.
         versions (VersionConfigModel): Version configuration.
         tested_versions_file (str): Path to the tested versions cache file.
@@ -103,10 +104,33 @@ class TestSchedulerConfigModel(BaseModel):
     """
 
     scheduling: SchedulingConfigModel
+    test_execution_order: List[constr(strip_whitespace=True, min_length=1)]
     commands: CommandConfigModel
     versions: VersionConfigModel
-    tested_versions_file: constr(strip_whitespace=True, min_length=1) = "tested_versions.json"
+    tested_versions_file: constr(strip_whitespace=True, min_length=1) = (
+        "tested_versions.json"
+    )
     cache_max_versions: conint(ge=1) = 10
+
+    @field_validator("test_execution_order")
+    def validate_test_execution_order(cls, v):
+        """
+        Validate that test execution order contains only valid test types.
+
+        :param v: List of test execution order
+        """
+        valid_tests = {"builder", "desktop"}
+        for test in v:
+            if test not in valid_tests:
+                raise ValueError(
+                    f"Invalid test type '{test}'. Valid types: {valid_tests}"
+                )
+
+        # Check for duplicates
+        if len(v) != len(set(v)):
+            raise ValueError("Test execution order contains duplicate entries")
+
+        return v
 
 
 @singleton
@@ -116,6 +140,7 @@ class SchedulerConfig:
 
     Attributes:
         scheduling (SchedulingConfigModel): Scheduling configuration.
+        test_execution_order (List[str]): Order of test execution (also defines enabled tests).
         commands (CommandConfigModel): Command configuration.
         versions (VersionConfigModel): Version configuration.
         tested_versions_file (str): Path to the tested versions cache file.
@@ -135,6 +160,7 @@ class SchedulerConfig:
         self.config_path = config_path or self.scheduler_config_path
         self._config = self._load_config(self.config_path)
         self.scheduling = self._config.scheduling
+        self.test_execution_order = self._config.test_execution_order
         self.commands = self._config.commands
         self.versions = self._config.versions
         self.tested_versions_file = self._config.tested_versions_file
@@ -158,6 +184,7 @@ class SchedulerConfig:
                 "end_hour": config_data.get("end_hour"),
                 "interval_minutes": config_data.get("interval_minutes"),
             },
+            "test_execution_order": config_data.get("test_execution_order", []),
             "commands": {
                 "builder_run_cmd": config_data.get("builder_run_cmd"),
                 "desktop_run_cmd": config_data.get("desktop_run_cmd"),
@@ -184,6 +211,8 @@ class SchedulerConfig:
             f"    Start Hour: {self.scheduling.start_hour}\n"
             f"    End Hour: {self.scheduling.end_hour}\n"
             f"    Interval (minutes): {self.scheduling.interval_minutes}\n"
+            f"  [blue]Test Execution:[/]\n"
+            f"    Execution Order: {' -> '.join(self.test_execution_order)}\n"
             f"  [blue]Commands:[/]\n"
             f"    Builder Command: {self.commands.builder_run_cmd}\n"
             f"    Desktop Command: {self.commands.desktop_run_cmd}\n"
@@ -228,6 +257,7 @@ class SchedulerConfig:
             "start_hour": updated_config.scheduling.start_hour,
             "end_hour": updated_config.scheduling.end_hour,
             "interval_minutes": updated_config.scheduling.interval_minutes,
+            "test_execution_order": updated_config.test_execution_order,
             "builder_run_cmd": updated_config.commands.builder_run_cmd,
             "desktop_run_cmd": updated_config.commands.desktop_run_cmd,
             "base_version": updated_config.versions.base_version,
@@ -243,6 +273,7 @@ class SchedulerConfig:
         # Update internal state
         self._config = updated_config
         self.scheduling = self._config.scheduling
+        self.test_execution_order = self._config.test_execution_order
         self.commands = self._config.commands
         self.versions = self._config.versions
         self.tested_versions_file = self._config.tested_versions_file
