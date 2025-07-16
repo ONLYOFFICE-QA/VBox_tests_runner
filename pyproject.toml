@@ -17,7 +17,6 @@ dependencies = [
     "inflate64>=1.0.3",
     "py7zr>=1",
     "aiohttp>=3.12.14",
-    "apscheduler>=4.0.0a6",
     "host-tools",
     "telegram",
     "vboxwrapper",
@@ -25,6 +24,7 @@ dependencies = [
     "report-portal",
     "s3wrapper",
     "pytest>=8.4.1",
+    "apscheduler>=3.11.0",
 ]
 
 [tool.uv.sources]
