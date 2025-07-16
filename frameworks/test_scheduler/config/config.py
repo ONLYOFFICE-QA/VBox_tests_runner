@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Optional, List
 import re
 from rich import print
-from pydantic import BaseModel, ConfigDict, conint, constr, field_validator
+from pydantic import BaseModel, conint, constr, field_validator
 from host_tools import singleton
 
 
