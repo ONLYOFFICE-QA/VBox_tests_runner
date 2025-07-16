@@ -184,12 +184,12 @@ class TestScheduler:
         return result.returncode == 0
 
     def run_desktop_test(self, version: str) -> bool:
-        # """
-        # Run desktop test for specified version.
+        """
+        Run desktop test for specified version.
 
-        # :param version: Version to test
-        # :return: True if successful, False otherwise
-        # """
+        :param version: Version to test
+        :return: True if successful, False otherwise
+        """
         cmd = self.config.commands.desktop_run_cmd.format(version=version)
         print(f"[green]|INFO| Running desktop test for version {version}[/]")
         print(f"[green]|INFO| Command: {cmd}[/]")
