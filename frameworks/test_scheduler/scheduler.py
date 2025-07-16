@@ -168,12 +168,11 @@ class TestScheduler:
         :param version: Version to test
         :return: True if successful, False otherwise
         """
-        # cmd = self.config.commands.builder_run_cmd.format(version=version)
-        # print(f"[green]|INFO| Running builder test for version {version}[/]")
-        # print(f"[green]|INFO| Command: {cmd}[/]")
-        # result = subprocess.run(cmd, shell=True)
-        # return result.returncode == 0
-        return True
+        cmd = self.config.commands.builder_run_cmd.format(version=version)
+        print(f"[green]|INFO| Running builder test for version {version}[/]")
+        print(f"[green]|INFO| Command: {cmd}[/]")
+        result = subprocess.run(cmd, shell=True)
+        return result.returncode == 0
 
     def run_desktop_test(self, version: str) -> bool:
         """
@@ -182,12 +181,11 @@ class TestScheduler:
         :param version: Version to test
         :return: True if successful, False otherwise
         """
-        # cmd = self.config.commands.desktop_run_cmd.format(version=version)
-        # print(f"[green]|INFO| Running desktop test for version {version}[/]")
-        # print(f"[green]|INFO| Command: {cmd}[/]")
-        # result = subprocess.run(cmd, shell=True)
-        # return result.returncode == 0
-        return True
+        cmd = self.config.commands.desktop_run_cmd.format(version=version)
+        print(f"[green]|INFO| Running desktop test for version {version}[/]")
+        print(f"[green]|INFO| Command: {cmd}[/]")
+        result = subprocess.run(cmd, shell=True)
+        return result.returncode == 0
 
     def start_scheduled_tests(
         self,
