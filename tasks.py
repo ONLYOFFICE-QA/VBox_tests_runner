@@ -1,4 +1,29 @@
 # -*- coding: utf-8 -*-
+"""
+VBox Tests Runner - Automated testing framework for VirtualBox environments.
+
+This module provides invoke tasks for running automated tests on VirtualBox VMs,
+including desktop tests, builder tests, and scheduled test execution.
+
+Usage examples:
+    # Run desktop tests manually:
+    invoke desktop-test --version="24.0.0" --telegram
+
+    # Run builder tests manually:
+    invoke builder-test --version="24.0.0" --connect-portal
+
+    # Start scheduled test runner (runs every 30 minutes between 2 AM and 3 PM):
+    invoke scheduled-tests
+
+    # Start scheduled test runner with custom schedule:
+    invoke scheduled-tests --start-hour=1 --end-hour=16 --interval-minutes=60
+
+    # Check package availability:
+    invoke check-package --version="24.0.0" --name="desktop"
+
+    # Get latest version:
+    invoke get-versions --version-base="24.0" --name="builder"
+"""
 from os import getcwd, system
 from os.path import isfile, join
 from typing import Optional
@@ -12,7 +37,7 @@ from rich.prompt import Prompt
 from vboxwrapper import Vbox, VirtualMachine
 
 import tests.multiprocessing as multiprocess
-from frameworks import PackageURLChecker, VmManager
+from frameworks import PackageURLChecker, VmManager, TestScheduler
 from frameworks.DepTests import DocBuilder
 from tests import (
     BuilderReportSender,
@@ -22,6 +47,64 @@ from tests import (
     DesktopTest,
     DesktopTestData,
 )
+
+
+@task
+def scheduled_tests(c, start_hour: int = 2, end_hour: int = 15, interval_minutes: int = 30):
+    """
+    Run scheduled version checking and testing every 30 minutes between 2 AM and 3 PM.
+
+    This task sets up a scheduler that:
+    - Checks for new versions every 30 minutes
+    - Only runs between 2 AM and 3 PM
+    - Automatically runs builder and desktop tests for new versions
+    - Sends results to report portal
+
+    :param c: Context (invoke requirement)
+    :param start_hour: Start hour for checking (default: 2 AM)
+    :param end_hour: End hour for checking (default: 3 PM)
+    :param interval_minutes: Check interval in minutes (default: 30)
+    """
+    scheduler = TestScheduler()
+    scheduler.start_scheduled_tests(
+        start_hour=start_hour,
+        end_hour=end_hour,
+        interval_minutes=interval_minutes
+    )
+
+
+@task
+def tested_versions_status(c):
+    """
+    Show the status of tested versions and scheduler configuration.
+
+    :param c: Context (invoke requirement)
+    """
+    scheduler = TestScheduler()
+    status = scheduler.get_tested_versions_status()
+    print(status)
+
+
+@task
+def clear_tested_versions(c, confirm: bool = False):
+    """
+    Clear the cache of tested versions.
+
+    :param c: Context (invoke requirement)
+    :param confirm: Skip confirmation prompt if True
+    """
+    if not confirm:
+        response = Prompt.ask(
+            "[red]Are you sure you want to clear all tested versions cache? This will cause all versions to be retested on next schedule run.[/] (yes/no)",
+            default="no"
+        )
+        if response.lower() not in ['yes', 'y']:
+            print("[yellow]Operation cancelled[/]")
+            return
+
+    scheduler = TestScheduler()
+    if scheduler.clear_tested_versions():
+        print("[green]|SUCCESS| Tested versions cache cleared[/]")
 
 
 @task
