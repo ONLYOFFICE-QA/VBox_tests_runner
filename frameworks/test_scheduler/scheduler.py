@@ -126,15 +126,9 @@ class TestScheduler:
                 continue
 
             version = new_versions[test_type]
-            print(f"[green]|INFO| Running {test_type} test for version {version}[/]")
-
-            test_method = getattr(self, f"run_{test_type}_test", None)
-            if not test_method:
-                print(f"[red]|ERROR| Test method for {test_type} not found[/]")
-                continue
 
             try:
-                if test_method(version):
+                if self.run_test(test_type, version):
                     successful_tests[test_type] = version
                     print(
                         f"[green]|INFO| {test_type.capitalize()} test completed successfully[/]"
@@ -170,32 +164,28 @@ class TestScheduler:
 
         self.save_tested_versions(tested_versions)
 
-    def run_builder_test(self, version: str) -> bool:
+    def run_test(self, test_type: str, version: str) -> bool:
         """
-        Run builder test for specified version.
+        Run test for specified type and version.
 
+        :param test_type: Type of test (builder or desktop)
         :param version: Version to test
         :return: True if successful, False otherwise
         """
-        cmd = self.config.commands.builder_run_cmd.format(version=version)
-        print(f"[green]|INFO| Running builder test for version {version}[/]")
+        # Get command template based on test type
+        command_attr = f"{test_type}_run_cmd"
+        if not hasattr(self.config.commands, command_attr):
+            print(f"[red]|ERROR| Unknown test type: {test_type}[/]")
+            return False
+
+        cmd_template = getattr(self.config.commands, command_attr)
+        cmd = cmd_template.format(version=version)
+
+        print(f"[green]|INFO| Running {test_type} test for version {version}[/]")
         print(f"[green]|INFO| Command: {cmd}[/]")
+
         result = subprocess.run(cmd, shell=True)
         return result.returncode == 0
-
-    def run_desktop_test(self, version: str) -> bool:
-        """
-        Run desktop test for specified version.
-
-        :param version: Version to test
-        :return: True if successful, False otherwise
-        """
-        cmd = self.config.commands.desktop_run_cmd.format(version=version)
-        print(f"[green]|INFO| Running desktop test for version {version}[/]")
-        print(f"[green]|INFO| Command: {cmd}[/]")
-        result = subprocess.run(cmd, shell=True)
-        return result.returncode == 0
-
 
     def start_scheduled_tests(
         self,
