@@ -105,9 +105,7 @@ class TestSchedulerConfigModel(BaseModel):
     scheduling: SchedulingConfigModel
     commands: CommandConfigModel
     versions: VersionConfigModel
-    tested_versions_file: constr(strip_whitespace=True, min_length=1) = (
-        "tested_versions.json"
-    )
+    tested_versions_file: constr(strip_whitespace=True, min_length=1) = "tested_versions.json"
     cache_max_versions: conint(ge=1) = 10
 
 

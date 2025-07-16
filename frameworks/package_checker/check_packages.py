@@ -89,21 +89,23 @@ class PackageURLChecker:
             self.logger.error(f"Error during URL checking: {e}")
             raise
 
-    def check_versions(self, base_version: str, max_builds: int = 200) -> None:
+    def check_versions(self, base_version: str, max_builds: int = 200, stdout: bool = True) -> None:
         """
         Check versions and update the report.
 
         :param base_version: The base version string (x.x.x).
         :param max_builds: Maximum number of builds to check upwards.
+        :param stdout: Whether to print results to console.
         """
-        asyncio.run(self.find_latest_valid_version(base_version=base_version, max_builds=max_builds))
+        asyncio.run(self.find_latest_valid_version(base_version=base_version, max_builds=max_builds, stdout=stdout))
 
     async def find_latest_valid_version(
             self,
             base_version: str,
             max_builds: int = 200,
             categories: Optional[List[str]] = None,
-            names: Optional[List[str]] = None
+            names: Optional[List[str]] = None,
+            stdout: bool = True
     ) -> Optional[str]:
         """
         Find the most recent version with all required URLs present.
@@ -128,9 +130,10 @@ class PackageURLChecker:
             results = await self.check_urls(versions=[v], categories=categories, names=names)
 
             if all(r.exists is True for r in results):
-                print(f"[green]✅ All packages found in version {v}[/green]")
+                if stdout:
+                    print(f"[green]✅ All packages found in version {v}[/green]")
                 return str(v)
-            return print(f"[dim]❌ Not all packages found in version {v}[/dim]")
+            return print(f"[dim]❌ Not all packages found in version {v}[/dim]") if stdout else None
 
         tasks = [check_version(v) for v in versions]
 

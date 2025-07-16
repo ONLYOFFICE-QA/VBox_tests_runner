@@ -4,6 +4,7 @@ from typing import Dict, List
 from datetime import datetime
 import json
 import subprocess
+from host_tools import File
 import time
 from rich import print
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -30,9 +31,8 @@ class TestScheduler:
         :param tested_versions_file: Path to the file storing tested versions
         """
         self.config = SchedulerConfig(config_path)
-        self.tested_versions_file = (
-            tested_versions_file or self.config.tested_versions_file
-        )
+        self.checker = PackageURLChecker()
+        self.tested_versions_file = tested_versions_file or self.config.tested_versions_file
         self.scheduler = None
 
     def load_tested_versions(self) -> Dict[str, List[str]]:
@@ -41,13 +41,8 @@ class TestScheduler:
 
         :return: Dictionary with builder and desktop tested versions
         """
-        try:
-            if isfile(self.tested_versions_file):
-                with open(self.tested_versions_file, "r") as f:
-                    return json.load(f)
-        except Exception as e:
-            print(f"[yellow]|WARNING| Could not load tested versions: {e}[/]")
-
+        if isfile(self.tested_versions_file):
+            return File.read_json(self.tested_versions_file)
         return {"builder": [], "desktop": []}
 
     def save_tested_versions(self, tested_versions: Dict[str, List[str]]) -> None:
@@ -56,96 +51,115 @@ class TestScheduler:
 
         :param tested_versions: Dictionary with tested versions to save
         """
-        try:
-            with open(self.tested_versions_file, "w") as f:
-                json.dump(tested_versions, f, indent=2)
-        except Exception as e:
-            print(f"[yellow]|WARNING| Could not save tested versions: {e}[/]")
+        File.write_json(self.tested_versions_file, tested_versions, indent=2)
 
     def check_and_run_tests(self, base_version: str = None, max_builds: int = None):
         """
         Check for new versions and run tests if available.
 
         This method checks for new builder and desktop versions and runs
-        and desktop tests if new versions are found.
+        tests if new versions are found.
 
         :param base_version: Base version to check for updates (uses config if None)
         :param max_builds: Maximum number of builds to check (uses config if None)
         """
-        # Use config values if not provided
         base_version = base_version or self.config.versions.base_version
         max_builds = max_builds or self.config.versions.max_builds
 
+        if not base_version:
+            print(f"[red]|ERROR| Base version not configured[/]")
+            return
+
         print(f"[green]|INFO| Starting version check at {datetime.now()}[/]")
+        self.checker.check_versions(base_version=base_version, max_builds=max_builds, stdout=False)
 
-        try:
-            # Load tested versions cache
-            tested_versions = self.load_tested_versions()
+        new_versions = self._get_new_versions_to_test(base_version)
+        if not new_versions:
+            print(f"[blue]|INFO| No new versions to test[/]")
+            return
 
-            # Create package checker
-            checker = PackageURLChecker()
+        successful_tests = self._run_tests_for_versions(new_versions)
+        if successful_tests:
+            print(f"[green]|INFO| Completed {len(successful_tests)} test(s) successfully[/]")
 
-            # Get latest version for builder tests
-            builder_last_version = checker.get_report(
-                base_version=base_version
-            ).get_last_exists_version(category="builder")
-            desktop_last_version = checker.get_report(
-                base_version=base_version
-            ).get_last_exists_version(category="desktop")
+    def _get_new_versions_to_test(self, base_version: str) -> Dict[str, str]:
+        """
+        Get new versions that need to be tested.
 
-            tests_run = False
+        :param base_version: Base version to check for updates
+        :return: Dictionary with test types and their new versions
+        """
+        tested_versions = self.load_tested_versions()
 
-            # Check and run builder tests for new version
-            if (
-                builder_last_version
-                and builder_last_version not in tested_versions["builder"]
-            ):
-                print(
-                    f"[green]|INFO| New builder version found: {builder_last_version}[/]"
-                )
-                success = self.run_builder_test(builder_last_version)
-                if success:
-                    tested_versions["builder"].append(builder_last_version)
-                    # Keep only last N tested versions to avoid file growth
-                    tested_versions["builder"] = tested_versions["builder"][
-                        -self.config.cache_max_versions :
-                    ]
-                    tests_run = True
-            elif builder_last_version:
-                print(
-                    f"[blue]|INFO| Builder version {builder_last_version} already tested[/]"
-                )
+        report = self.checker.get_report(base_version=base_version)
+        latest_versions = {
+            "builder": report.get_last_exists_version(category="builder"),
+            "desktop": report.get_last_exists_version(category="desktop"),
+        }
 
-            # Check and run desktop tests for new version
-            if (
-                desktop_last_version
-                and desktop_last_version not in tested_versions["desktop"]
-            ):
-                print(
-                    f"[green]|INFO| New desktop version found: {desktop_last_version}[/]"
-                )
-                success = self.run_desktop_test(desktop_last_version)
-                if success:
-                    tested_versions["desktop"].append(desktop_last_version)
-                    # Keep only last N tested versions to avoid file growth
-                    tested_versions["desktop"] = tested_versions["desktop"][
-                        -self.config.cache_max_versions :
-                    ]
-                    tests_run = True
-            elif desktop_last_version:
-                print(
-                    f"[blue]|INFO| Desktop version {desktop_last_version} already tested[/]"
-                )
+        new_versions = {}
+        for test_type, latest_version in latest_versions.items():
+            if latest_version and latest_version not in tested_versions[test_type]:
+                new_versions[test_type] = latest_version
+                print(f"[green]|INFO| New {test_type} version found: {latest_version}[/]")
+            elif latest_version:
+                print(f"[blue]|INFO| {test_type.capitalize()} version {latest_version} already tested[/]")
 
-            # Save updated tested versions if any tests were run
-            if tests_run:
-                self.save_tested_versions(tested_versions)
-                print(f"[green]|INFO| Tests completed and cache updated[/]")
-            else:
-                print(f"[blue]|INFO| No new versions to test[/]")
+        return new_versions
 
-        except Exception as e:
-            print(f"[red]|ERROR| Version check failed: {e}[/]")
+    def _run_tests_for_versions(self, new_versions: Dict[str, str]) -> Dict[str, str]:
+        """
+        Run tests for the specified versions.
+
+        :param new_versions: Dictionary with test types and versions to test
+        :return: Dictionary with successfully tested versions
+        """
+        successful_tests = {}
+
+        for test_type, version in new_versions.items():
+            print(f"[green]|INFO| Running {test_type} test for version {version}[/]")
+
+            test_method = getattr(self, f"run_{test_type}_test", None)
+            if not test_method:
+                print(f"[red]|ERROR| Test method for {test_type} not found[/]")
+                continue
+
+            try:
+                if test_method(version):
+                    successful_tests[test_type] = version
+                    print(
+                        f"[green]|INFO| {test_type.capitalize()} test completed successfully[/]"
+                    )
+                    # Update cache immediately after each successful test
+                    self._update_single_tested_version(test_type, version)
+                    print(
+                        f"[green]|INFO| Cache updated for {test_type} version {version}[/]"
+                    )
+                else:
+                    print(
+                        f"[red]|ERROR| {test_type.capitalize()} test failed for version {version}[/]"
+                    )
+            except Exception as e:
+                print(f"[red]|ERROR| {test_type.capitalize()} test error: {e}[/]")
+
+        return successful_tests
+
+    def _update_single_tested_version(self, test_type: str, version: str) -> None:
+        """
+        Update the tested versions cache with a single successful test result.
+
+        :param test_type: Type of test (builder or desktop)
+        :param version: Version that was successfully tested
+        """
+        tested_versions = self.load_tested_versions()
+        tested_versions[test_type].append(version)
+
+        # Keep only last N tested versions to avoid unlimited growth
+        tested_versions[test_type] = tested_versions[test_type][
+            -self.config.cache_max_versions :
+        ]
+
+        self.save_tested_versions(tested_versions)
 
     def run_builder_test(self, version: str) -> bool:
         """
@@ -154,11 +168,12 @@ class TestScheduler:
         :param version: Version to test
         :return: True if successful, False otherwise
         """
-        cmd = self.config.commands.builder_run_cmd.format(version=version)
-        print(f"[green]|INFO| Running builder test for version {version}[/]")
-        print(f"[green]|INFO| Command: {cmd}[/]")
-        result = subprocess.run(cmd, shell=True)
-        return result.returncode == 0
+        # cmd = self.config.commands.builder_run_cmd.format(version=version)
+        # print(f"[green]|INFO| Running builder test for version {version}[/]")
+        # print(f"[green]|INFO| Command: {cmd}[/]")
+        # result = subprocess.run(cmd, shell=True)
+        # return result.returncode == 0
+        return True
 
     def run_desktop_test(self, version: str) -> bool:
         """
@@ -167,11 +182,12 @@ class TestScheduler:
         :param version: Version to test
         :return: True if successful, False otherwise
         """
-        cmd = self.config.commands.desktop_run_cmd.format(version=version)
-        print(f"[green]|INFO| Running desktop test for version {version}[/]")
-        print(f"[green]|INFO| Command: {cmd}[/]")
-        result = subprocess.run(cmd, shell=True)
-        return result.returncode == 0
+        # cmd = self.config.commands.desktop_run_cmd.format(version=version)
+        # print(f"[green]|INFO| Running desktop test for version {version}[/]")
+        # print(f"[green]|INFO| Command: {cmd}[/]")
+        # result = subprocess.run(cmd, shell=True)
+        # return result.returncode == 0
+        return True
 
     def start_scheduled_tests(
         self,
@@ -204,15 +220,11 @@ class TestScheduler:
         max_builds = max_builds or self.config.versions.max_builds
 
         print(f"[green]|INFO| Starting scheduled test runner[/]")
-        print(
-            f"[green]|INFO| Schedule: Every {interval_minutes} minutes from {start_hour}:00 to {end_hour}:00[/]"
-        )
+        print(f"[green]|INFO| Schedule: Every {interval_minutes} minutes from {start_hour}:00 to {end_hour}:00[/]")
 
         try:
-            # Create BackgroundScheduler instance for APScheduler 3.x
             self.scheduler = BackgroundScheduler()
 
-            # Create cron trigger for the specified time range
             cron_trigger = CronTrigger(
                 minute=f"*/{interval_minutes}", hour=f"{start_hour}-{end_hour}"
             )

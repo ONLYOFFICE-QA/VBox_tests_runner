@@ -7,10 +7,10 @@ including desktop tests, builder tests, and scheduled test execution.
 
 Usage examples:
     # Run desktop tests manually:
-    invoke desktop-test --version="24.0.0" --telegram
+    invoke desktop-test --version="9.0.4" --telegram
 
     # Run builder tests manually:
-    invoke builder-test --version="24.0.0" --connect-portal
+    invoke builder-test --version="9.0.4" --connect-portal
 
     # Start scheduled test runner (runs every 30 minutes between 2 AM and 3 PM):
     invoke scheduled-tests
@@ -19,10 +19,10 @@ Usage examples:
     invoke scheduled-tests --start-hour=1 --end-hour=16 --interval-minutes=60
 
     # Check package availability:
-    invoke check-package --version="24.0.0" --name="desktop"
+    invoke check-package --version="9.0.4" --name="desktop"
 
     # Get latest version:
-    invoke get-versions --version-base="24.0" --name="builder"
+    invoke get-versions --version-base="9.0.4" --name="builder"
 """
 from os import getcwd, system
 from os.path import isfile, join
@@ -50,7 +50,14 @@ from tests import (
 
 
 @task
-def scheduled_tests(c, start_hour: int = 2, end_hour: int = 15, interval_minutes: int = 30):
+def scheduled_tests(
+    c,
+    start_hour: int = 2,
+    end_hour: int = 15,
+    interval_minutes: int = 30,
+    base_version: str = None,
+    max_builds: int = None,
+):
     """
     Run scheduled version checking and testing every 30 minutes between 2 AM and 3 PM.
 
@@ -69,7 +76,9 @@ def scheduled_tests(c, start_hour: int = 2, end_hour: int = 15, interval_minutes
     scheduler.start_scheduled_tests(
         start_hour=start_hour,
         end_hour=end_hour,
-        interval_minutes=interval_minutes
+        interval_minutes=interval_minutes,
+        base_version=base_version,
+        max_builds=max_builds,
     )
 
 
@@ -95,10 +104,11 @@ def clear_tested_versions(c, confirm: bool = False):
     """
     if not confirm:
         response = Prompt.ask(
-            "[red]Are you sure you want to clear all tested versions cache? This will cause all versions to be retested on next schedule run.[/] (yes/no)",
-            default="no"
+            "[red]Are you sure you want to clear all tested versions cache? "
+            "This will cause all versions to be retested on next schedule run.[/] (yes/no)",
+            default="no",
         )
-        if response.lower() not in ['yes', 'y']:
+        if response.lower() not in ["yes", "y"]:
             print("[yellow]Operation cancelled[/]")
             return
 
@@ -124,7 +134,7 @@ def desktop_test(
     flatpak: bool = False,
     only_portal: bool = False,
     open_retries: Optional[int] = None,
-    retest: bool = False
+    retest: bool = False,
 ):
     """
     Run desktop tests and send reports.
@@ -152,7 +162,10 @@ def desktop_test(
         version=version or Prompt.ask("[red]Please enter version"),
         update_from=update_from_version,
         telegram=detailed_telegram,
-        config_path=join(getcwd(),"custom_config.json" if custom_config else "desktop_tests_config.json"),
+        config_path=join(
+            getcwd(),
+            "custom_config.json" if custom_config else "desktop_tests_config.json",
+        ),
         custom_config_mode=custom_config,
         snap=snap,
         appimage=appimage,
@@ -178,15 +191,18 @@ def desktop_test(
         raise FileNotFoundError(f"Report file {data.full_report_path} not found")
 
     report.send_to_tg(data=data) if not name and not only_portal and telegram else None
-    report.send_to_report_portal(
-        data.portal_project_name, data.package_name
-    ) if connect_portal or only_portal else None
+    (
+        report.send_to_report_portal(data.portal_project_name, data.package_name)
+        if connect_portal or only_portal
+        else None
+    )
 
     error_vms = report.get_error_vm_list()
     if len(error_vms) > 0:
         print(f"[red]|ERROR| Tests for the following VMs have errors: {error_vms}")
     else:
         print("[green]All tests passed![/]")
+
 
 @task
 def builder_test(
@@ -220,7 +236,10 @@ def builder_test(
 
     if not only_portal:
         builder = DocBuilder(version=data.version)
-        builder.get(dep_test_branch=data.dep_test_branch, builder_samples_branch=data.document_builder_samples_branch)
+        builder.get(
+            dep_test_branch=data.dep_test_branch,
+            builder_samples_branch=data.document_builder_samples_branch,
+        )
         builder.compress_dep_tests(delete=False)
         Dir.delete(builder.local_path.dep_test_path)
 
@@ -233,7 +252,7 @@ def builder_test(
             for vm in vms:
                 BuilderTests(vm, data).run(headless=headless)
 
-        data.report.get_full()
+    data.report.get_full()
 
     if only_portal and not isfile(report_path):
         raise FileNotFoundError(f"Report file {report_path} not found")
@@ -404,7 +423,12 @@ def check_package(c, version: str, name: Optional[str] = None):
 
 
 @task
-def get_versions(c, version_base: str, name: Optional[str] = None, max_builds: int = 200):
+def get_versions(
+    c,
+    version_base: str,
+    name: Optional[str] = None,
+    max_builds: int = 200
+):
     """
     Get the latest available version and check its package.
 
