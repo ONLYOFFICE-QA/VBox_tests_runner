@@ -41,7 +41,6 @@ class CSVReport(Report):
 
         return self.__df
 
-    
     def update_df(self):
         """Update the DataFrame with the latest data from the report file.
 

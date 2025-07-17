@@ -1,0 +1,47 @@
+---
+
+1. **Directory Structure**:
+
+   - All modules should be organized into appropriate directories such as `frameworks`, `tests`, and `vm_configs`.
+   - Each directory should contain an `__init__.py` file if it is a Python package.
+
+2. **File and Module Naming**:
+
+   - File and module names should be in lowercase and use underscores to separate words (e.g., `test_tools.py`).
+
+3. **Documentation**:
+
+   - Each module should contain comments and documentation explaining its purpose and main functions.
+   - Use docstrings for functions and classes with parameter descriptions.
+
+4. **Testing**:
+
+   - All new functions and modules should be accompanied by appropriate unit tests.
+   - Tests should be organized in the `tests` directory and follow a similar structure to the main code.
+
+5. **Configuration Files**:
+   - All configuration files should be placed in appropriate directories such as `vm_configs` and `frameworks/package_checker/config`.
+1. **Directory Structure**:
+
+   - All modules should be organized into appropriate directories such as `frameworks`, `tests`, and `vm_configs`.
+   - Each directory should contain an `__init__.py` file if it is a Python package.
+
+2. **File and Module Naming**:
+
+   - File and module names should be in lowercase and use underscores to separate words (e.g., `test_tools.py`).
+
+3. **Documentation**:
+
+   - Each module should contain comments and documentation explaining its purpose and main functions.
+   - Use docstrings for functions and classes with parameter descriptions.
+
+4. **Testing**:
+
+   - All new functions and modules should be accompanied by appropriate unit tests.
+   - Tests should be organized in the `tests` directory and follow a similar structure to the main code.
+
+5. **Configuration Files**:
+   - All configuration files should be placed in appropriate directories such as `vm_configs` and `frameworks/package_checker/config`.
+
+alwaysApply: true
+---
