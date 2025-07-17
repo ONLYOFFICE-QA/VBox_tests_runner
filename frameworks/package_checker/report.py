@@ -41,6 +41,14 @@ class CSVReport(Report):
 
         return self.__df
 
+    
+    def update_df(self):
+        """Update the DataFrame with the latest data from the report file.
+
+        :return: DataFrame with report data or None if file doesn't exist
+        """
+        self.__df = pd.read_csv(self.path, delimiter=self.delimiter)
+
     @property
     def exists(self) -> bool:
         """Check if the report file exists.

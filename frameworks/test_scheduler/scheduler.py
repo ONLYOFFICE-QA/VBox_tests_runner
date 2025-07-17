@@ -248,6 +248,7 @@ class TestScheduler:
         """
         tested_versions = self.load_tested_versions()
         report = self.checker.get_report(base_version=base_version)
+        report.update_df()
 
         latest_versions = {
             "builder": report.get_last_exists_version(category="builder"),
