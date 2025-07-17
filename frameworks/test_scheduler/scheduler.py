@@ -118,8 +118,8 @@ class TestScheduler:
         print(f"[green]|INFO| Running {test_type} test for version {version}[/]")
         print(f"[green]|INFO| Command: {cmd}[/]")
 
-        # result = subprocess.run(cmd, shell=True)
-        return True
+        result = subprocess.run(cmd, shell=True)
+        return result.returncode == 0
 
 
     def start_scheduled_tests(
