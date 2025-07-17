@@ -52,9 +52,9 @@ from tests import (
 @task
 def scheduled_tests(
     c,
-    start_hour: int = 2,
-    end_hour: int = 15,
-    interval_minutes: int = 30,
+    start_hour: int = None,
+    end_hour: int = None,
+    interval_minutes: int = None,
     base_version: str = None,
     max_builds: int = None,
 ):

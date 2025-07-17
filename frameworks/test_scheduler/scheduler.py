@@ -140,15 +140,9 @@ class TestScheduler:
         :param max_builds: Maximum number of builds to check (uses config if None)
         """
         # Use config values as defaults
-        start_hour = (
-            start_hour if start_hour is not None else self.config.scheduling.start_hour
-        )
-        end_hour = end_hour if end_hour is not None else self.config.scheduling.end_hour
-        interval_minutes = (
-            interval_minutes
-            if interval_minutes is not None
-            else self.config.scheduling.interval_minutes
-        )
+        start_hour = start_hour or self.config.scheduling.start_hour
+        end_hour = end_hour or self.config.scheduling.end_hour
+        interval_minutes = interval_minutes or self.config.scheduling.interval_minutes
         base_version = base_version or self.config.versions.base_version
         max_builds = max_builds or self.config.versions.max_builds
 
@@ -265,13 +259,9 @@ class TestScheduler:
 
             if latest_version not in tested_versions[test_type]:
                 new_versions[test_type] = latest_version
-                print(
-                    f"[green]|INFO| New {test_type} version found: {latest_version}[/]"
-                )
+                print(f"[green]|INFO| New {test_type} version found: {latest_version}[/]")
             else:
-                print(
-                    f"[blue]|INFO| {test_type.capitalize()} version {latest_version} already tested[/]"
-                )
+                print(f"[blue]|INFO| {test_type.capitalize()} version {latest_version} already tested[/]")
 
         return new_versions
 
@@ -308,14 +298,10 @@ class TestScheduler:
         """
         try:
             if self.run_test(test_type, version):
-                print(
-                    f"[green]|INFO| {test_type.capitalize()} test completed successfully[/]"
-                )
+                print(f"[green]|INFO| {test_type.capitalize()} test completed successfully[/]")
                 return True
             else:
-                print(
-                    f"[red]|ERROR| {test_type.capitalize()} test failed for version {version}[/]"
-                )
+                print(f"[red]|ERROR| {test_type.capitalize()} test failed for version {version}[/]")
                 return False
         except Exception as e:
             print(f"[red]|ERROR| {test_type.capitalize()} test error: {e}[/]")
@@ -388,16 +374,12 @@ class TestScheduler:
 
         :return: List of cache file status lines
         """
-        info_lines = [
-            f"\n[yellow]Tested versions cache file: {self.tested_versions_file}[/]"
-        ]
+        info_lines = [f"\n[yellow]Tested versions cache file: {self.tested_versions_file}[/]"]
 
         if isfile(self.tested_versions_file):
             size = getsize(self.tested_versions_file)
             mtime = datetime.fromtimestamp(getmtime(self.tested_versions_file))
-            info_lines.append(
-                f"[yellow]Cache file size: {size} bytes, last modified: {mtime}[/]"
-            )
+            info_lines.append(f"[yellow]Cache file size: {size} bytes, last modified: {mtime}[/]")
         else:
             info_lines.append("[yellow]Cache file does not exist[/]")
 
