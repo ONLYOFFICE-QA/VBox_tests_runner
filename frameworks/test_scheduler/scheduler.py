@@ -256,7 +256,6 @@ class TestScheduler:
             "desktop": report.get_last_exists_version(category="desktop"),
         }
 
-        print(latest_versions)
 
         new_versions = {}
         for test_type in self.config.test_execution_order:
