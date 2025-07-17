@@ -1,6 +1,6 @@
 {
   "token_file": "",
-  "chat_id_file": "builder_chat",
+  "chat_id_file": "",
   "dep_test_branch": "",
   "build_tools_branch": "",
   "office_js_api_branch": "",
