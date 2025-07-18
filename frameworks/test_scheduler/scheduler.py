@@ -85,7 +85,7 @@ class TestScheduler:
         self.checker.check_versions(
             base_version=base_version,
             max_builds=max_builds,
-            stdout=False
+            stdout=True
         )
 
         new_versions = self._get_new_versions_to_test(base_version)
