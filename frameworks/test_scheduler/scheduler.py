@@ -89,6 +89,7 @@ class TestScheduler:
         )
 
         new_versions = self._get_new_versions_to_test(base_version)
+        print(f"[green]|INFO| New versions to test: {new_versions}[/]")
         if not new_versions:
             print("[blue]|INFO| No new versions to test[/]")
             return
