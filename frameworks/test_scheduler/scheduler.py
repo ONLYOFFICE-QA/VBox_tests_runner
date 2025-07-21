@@ -243,14 +243,16 @@ class TestScheduler:
         :return: Dictionary mapping test types to their new versions
         """
         tested_versions = self.load_tested_versions()
+        print(f"[green]|INFO| Tested versions: {tested_versions}[/]")
         report = self.checker.get_report(base_version=base_version)
+        print(f"[green]|INFO| Report: {report}[/]")
         report.update_df()
 
         latest_versions = {
             "builder": report.get_last_exists_version(category="builder"),
             "desktop": report.get_last_exists_version(category="desktop"),
         }
-
+        print(f"[green]|INFO| Latest versions: {latest_versions}[/]")
 
         new_versions = {}
         for test_type in self.config.test_execution_order:
