@@ -152,14 +152,14 @@ class TestScheduler:
         :param recheck_count: Number of latest versions to recheck (uses config if None)
         :param recheck_all: If True, recheck all versions in report (uses config if None)
         """
-        # Use config values as defaults
+
         start_hour = start_hour or self.config.scheduling.start_hour
         end_hour = end_hour or self.config.scheduling.end_hour
         interval_minutes = interval_minutes or self.config.scheduling.interval_minutes
         base_version = base_version or self.config.versions.base_version
         max_builds = max_builds or self.config.versions.max_builds
-        recheck_count = recheck_count if recheck_count is not None else self.config.versions.recheck_count
-        recheck_all = recheck_all if recheck_all is not None else self.config.versions.recheck_all
+        recheck_count = recheck_count or self.config.versions.recheck_count
+        recheck_all = recheck_all or self.config.versions.recheck_all
 
         print("[green]|INFO| Starting scheduled test runner[/]")
         print(
