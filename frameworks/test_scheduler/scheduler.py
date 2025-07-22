@@ -66,16 +66,22 @@ class TestScheduler:
     def check_and_run_tests(
         self,
         base_version: Optional[str] = None,
-        max_builds: Optional[int] = None
+        max_builds: Optional[int] = None,
+        recheck_count: Optional[int] = None,
+        recheck_all: Optional[bool] = None
     ):
         """
         Check for new versions and run tests if available.
 
         :param base_version: Base version to check for updates (uses config if None)
         :param max_builds: Maximum number of builds to check (uses config if None)
+        :param recheck_count: Number of latest versions to recheck (uses config if None)
+        :param recheck_all: If True, recheck all versions in report (uses config if None)
         """
         base_version = base_version or self.config.versions.base_version
         max_builds = max_builds or self.config.versions.max_builds
+        recheck_count = recheck_count or self.config.versions.recheck_count
+        recheck_all = recheck_all or self.config.versions.recheck_all
 
         if not base_version:
             print("[red]|ERROR| Base version not configured[/]")
@@ -85,7 +91,9 @@ class TestScheduler:
         self.checker.check_versions(
             base_version=base_version,
             max_builds=max_builds,
-            stdout=True
+            stdout=True,
+            recheck_count=recheck_count,
+            recheck_all=recheck_all
         )
 
         new_versions = self._get_new_versions_to_test(base_version)
@@ -130,6 +138,8 @@ class TestScheduler:
         interval_minutes: Optional[int] = None,
         base_version: Optional[str] = None,
         max_builds: Optional[int] = None,
+        recheck_count: Optional[int] = None,
+        recheck_all: Optional[bool] = None,
     ):
         """
         Start scheduled test execution with specified parameters.
@@ -139,6 +149,8 @@ class TestScheduler:
         :param interval_minutes: Check interval in minutes (uses config if None)
         :param base_version: Base version to check for updates (uses config if None)
         :param max_builds: Maximum number of builds to check (uses config if None)
+        :param recheck_count: Number of latest versions to recheck (uses config if None)
+        :param recheck_all: If True, recheck all versions in report (uses config if None)
         """
         # Use config values as defaults
         start_hour = start_hour or self.config.scheduling.start_hour
@@ -146,6 +158,8 @@ class TestScheduler:
         interval_minutes = interval_minutes or self.config.scheduling.interval_minutes
         base_version = base_version or self.config.versions.base_version
         max_builds = max_builds or self.config.versions.max_builds
+        recheck_count = recheck_count if recheck_count is not None else self.config.versions.recheck_count
+        recheck_all = recheck_all if recheck_all is not None else self.config.versions.recheck_all
 
         print("[green]|INFO| Starting scheduled test runner[/]")
         print(
@@ -159,6 +173,8 @@ class TestScheduler:
                 interval_minutes=interval_minutes,
                 base_version=base_version,
                 max_builds=max_builds,
+                recheck_count=recheck_count,
+                recheck_all=recheck_all,
             )
             self._run_scheduler()
         except Exception as e:
@@ -245,8 +261,7 @@ class TestScheduler:
         tested_versions = self.load_tested_versions()
         print(f"[green]|INFO| Tested versions: {tested_versions}[/]")
         report = self.checker.get_report(base_version=base_version)
-        print(f"[green]|INFO| Report: {report}[/]")
-        report.update_df()
+        print(f"[green]|INFO| Report: {report.path}[/]")
 
         latest_versions = {
             "builder": report.get_last_exists_version(category="builder"),
@@ -333,6 +348,8 @@ class TestScheduler:
         interval_minutes: int,
         base_version: str,
         max_builds: int,
+        recheck_count: int,
+        recheck_all: bool,
     ) -> None:
         """
         Initialize the background scheduler with specified parameters.
@@ -342,12 +359,14 @@ class TestScheduler:
         :param interval_minutes: Check interval in minutes
         :param base_version: Base version to check
         :param max_builds: Maximum builds to check
+        :param recheck_count: Number of latest versions to recheck
+        :param recheck_all: If True, recheck all versions in report
         """
         self.scheduler = BackgroundScheduler()
         cron_trigger = CronTrigger(minute=f"*/{interval_minutes}", hour=f"{start_hour}-{end_hour}")
 
         self.scheduler.add_job(
-            func=lambda: self.check_and_run_tests(base_version, max_builds),
+            func=lambda: self.check_and_run_tests(base_version, max_builds, recheck_count, recheck_all),
             trigger=cron_trigger,
             id="version_check_and_tests",
             replace_existing=True,

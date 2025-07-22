@@ -23,8 +23,9 @@ class CSVReport(Report):
 
         self.path = Path(path)
         self.fieldnames = ['version', 'build', 'category', 'name', 'url', 'exists', 'status_code', 'error']
+        self.keys = ['version', 'category', 'name']
         self.delimiter = delimiter
-        self.encoding=encoding
+        self.encoding = encoding
         self.exists_df = self.df if self.exists else None
         self._ensure_file()
 
@@ -75,12 +76,11 @@ class CSVReport(Report):
         :raises OSError: If file writing fails
         """
         existing_df = self.exists_df
-        keys = ['version', 'category', 'name']
         new_rows = [asdict(r) for r in results]
 
         if existing_df is not None and not existing_df.empty:
             new_df = pd.DataFrame(new_rows)
-            merged = new_df.merge(existing_df[keys], on=keys, how='left', indicator=True)
+            merged = new_df.merge(existing_df[self.keys], on=self.keys, how='left', indicator=True)
             filtered_rows = new_df[merged['_merge'] == 'left_only']
         else:
             filtered_rows = pd.DataFrame(new_rows)
@@ -90,11 +90,34 @@ class CSVReport(Report):
                 writer = csv.DictWriter(f, fieldnames=self.fieldnames, delimiter=self.delimiter)
                 writer.writerows(filtered_rows.to_dict(orient='records'))
 
-    def get_last_exists_version(self, name: Optional[str] = None, category: Optional[str] = None) -> Optional[str]:
-        """Get the latest version where the package exists in the report.
+    def update_results(self, results: List[URLCheckResult]):
+        """Update existing URL check results in the report file.
+
+        :param results: List of URLCheckResult objects to update
+        :raises OSError: If file operations fail
+        """
+        if not self.exists or not results:
+            return
+
+        existing_df = self.df.copy()
+        new_results_df = pd.DataFrame([asdict(r) for r in results])
+        updated_df = existing_df.set_index(self.keys).sort_index()
+        new_df = new_results_df.set_index(self.keys).sort_index()
+
+        updated_df.update(new_df)
+
+        final_df = updated_df.reset_index()
+        final_df.to_csv(self.path, sep=self.delimiter, index=False, encoding=self.encoding)
+
+        self.__df = None
+        self.__cached_mtime = None
+
+    def get_last_exists_version(self, name: Optional[str] = None, category: Optional[str] = None, any_exists: bool = True) -> Optional[str]:
+        """Get the latest version where packages of the category exist in the report.
 
         :param name: Name of the package to check
         :param category: Category of the package to check
+        :param any_exists: If True, find version where at least one package exists. If False, find version where all packages exist
         :return: Latest version string or None if not found
         """
         if self.df is None or self.df.empty:
@@ -108,12 +131,31 @@ class CSVReport(Report):
         if category:
             df = df[df['category'] == category.lower()]
 
-        df = df[df['exists'].astype(bool)]
-
         if df.empty:
             return None
 
-        return df.loc[df['build'].idxmax()]['version']
+        # Group by version and check packages existence based on any_exists flag
+        version_groups = df.groupby('version')
+
+        # Find versions where packages exist based on the mode
+        valid_versions = []
+        for version, group in version_groups:
+            exists_check = group['exists'].astype(bool)
+            if any_exists:
+                # At least one package exists
+                condition = exists_check.any()
+            else:
+                # All packages exist
+                condition = exists_check.all()
+
+            if condition:
+                valid_versions.append((version, group['build'].iloc[0]))
+
+        if not valid_versions:
+            return None
+
+        # Return the version with the highest build number
+        return max(valid_versions, key=lambda x: x[1])[0]
 
     def get_result(self, version: str, name: str, category: str) -> Optional[bool]:
         """
@@ -138,6 +180,20 @@ class CSVReport(Report):
 
         return bool(df['exists'].iloc[0]) if not df.empty else None
 
+    def get_latest_versions(self, count: int = 2) -> List[str]:
+        """
+        Get the latest N versions from the report based on build numbers.
+
+        :param count: Number of latest versions to return
+        :return: List of version strings ordered by build number (latest first)
+        """
+        if self.df is None or self.df.empty:
+            return []
+
+        df = self.df.copy()
+        # Get unique versions sorted by build number in descending order
+        versions = df.groupby('version')['build'].first().sort_values(ascending=False)
+        return versions.head(count).index.tolist()
 
     @property
     def last_checked_version(self) -> Optional[str]:

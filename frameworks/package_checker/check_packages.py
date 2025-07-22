@@ -89,15 +89,58 @@ class PackageURLChecker:
             self.logger.error(f"Error during URL checking: {e}")
             raise
 
-    def check_versions(self, base_version: str, max_builds: int = 200, stdout: bool = True) -> None:
+    def recheck_versions(
+            self,
+            base_version: str,
+            count: Optional[int] = 2,
+            recheck_all: bool = False,
+            categories: Optional[List[str]] = None,
+            names: Optional[List[str]] = None,
+            stdout: bool = True
+    ) -> None:
+        """
+        Recheck existing versions in the report and update their status.
+
+        :param base_version: The base version string (x.x.x).
+        :param count: Number of latest versions to recheck (None for 2).
+        :param recheck_all: If True, recheck all versions in report.
+        :param categories: Optional list of categories to check.
+        :param names: Optional list of names to check.
+        :param stdout: Whether to print results to console.
+        """
+        asyncio.run(self._recheck_latest_versions(
+            report=self.get_report(base_version=base_version),
+            categories=categories,
+            names=names,
+            stdout=stdout,
+            recheck_count=count,
+            recheck_all=recheck_all
+        ))
+
+    def check_versions(
+            self,
+            base_version: str,
+            max_builds: int = 200,
+            stdout: bool = True,
+            recheck_count: Optional[int] = 2,
+            recheck_all: bool = False
+    ) -> None:
         """
         Check versions and update the report.
 
         :param base_version: The base version string (x.x.x).
         :param max_builds: Maximum number of builds to check upwards.
         :param stdout: Whether to print results to console.
+        :param recheck_count: Number of latest versions to recheck (None to skip recheck).
+        :param recheck_all: If True, recheck all versions in report (overrides recheck_count).
         """
-        asyncio.run(self.find_latest_valid_version(base_version=base_version, max_builds=max_builds, stdout=stdout))
+        asyncio.run(self.find_latest_valid_version(
+            base_version=base_version,
+            max_builds=max_builds,
+            stdout=stdout,
+            recheck_count=recheck_count,
+            recheck_all=recheck_all
+        ))
 
     async def find_latest_valid_version(
             self,
@@ -105,7 +148,9 @@ class PackageURLChecker:
             max_builds: int = 200,
             categories: Optional[List[str]] = None,
             names: Optional[List[str]] = None,
-            stdout: bool = True
+            stdout: bool = True,
+            recheck_count: Optional[int] = 2,
+            recheck_all: bool = False
     ) -> Optional[str]:
         """
         Find the most recent version with all required URLs present.
@@ -114,10 +159,21 @@ class PackageURLChecker:
         :param max_builds: Maximum number of builds to check upwards.
         :param categories: Optional list of categories to check.
         :param names: Optional list of names to check.
+        :param stdout: Whether to print results to console.
+        :param recheck_count: Number of latest versions to recheck (None to skip recheck).
+        :param recheck_all: If True, recheck all versions in report (overrides recheck_count).
         :return: The latest valid version string or None.
         """
 
-        last_version = self.get_report(base_version=base_version).last_checked_version
+        report = self.get_report(base_version=base_version)
+
+        # Check and update status of existing versions in report
+        if recheck_all or recheck_count:
+            await self._recheck_latest_versions(
+                report, categories, names, stdout, recheck_count, recheck_all
+            )
+
+        last_version = report.last_checked_version
         start_build = self._get_version(last_version).build if last_version else 0
         end_build = start_build + max_builds
 
@@ -226,6 +282,69 @@ class PackageURLChecker:
             return "develop"
         return "hotfix"
 
+    async def _recheck_latest_versions(
+            self,
+            report,
+            categories: Optional[List[str]] = None,
+            names: Optional[List[str]] = None,
+            stdout: bool = True,
+            recheck_count: Optional[int] = 2,
+            recheck_all: bool = False
+    ) -> None:
+        """
+        Recheck and update status of versions in the report.
+
+        :param report: CSVReport instance to check and update
+        :param categories: Optional list of categories to check
+        :param names: Optional list of names to check
+        :param stdout: Whether to print results to console
+        :param recheck_count: Number of latest versions to recheck
+        :param recheck_all: If True, recheck all versions in report
+        """
+        if recheck_all:
+            # Get all unique versions from the report
+            if report.df is None or report.df.empty:
+                return
+            latest_versions = report.df['version'].unique().tolist()
+            if stdout:
+                print(f"[blue]Rechecking ALL {len(latest_versions)} versions in report[/blue]")
+        else:
+            latest_versions = report.get_latest_versions(count=recheck_count or 1)
+            if stdout:
+                print(f"[blue]Rechecking latest {len(latest_versions)} versions: {latest_versions}[/blue]")
+        if not latest_versions:
+            return
+
+        updated_results = []
+
+        async with self._get_session() as session:
+            for version_str in latest_versions:
+                version = self._get_version(version_str)
+                params_list = self.generate_urls(version, categories=categories, names=names)
+
+                # Check current status of packages for this version
+                version_tasks = [self._check_url_with_retry(session, param) for param in params_list]
+                current_results = await asyncio.gather(*version_tasks, return_exceptions=False)
+
+                # Check if any statuses have changed
+                has_changes = False
+                for result in current_results:
+                    old_result = report.get_result(version=result.version, name=result.name, category=result.category)
+                    if old_result != result.exists:
+                        has_changes = True
+                        if stdout:
+                            status_change = f"{'❌→✅' if result.exists else '✅→❌'}"
+                            print(f"[yellow]{status_change} {result.category}.{result.name} in {result.version}[/yellow]")
+
+                if has_changes:
+                    updated_results.extend(current_results)
+                    if stdout:
+                        print(f"[green]Updated status for version {version_str}[/green]")
+
+        if updated_results:
+            report.update_results(updated_results)
+            if stdout:
+                print(f"[green]Report updated with {len(updated_results)} package status changes[/green]")
 
     @asynccontextmanager
     async def _get_session(self):

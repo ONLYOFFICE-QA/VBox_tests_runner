@@ -73,10 +73,14 @@ class VersionConfigModel(BaseModel):
     Attributes:
         base_version (str): Base version to check for updates.
         max_builds (int): Maximum number of builds to check (must be >= 1).
+        recheck_count (int): Number of latest versions to recheck (0 to disable recheck).
+        recheck_all (bool): If True, recheck all versions in report.
     """
 
     base_version: constr(strip_whitespace=True, min_length=1)
     max_builds: conint(ge=1)
+    recheck_count: conint(ge=0) = 2
+    recheck_all: bool = False
 
     @field_validator("base_version")
     def validate_base_version_format(cls, v):
@@ -192,6 +196,8 @@ class SchedulerConfig:
             "versions": {
                 "base_version": config_data.get("base_version"),
                 "max_builds": config_data.get("max_builds"),
+                "recheck_count": config_data.get("recheck_count", 2),
+                "recheck_all": config_data.get("recheck_all", False),
             },
             "tested_versions_file": config_data.get(
                 "tested_versions_file", "tested_versions.json"
@@ -219,6 +225,8 @@ class SchedulerConfig:
             f"  [blue]Versions:[/]\n"
             f"    Base Version: {self.versions.base_version}\n"
             f"    Max Builds: {self.versions.max_builds}\n"
+            f"    Recheck Count: {self.versions.recheck_count}\n"
+            f"    Recheck All: {self.versions.recheck_all}\n"
             f"  [blue]Cache:[/]\n"
             f"    Tested Versions File: {self.tested_versions_file}\n"
             f"    Max Cached Versions: {self.cache_max_versions}"
@@ -262,6 +270,8 @@ class SchedulerConfig:
             "desktop_run_cmd": updated_config.commands.desktop_run_cmd,
             "base_version": updated_config.versions.base_version,
             "max_builds": updated_config.versions.max_builds,
+            "recheck_count": updated_config.versions.recheck_count,
+            "recheck_all": updated_config.versions.recheck_all,
             "tested_versions_file": updated_config.tested_versions_file,
             "cache_max_versions": updated_config.cache_max_versions,
         }
