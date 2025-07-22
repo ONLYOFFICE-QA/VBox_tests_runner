@@ -26,7 +26,6 @@ class CSVReport(Report):
         self.keys = ['version', 'category', 'name']
         self.delimiter = delimiter
         self.encoding = encoding
-        self.exists_df = self.df if self.exists else None
         self._ensure_file()
 
     @property
@@ -75,7 +74,8 @@ class CSVReport(Report):
         :param results: List of URLCheckResult objects to write
         :raises OSError: If file writing fails
         """
-        existing_df = self.exists_df
+        # Get fresh data from file instead of cached property
+        existing_df = self.df if self.exists else None
         new_rows = [asdict(r) for r in results]
 
         if existing_df is not None and not existing_df.empty:
@@ -90,6 +90,10 @@ class CSVReport(Report):
             with self.path.open('a', newline='', encoding=self.encoding) as f:
                 writer = csv.DictWriter(f, fieldnames=self.fieldnames, delimiter=self.delimiter)
                 writer.writerows(filtered_rows.to_dict(orient='records'))
+
+            # Invalidate cache after writing to ensure fresh data on next read
+            self.__df = None
+            self.__cached_mtime = None
 
     def update_results(self, results: List[URLCheckResult]):
         """Update existing URL check results in the report file.
