@@ -189,14 +189,21 @@ class PackageURLChecker:
                 if stdout:
                     print(f"[green]✅ All packages found in version {v}[/green]")
                 return str(v)
-            return print(f"[dim]❌ Not all packages found in version {v}[/dim]") if stdout else None
+            else:
+                if stdout:
+                    print(f"[dim]❌ Not all packages found in version {v}[/dim]")
+                return None
 
         tasks = [check_version(v) for v in versions]
+        results = await asyncio.gather(*tasks, return_exceptions=False)
 
-        for coro in asyncio.as_completed(tasks):
-            result = await coro
-            if result:
-                return result
+        # Filter out None results and find the latest valid version
+        valid_versions = [result for result in results if result is not None]
+
+        if valid_versions:
+            # Return the version with the highest build number
+            latest_version = max(valid_versions, key=lambda x: self._get_version(x).build)
+            return latest_version
 
         return None
 

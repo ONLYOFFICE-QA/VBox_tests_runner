@@ -81,7 +81,8 @@ class CSVReport(Report):
         if existing_df is not None and not existing_df.empty:
             new_df = pd.DataFrame(new_rows)
             merged = new_df.merge(existing_df[self.keys], on=self.keys, how='left', indicator=True)
-            filtered_rows = new_df[merged['_merge'] == 'left_only']
+            mask = merged['_merge'] == 'left_only'
+            filtered_rows = new_df.loc[mask]
         else:
             filtered_rows = pd.DataFrame(new_rows)
 
