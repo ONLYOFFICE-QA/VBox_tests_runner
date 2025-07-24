@@ -130,37 +130,37 @@ class CSVReport(Report):
 
         df = self.df.copy()
 
-        if name:
-            df = df[df['name'] == name.lower()]
+        filter_conditions = []
 
+        if name:
+            filter_conditions.append(f"name == '{name.lower()}'")
         if category:
-            df = df[df['category'] == category.lower()]
+            filter_conditions.append(f"category == '{category.lower()}'")
+
+        if filter_conditions:
+            df = df.query(' and '.join(filter_conditions))
 
         if df.empty:
             return None
 
-        # Group by version and check packages existence based on any_exists flag
-        version_groups = df.groupby('version')
+        df['build'] = pd.to_numeric(df['build'], errors='coerce')
+        df['exists'] = df['exists'].astype(bool)
 
-        # Find versions where packages exist based on the mode
-        valid_versions = []
-        for version, group in version_groups:
-            exists_check = group['exists'].astype(bool)
-            if any_exists:
-                # At least one package exists
-                condition = exists_check.any()
-            else:
-                # All packages exist
-                condition = exists_check.all()
+        version_stats = df.groupby('version').agg({
+            'exists': 'any' if any_exists else 'all',
+            'build': 'first'
+        })
 
-            if condition:
-                valid_versions.append((version, group['build'].iloc[0]))
+        valid_versions = version_stats[
+            version_stats['exists'] &
+            version_stats['build'].notna()
+        ]
 
-        if not valid_versions:
+        if valid_versions.empty:
             return None
 
-        # Return the version with the highest build number
-        return max(valid_versions, key=lambda x: x[1])[0]
+        return valid_versions['build'].idxmax()
+
 
     def get_result(self, version: str, name: str, category: str) -> Optional[bool]:
         """
