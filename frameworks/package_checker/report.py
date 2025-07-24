@@ -138,7 +138,7 @@ class CSVReport(Report):
             filter_conditions.append(f"category == '{category.lower()}'")
 
         if filter_conditions:
-            df = df.query(' and '.join(filter_conditions))
+            df = df.query(' and '.join(filter_conditions)).copy()
 
         if df.empty:
             return None
@@ -196,6 +196,8 @@ class CSVReport(Report):
             return []
 
         df = self.df.copy()
+        # Convert build to numeric for proper sorting
+        df['build'] = pd.to_numeric(df['build'], errors='coerce')
         # Get unique versions sorted by build number in descending order
         versions = df.groupby('version')['build'].first().sort_values(ascending=False)
         return versions.head(count).index.tolist()
@@ -211,4 +213,5 @@ class CSVReport(Report):
             return None
 
         df = self.df.copy()
+        df['build'] = pd.to_numeric(df['build'], errors='coerce')
         return df.loc[df['build'].idxmax()]['version']
