@@ -64,11 +64,13 @@ class VersionHandler:
         :return: Tuple containing the version components as integers.
         :raises ValueError: If the version string is not in the correct format.
         """
+        if not isinstance(version, str) or not version.strip():
+            raise ValueError(f"[red]|ERROR| Version must be a non-empty string. Version: {version}.")
         match = VersionHandler._version_pattern.fullmatch(version)
         if not match:
             raise ValueError(
-                "[red]|WARNING| Version is entered incorrectly. "
-                "The version must be in the format 'x.x.x.x'"
+                f"[red]|ERROR| Version is entered incorrectly: '{version}'. "
+                f"The version must be in the format 'x.x.x.x'"
             )
         return tuple(int(part) for part in match.groups())
 

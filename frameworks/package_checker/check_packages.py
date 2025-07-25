@@ -213,7 +213,7 @@ class PackageURLChecker:
 
     def _get_version(self, version: str) -> VersionHandler:
         """
-        Get or cache a VersionHandler instance.
+        Get a VersionHandler instance for the given version, caching the result.
 
         :param version: Version string.
         :return: VersionHandler instance.
