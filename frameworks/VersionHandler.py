@@ -29,13 +29,13 @@ class VersionHandler:
         return f"{self._components[0]}.{self._components[1]}"
 
     @property
-    def minor(self) -> str:
+    def minor(self) -> int:
         """
         Extract the minor version component.
 
         :return: Minor version as a string.
         """
-        return str(self._components[2])
+        return self._components[2]
 
     @property
     def build(self) -> int:
