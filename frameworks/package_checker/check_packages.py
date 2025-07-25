@@ -203,11 +203,9 @@ class PackageURLChecker:
         tasks = [check_version(v) for v in versions]
         results = await asyncio.gather(*tasks, return_exceptions=False)
 
-        # Filter out None results and find the latest valid version
         valid_versions = [result for result in results if result is not None]
 
         if valid_versions:
-            # Return the version with the highest build number
             latest_version = max(valid_versions, key=lambda x: self._get_version(x).build)
             return latest_version
 
