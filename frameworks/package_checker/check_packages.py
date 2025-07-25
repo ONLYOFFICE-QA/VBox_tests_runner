@@ -177,10 +177,7 @@ class PackageURLChecker:
                 recheck_all=recheck_all
             )
 
-        existing_versions = set()
-        if report.df is not None and not report.df.empty:
-            existing_versions = set(report.df['version'].unique())
-
+        existing_versions = report.get_existing_versions()
         last_version = report.last_checked_version
         start_build = self._get_version(last_version).build if last_version else 0
         end_build = start_build + max_builds
@@ -408,20 +405,12 @@ class PackageURLChecker:
                 else:
                     version_results = await asyncio.gather(*version_tasks, return_exceptions=False)
 
-                if any(r.exists is True for r in version_results) and not self.version_exists(version):
+                if any(r.exists is True for r in version_results) and not report.version_exists(version):
                     report.write_results(version_results)
 
                 all_results.extend(version_results)
 
         return all_results
-
-    def version_exists(self, version: str) -> bool:
-        """
-        Check if version exists in report.
-        """
-        if self.report.df is not None and not self.report.df.empty:
-            return str(version) in self.report.df['version'].values
-        return False
 
     @staticmethod
     async def _check_urls_with_progress(tasks: List) -> List[URLCheckResult]:

@@ -202,6 +202,28 @@ class CSVReport(Report):
         versions = df.groupby('version')['build'].first().sort_values(ascending=False)
         return versions.head(count).index.tolist()
 
+    def version_exists(self, version: str) -> bool:
+        """
+        Check if version exists in report.
+
+        :param version: Version to check.
+        :return: True if version exists in report, False otherwise.
+        """
+        df = self.df
+
+        if df is not None and not df.empty:
+            return str(version) in df['version'].values
+        return False
+
+    def get_existing_versions(self) -> set[str]:
+        """
+        Get all existing versions from report.
+        """
+        df = self.df
+        if df is not None and not df.empty:
+            return set(df['version'].unique())
+        return set()
+
     @property
     def last_checked_version(self) -> Optional[str]:
         """Get the latest version where the package exists in the report.
