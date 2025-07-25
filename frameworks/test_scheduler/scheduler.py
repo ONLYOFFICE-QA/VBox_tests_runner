@@ -264,8 +264,8 @@ class TestScheduler:
         print(f"[green]|INFO| Report: {report.path}[/]") # TODO
 
         latest_versions = {
-            "builder": report.get_last_exists_version(category="builder", any_exists=True),
-            "desktop": report.get_last_exists_version(category="desktop", any_exists=True),
+            "builder": report.get_last_exists_version(category="builder", any_exists=self.config.any_package_exists),
+            "desktop": report.get_last_exists_version(category="desktop", any_exists=self.config.any_package_exists),
         }
         print(f"[green]|INFO| Latest versions: {latest_versions}[/]") # TODO
 

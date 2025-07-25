@@ -10,6 +10,7 @@
     "recheck_all": false,
     "tested_versions_file": "./reports/report_checker/tested_versions.json",
     "cache_max_versions": 10,
+    "any_package_exists": false,
     "test_execution_order": [
         "builder",
         "desktop"

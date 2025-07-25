@@ -105,6 +105,7 @@ class TestSchedulerConfigModel(BaseModel):
         versions (VersionConfigModel): Version configuration.
         tested_versions_file (str): Path to the tested versions cache file.
         cache_max_versions (int): Maximum number of versions to keep in cache.
+        any_package_exists (bool): Whether to check for any package existence.
     """
 
     scheduling: SchedulingConfigModel
@@ -115,6 +116,7 @@ class TestSchedulerConfigModel(BaseModel):
         "tested_versions.json"
     )
     cache_max_versions: conint(ge=1) = 10
+    any_package_exists: bool = False
 
     @field_validator("test_execution_order")
     def validate_test_execution_order(cls, v):
@@ -149,6 +151,7 @@ class SchedulerConfig:
         versions (VersionConfigModel): Version configuration.
         tested_versions_file (str): Path to the tested versions cache file.
         cache_max_versions (int): Maximum number of versions to keep in cache.
+        any_package_exists (bool): Whether to check for any package existence.
     """
 
     scheduler_config_path = str(
@@ -169,6 +172,7 @@ class SchedulerConfig:
         self.versions = self._config.versions
         self.tested_versions_file = self._config.tested_versions_file
         self.cache_max_versions = self._config.cache_max_versions
+        self.any_package_exists = self._config.any_package_exists
 
     @staticmethod
     def _load_config(file_path: str) -> TestSchedulerConfigModel:
@@ -203,6 +207,7 @@ class SchedulerConfig:
                 "tested_versions_file", "tested_versions.json"
             ),
             "cache_max_versions": config_data.get("cache_max_versions", 10),
+            "any_package_exists": config_data.get("any_package_exists", False),
         }
 
         return TestSchedulerConfigModel(**transformed_config)
@@ -274,6 +279,7 @@ class SchedulerConfig:
             "recheck_all": updated_config.versions.recheck_all,
             "tested_versions_file": updated_config.tested_versions_file,
             "cache_max_versions": updated_config.cache_max_versions,
+            "any_package_exists": updated_config.any_package_exists,
         }
 
         # Save the updated configuration back to the file
@@ -288,6 +294,7 @@ class SchedulerConfig:
         self.versions = self._config.versions
         self.tested_versions_file = self._config.tested_versions_file
         self.cache_max_versions = self._config.cache_max_versions
+        self.any_package_exists = self._config.any_package_exists
 
     def get_config_dict(self) -> dict:
         """

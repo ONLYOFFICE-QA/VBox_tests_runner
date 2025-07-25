@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from os.path import dirname, isfile
+from os import listdir
+from os.path import dirname, isfile, join
 
 from host_tools import File
 from host_tools.utils import Dir
@@ -22,12 +23,13 @@ class BuilderReport:
         self.dir = dirname(self.path)
         Dir.create(self.dir, stdout=False)
 
-    def get_full(self) -> str:
+    def get_full(self, clear_merged_reports: bool = True) -> str:
         """
         Deletes the existing report file if it exists and merges CSV files from the directory into a single report.
         :return: The path to the merged report.
         """
-        File.delete(self.path, stdout=False) if isfile(self.path) else ...
+        self._clear_merged_reports() if clear_merged_reports else None
+
         self.base_report.merge(
             File.get_paths(self.dir, extension='csv'),
             self.path
@@ -85,6 +87,24 @@ class BuilderReport:
         :return: True if the report file exists, otherwise False.
         """
         return isfile(self.path)
+
+    def _clear_merged_reports(self) -> None:
+        """
+        Clears the merged reports.
+        """
+        File.delete(self.path, stdout=False) if isfile(self.path) else ...
+        errors_only_report = self._get_errors_only_report()
+        File.delete(errors_only_report, stdout=False) if errors_only_report and isfile(errors_only_report) else ...
+
+    def _get_errors_only_report(self) -> str:
+        """
+        Returns the path to the errors only report.
+        :return: The path to the errors only report.
+        """
+        for file in listdir(self.dir):
+            if file.endswith('_errors_only_report.csv'):
+                return join(self.dir, file)
+        return None
 
 
     def _write_titles(self):
