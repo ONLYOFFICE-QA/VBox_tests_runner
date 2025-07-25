@@ -6,7 +6,7 @@ class TestVersionHandler:
         """Test correct parsing of a valid version string."""
         v = VersionHandler("1.2.3.4")
         assert v.major == "1.2"
-        assert v.minor == "3"
+        assert v.minor == 3
         assert v.build == 4
         assert v.without_build == "1.2.3"
         assert str(v) == "1.2.3.4"
