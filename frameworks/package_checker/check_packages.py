@@ -167,20 +167,29 @@ class PackageURLChecker:
 
         report = self.get_report(base_version=base_version)
 
-        # Check and update status of existing versions in report
         if recheck_all or recheck_count:
             await self._recheck_latest_versions(
-                report, categories, names, stdout, recheck_count, recheck_all
+                report=report,
+                categories=categories,
+                names=names,
+                stdout=stdout,
+                recheck_count=recheck_count,
+                recheck_all=recheck_all
             )
+
+        existing_versions = set()
+        if report.df is not None and not report.df.empty:
+            existing_versions = set(report.df['version'].unique())
 
         last_version = report.last_checked_version
         start_build = self._get_version(last_version).build if last_version else 0
         end_build = start_build + max_builds
 
-        versions = [
-            self._get_version(version=f"{base_version}.{build}")
-            for build in range(start_build + 1, end_build + 1)
-        ]
+        versions = []
+        for build in range(start_build + 1, end_build + 1):
+            version_str = f"{base_version}.{build}"
+            if version_str not in existing_versions:
+                versions.append(self._get_version(version=version_str))
 
         async def check_version(v: VersionHandler) -> Optional[str]:
             results = await self.check_urls(versions=[v], categories=categories, names=names)
@@ -399,12 +408,20 @@ class PackageURLChecker:
                 else:
                     version_results = await asyncio.gather(*version_tasks, return_exceptions=False)
 
-                if any(r.exists is True for r in version_results):
+                if any(r.exists is True for r in version_results) and not self.version_exists(version):
                     report.write_results(version_results)
 
                 all_results.extend(version_results)
 
         return all_results
+
+    def version_exists(self, version: str) -> bool:
+        """
+        Check if version exists in report.
+        """
+        if self.report.df is not None and not self.report.df.empty:
+            return str(version) in self.report.df['version'].values
+        return False
 
     @staticmethod
     async def _check_urls_with_progress(tasks: List) -> List[URLCheckResult]:

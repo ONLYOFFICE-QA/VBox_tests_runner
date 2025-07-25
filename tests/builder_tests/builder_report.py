@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from os import listdir
 from os.path import dirname, isfile, join
+from typing import Optional
 
 from host_tools import File
 from host_tools.utils import Dir
@@ -96,7 +97,7 @@ class BuilderReport:
         errors_only_report = self._get_errors_only_report()
         File.delete(errors_only_report, stdout=False) if errors_only_report and isfile(errors_only_report) else ...
 
-    def _get_errors_only_report(self) -> str:
+    def _get_errors_only_report(self) -> Optional[str]:
         """
         Returns the path to the errors only report.
         :return: The path to the errors only report.
