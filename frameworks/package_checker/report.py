@@ -55,7 +55,7 @@ class CSVReport(Report):
                 header=0,
                 encoding=self.encoding
             )
-        except Exception as e:
+        except Exception as _:
             # Fallback to regular read if there are issues
             self.__df = pd.read_csv(self.path, delimiter=self.delimiter)
 
