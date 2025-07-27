@@ -23,7 +23,7 @@ class CSVReport(Report):
 
         self.path = Path(path)
         self.fieldnames = ['version', 'build', 'category', 'name', 'url', 'exists', 'status_code', 'error']
-        self.keys = ['version', 'category', 'name']
+        self.keys = ['version', 'build', 'category', 'name']
         self.delimiter = delimiter
         self.encoding = encoding
         self._ensure_file()
@@ -36,7 +36,7 @@ class CSVReport(Report):
         """
         current_mtime = self.path.stat().st_mtime
         if self.__df is None or self.__cached_mtime != current_mtime:
-            self.__df = pd.read_csv(self.path, delimiter=self.delimiter)
+            self.update_df()
             self.__cached_mtime = current_mtime
 
         return self.__df
@@ -46,7 +46,18 @@ class CSVReport(Report):
 
         :return: DataFrame with report data or None if file doesn't exist
         """
-        self.__df = pd.read_csv(self.path, delimiter=self.delimiter)
+        try:
+            # Read CSV with explicit column names to handle cases where column order might be inconsistent
+            self.__df = pd.read_csv(
+                self.path,
+                delimiter=self.delimiter,
+                names=self.fieldnames,
+                header=0,
+                encoding=self.encoding
+            )
+        except Exception as e:
+            # Fallback to regular read if there are issues
+            self.__df = pd.read_csv(self.path, delimiter=self.delimiter)
 
     @property
     def exists(self) -> bool:
@@ -112,6 +123,7 @@ class CSVReport(Report):
         updated_df.update(new_df)
 
         final_df = updated_df.reset_index()
+        final_df = final_df[self.fieldnames]
         final_df.to_csv(self.path, sep=self.delimiter, index=False, encoding=self.encoding)
 
         self.__df = None
@@ -196,11 +208,24 @@ class CSVReport(Report):
             return []
 
         df = self.df.copy()
-        # Convert build to numeric for proper sorting
+
+        # Ensure build column is numeric
         df['build'] = pd.to_numeric(df['build'], errors='coerce')
-        # Get unique versions sorted by build number in descending order
-        versions = df.groupby('version')['build'].first().sort_values(ascending=False)
-        return versions.head(count).index.tolist()
+
+        # Remove rows where build conversion failed
+        df = df.dropna(subset=['build'])
+
+        if df.empty:
+            return []
+
+        # Get unique versions with their maximum build numbers
+        version_builds = df.groupby('version')['build'].max().reset_index()
+
+        # Sort by build number in descending order
+        version_builds = version_builds.sort_values('build', ascending=False)
+
+        # Return the top N versions
+        return version_builds.head(count)['version'].tolist()
 
     def version_exists(self, version: str) -> bool:
         """
