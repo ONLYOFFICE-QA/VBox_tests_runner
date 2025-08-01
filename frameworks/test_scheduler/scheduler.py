@@ -91,17 +91,18 @@ class TestScheduler:
         self.checker.check_versions(
             base_version=base_version,
             max_builds=max_builds,
-            stdout=True,
+            stdout=False,
             recheck_count=recheck_count,
             recheck_all=recheck_all
         )
 
         new_versions = self._get_new_versions_to_test(base_version)
-        print(f"[green]|INFO| New versions to test: {new_versions}[/]")
         if not new_versions:
             print("[blue]|INFO| No new versions to test[/]")
             return
 
+        print(f"[green]|INFO| New versions to test: [cyan]{new_versions}[/]")
+        
         successful_tests = self._run_tests_for_versions(new_versions)
         if successful_tests:
             print(
@@ -259,15 +260,12 @@ class TestScheduler:
         :return: Dictionary mapping test types to their new versions
         """
         tested_versions = self.load_tested_versions()
-        print(f"[green]|INFO| Tested versions: {tested_versions}[/]") # TODO
         report = self.checker.get_report(base_version=base_version)
-        print(f"[green]|INFO| Report: {report.path}[/]") # TODO
 
         latest_versions = {
             "builder": report.get_last_exists_version(category="builder", any_exists=self.config.any_package_exists),
             "desktop": report.get_last_exists_version(category="desktop", any_exists=self.config.any_package_exists),
         }
-        print(f"[green]|INFO| Latest versions: {latest_versions}[/]") # TODO
 
         new_versions = {}
         for test_type in self.config.test_execution_order:
