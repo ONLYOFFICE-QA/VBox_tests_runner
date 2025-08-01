@@ -102,7 +102,7 @@ class TestScheduler:
             return
 
         print(f"[green]|INFO| New versions to test: [cyan]{new_versions}[/]")
-        
+
         successful_tests = self._run_tests_for_versions(new_versions)
         if successful_tests:
             print(
@@ -164,7 +164,8 @@ class TestScheduler:
 
         print("[green]|INFO| Starting scheduled test runner[/]")
         print(
-            f"[green]|INFO| Schedule: Every {interval_minutes} minutes from {start_hour}:00 to {end_hour}:00[/]"
+            f"[green]|INFO| Schedule: Every {interval_minutes} minutes "
+            f"from {start_hour}:00 to {end_hour}:00[/]"
         )
 
         try:
