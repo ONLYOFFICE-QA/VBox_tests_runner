@@ -4,7 +4,7 @@
     "interval_minutes": 30,
     "builder_run_cmd": "uv run inv builder-test -h -p 3 --version {version} --connect-portal --telegram",
     "desktop_run_cmd": "uv run inv desktop-test -d -h -p 5 --version {version} --telegram",
-    "base_version": "9.0.4",
+    "base_version": "9.1.0",
     "max_builds": 50,
     "recheck_count": 2,
     "recheck_all": false,
