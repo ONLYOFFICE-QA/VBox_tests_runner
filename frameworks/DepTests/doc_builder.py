@@ -30,7 +30,7 @@ class DocBuilder(DepTests):
         if "99.99.99" in str(self.version):
             return 'develop'
 
-        if self.version.minor != "0":
+        if int(self.version.minor) != 0:
             return f'hotfix/v{self.version.without_build}'
 
         return f"release/v{self.version.without_build}"
