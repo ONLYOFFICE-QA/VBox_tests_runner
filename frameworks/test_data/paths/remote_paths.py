@@ -3,8 +3,9 @@ from posixpath import join
 
 class RemotePaths:
 
-    def __init__(self, user_name: str, os_type: str):
-        self.os_type = os_type.lower() if os_type else ''
+    def __init__(self, user_name: str, os_info: dict):
+        self.os_type = os_info['type']
+        self.os_name = os_info['name']
         self.user_name = user_name
         self.run_script_name = self._get_run_script_name()
 
@@ -23,12 +24,8 @@ class RemotePaths:
         self.github_token_path = self._join_path(self.github_token_dir, 'token')
 
     def _get_run_script_name(self) -> str:
-        if 'vista' in self.os_type:
-            return 'script.bat'
-
         if 'windows' in self.os_type:
-            return 'script.ps1'
-
+            return 'script.bat' if 'vista' in self.os_name else 'script.ps1'
         return 'script.sh'
 
     def _join_path(self, *parts) -> str:

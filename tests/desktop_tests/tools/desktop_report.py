@@ -14,6 +14,7 @@ from frameworks.report import Report
 from telegram import Telegram
 
 from frameworks.report_portal import PortalManager
+from frameworks.test_data import PortalData
 
 
 class DesktopReport:
@@ -23,19 +24,17 @@ class DesktopReport:
         self.dir = dirname(self.path)
         self.report = Report()
         self.console = Console()
+        self.portal_data = PortalData()
         Dir.create(self.dir, stdout=False)
 
     def write(self, version: str, vm_name: str, exit_code: str) -> None:
         self._write_titles() if not isfile(self.path) else ...
-        self._writer(mode='a', message=["", vm_name, version, "", exit_code])
+        self._writer(mode='a', message=[vm_name, vm_name, str(version), 'NONE', exit_code, exit_code])
 
     def get_total_count(self, column_name: str) -> int:
         return self.report.total_count(self.report.read(self.path), column_name)
 
-    def all_is_passed(self) -> bool:
-        df = self.report.read(self.path)
-        return df['Exit_code'].eq('Passed').all()
-    
+
     def get_error_vm_list(self) -> list[str]:
         if not isfile(self.path):
             raise FileNotFoundError(f"[red]|ERROR| Report not found: {self.path}")
@@ -97,12 +96,17 @@ class DesktopReport:
 
                     concurrent.futures.wait(futures)
 
+    @staticmethod
+    def is_passed(row: pd.Series) -> bool:
+        return row['Exit_code'] == 'Passed'
+
     def _process_row(self, row: pd.Series, launch: PortalManager, package_name: str) -> Optional[str]:
         launch.set_test_result(
             test_name=row['Test_name'],
             return_code=0 if self.is_passed(row) else 1,
             log_message=row['Exit_code'] if not self.is_passed(row) else None,
-            suite_uuid=self._create_suite(self._get_os_name(row), launch, package_name)
+            suite_uuid=self._create_suite(self._get_os_name(row), launch, package_name),
+            status=self.portal_data.get_status(row['Exit_code'])
         )
 
         if not self.is_passed(row):
@@ -111,10 +115,6 @@ class DesktopReport:
             )
             return ''
         return f"[cyan][{'green'}][{row['Os']}] {row['Test_name']} finished with exit code {row['Exit_code']}"
-
-    @staticmethod
-    def is_passed(row: pd.Series) -> bool:
-        return row['Exit_code'] == 'Passed'
 
     def _create_suites(self, df: pd.DataFrame, launch: PortalManager, packege_name: str):
         with self.console.status('') as status:
@@ -139,22 +139,52 @@ class DesktopReport:
             return print(f"[red]|ERROR| Report for sending to telegram not exists: {self.path}")
 
         update_info = f"{data.update_from} -> " if data.update_from else ""
-        result_status = "All tests passed" if self.all_is_passed() else "Some tests have errors"
+        df = self.report.read(self.path)
 
-        caption = (
-            f"{data.title} desktop editor tests completed on version: `{update_info}{data.version}`\n\n"
-            f"Package: `{data.package_name}`\n"
-            f"Result: `{result_status}`\n\n"
-            f"Number of tested Os: `{self.get_total_count('Exit_code')}`"
-        )
+        main_result_line = self._get_overall_result(df)
+        package_not_exists_os = self._get_os_list_by_status(df, self.portal_data.test_status.not_exists_package)
+        failed_create_vm_os = self._get_os_list_by_status(df, self.portal_data.test_status.failed_create_vm)
 
+        caption_parts = [
+            f"{data.title} desktop editor tests completed on version: `{update_info}{data.version}`\n\n",
+            f"Package: `{data.package_name}`\n",
+            f"Result: `{main_result_line}`\n"
+        ]
+        if package_not_exists_os:
+            caption_parts.append(f"Package not exists for OS: `{', '.join(package_not_exists_os)}`\n\n")
+
+        if failed_create_vm_os:
+            caption_parts.append(f"Failed to create VM for OS: `{', '.join(failed_create_vm_os)}`\n\n")
+
+        caption_parts.append(f"Number of tested Os: `{self.get_total_count('Exit_code')}`")
+        caption = ''.join(caption_parts)
         Telegram(token=data.tg_token, chat_id=data.tg_chat_id).send_document(self.path, caption=caption)
+
+    def _get_os_list_by_status(self, df: pd.DataFrame, status: str):
+        """
+        Returns a list of OS names where Exit_code matches the given status.
+        :param status: The status to filter by.
+        :return: List of OS names.
+        """
+        filtered_df = df[df['Exit_code'] == status]
+        return list(filtered_df['Vm_name'].unique()) if not filtered_df.empty else []
+
+    def _get_overall_result(self, df: pd.DataFrame):
+        """
+        Returns overall test result status for all except PACKAGE_NOT_EXISTS.
+        :return: String with test result status.
+        """
+        results = df[
+            (df['Exit_code'] != self.portal_data.test_status.not_exists_package) &
+            (df['Exit_code'] != self.portal_data.test_status.failed_create_vm)
+        ]
+        return 'All tests passed' if not results.empty and results['Exit_code'].eq('Passed').all() else 'Some tests have errors'
 
     def _writer(self, mode: str, message: list, delimiter='\t', encoding='utf-8'):
         self.report.write(self.path, mode, message, delimiter, encoding)
 
     def _write_titles(self):
-        self._writer(mode='w', message=['Os', 'Vm_name', 'Version', 'Package_name', 'Exit_code'])
+        self._writer(mode='w', message=['Os', 'Vm_name', 'Version', 'Test_name', 'Package_name', 'Exit_code'])
 
     @staticmethod
     def _get_thread_result(future):

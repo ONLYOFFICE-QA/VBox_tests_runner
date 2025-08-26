@@ -29,13 +29,13 @@ class VersionHandler:
         return f"{self._components[0]}.{self._components[1]}"
 
     @property
-    def minor(self) -> str:
+    def minor(self) -> int:
         """
         Extract the minor version component.
 
         :return: Minor version as a string.
         """
-        return str(self._components[2])
+        return self._components[2]
 
     @property
     def build(self) -> int:
@@ -64,11 +64,13 @@ class VersionHandler:
         :return: Tuple containing the version components as integers.
         :raises ValueError: If the version string is not in the correct format.
         """
+        if not isinstance(version, str) or not version.strip():
+            raise ValueError(f"[red]|ERROR| Version must be a non-empty string. Version: {version}.")
         match = VersionHandler._version_pattern.fullmatch(version)
         if not match:
             raise ValueError(
-                "[red]|WARNING| Version is entered incorrectly. "
-                "The version must be in the format 'x.x.x.x'"
+                f"[red]|ERROR| Version is entered incorrectly: '{version}'. "
+                f"The version must be in the format 'x.x.x.x'"
             )
         return tuple(int(part) for part in match.groups())
 
