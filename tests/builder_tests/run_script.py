@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from os.path import basename, splitext
 from tempfile import gettempdir
+from typing import Optional
 
 from host_tools import File
 
@@ -30,8 +31,7 @@ class RunScript:
             self.get_change_dir_command(self._path.remote.docbuilder_path),
             self.set_license(),
             self.run_update(),
-            self.generate_run_framework_cmd(),
-            self.generate_run_docs_cmd()
+            *[self._generate_run_script_cmd(script, params) for script, params in self._path.remote.tests_scripts.items()]
         ]
 
         script_content = [line.strip() for line in filter(None, commands)]
@@ -78,29 +78,6 @@ class RunScript:
             f"{join(self._path.remote.script_dir, splitext(basename(self.office_js_api))[0])}"
         )
 
-    def generate_run_framework_cmd(self) -> str:
-        options = [
-                f"{self.get_python()}",
-                f"{self._path.remote.docbuilder_main_script}"
-            ]
-
-        return ' '.join(filter(None, options))
-
-    def run_update(self) -> str:
-        options = [
-            f"{self.get_python()}",
-            f"{self._path.remote.update_script}"
-        ]
-        return ' '.join(filter(None, options))
-
-    def generate_run_docs_cmd(self) -> str:
-        options = [
-            f"{self.get_python()}",
-            f"{self._path.remote.docbuilder_docs_main_script}"
-        ]
-
-        return ' '.join(filter(None, options))
-
     def get_save_path(self) -> str:
         return File.unique_name(gettempdir(), extension=splitext(self._path.remote.run_script_name)[1])
 
@@ -108,3 +85,10 @@ class RunScript:
         save_path = self.get_save_path()
         File.write(save_path, self.generate(), newline='')
         return save_path
+
+    def run_update(self) -> str:
+        """Generate command to run update script."""
+        return self._generate_run_script_cmd(self._path.remote.update_script)
+
+    def _generate_run_script_cmd(self, script_path: str, params: Optional[list[str]] = None) -> str:
+        return ' '.join(filter(None, [self.get_python(), script_path, *(params or [])]))
