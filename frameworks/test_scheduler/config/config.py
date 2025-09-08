@@ -25,8 +25,8 @@ class SchedulingConfigModel(BaseModel):
         interval_minutes (int): Check interval in minutes (must be >= 1).
     """
 
-    start_hour: conint(ge=0, le=23)
-    end_hour: conint(ge=0, le=23)
+    start_hour: Optional[conint(ge=0, le=23)] = None
+    end_hour: Optional[conint(ge=0, le=23)] = None
     interval_minutes: conint(ge=1)
 
     @field_validator("end_hour")
