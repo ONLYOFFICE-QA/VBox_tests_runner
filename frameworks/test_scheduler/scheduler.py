@@ -342,13 +342,13 @@ class TestScheduler:
 
     def _initialize_scheduler(
         self,
-        start_hour: int,
-        end_hour: int,
         interval_minutes: int,
         base_version: str,
         max_builds: int,
         recheck_count: int,
         recheck_all: bool,
+        start_hour: Optional[int] = None,
+        end_hour: Optional[int] = None,
     ) -> None:
         """
         Initialize the background scheduler with specified parameters.
@@ -362,7 +362,10 @@ class TestScheduler:
         :param recheck_all: If True, recheck all versions in report
         """
         self.scheduler = BackgroundScheduler()
-        cron_trigger = CronTrigger(minute=f"*/{interval_minutes}", hour=f"{start_hour}-{end_hour}")
+        cron_trigger = CronTrigger(
+            minute=f"*/{interval_minutes}",
+            hour=self._get_cron_trigger_hour(start_hour, end_hour),
+        )
 
         self.scheduler.add_job(
             func=lambda: self.check_and_run_tests(base_version, max_builds, recheck_count, recheck_all),
@@ -370,6 +373,28 @@ class TestScheduler:
             id="version_check_and_tests",
             replace_existing=True,
         )
+
+    def _get_cron_trigger_hour(self, start_hour: Optional[int], end_hour: Optional[int]) -> str:
+        """
+        Generate cron hour expression for scheduler time range.
+
+        :param start_hour: Starting hour (0-23), None defaults to 0
+        :param end_hour: Ending hour (0-23), None defaults to 23
+        :return: Cron hour expression string
+        :raises ValueError: If hour values are invalid
+        """
+        start_hour = start_hour or 0
+        end_hour = end_hour or 23
+
+        if not (0 <= start_hour <= 23) or not (0 <= end_hour <= 23):
+            raise ValueError("Hour values must be between 0 and 23")
+
+        if start_hour == end_hour:
+            return str(start_hour)
+        elif start_hour < end_hour:
+            return f"{start_hour}-{end_hour}"
+        else:
+            return f"0-{end_hour},{start_hour}-23"
 
     def _run_scheduler(self) -> None:
         """
