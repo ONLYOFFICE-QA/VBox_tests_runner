@@ -1,0 +1,11 @@
+{
+  "token_file": "",
+  "chat_id_file": "",
+  "run_script_cmd": "inv conversion-test -c 25 -q ",
+  "password": "",
+  "hosts": [
+    "Windows11",
+    "KUbuntu",
+    "MacOS"
+  ]
+}

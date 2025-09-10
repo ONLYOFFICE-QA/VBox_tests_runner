@@ -1,0 +1,13 @@
+{
+    "os_family": {
+        "linux-64": [
+            "KUbuntu22"
+        ],
+        "win-64": [
+            "Windows11"
+        ],
+        "mac-arm64": [
+            "MacOS"
+        ]
+    }
+}
