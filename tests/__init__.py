@@ -7,11 +7,16 @@ from .desktop_tests import DesktopTest
 from .desktop_tests import DesktopTestData
 from .desktop_tests import DesktopReport
 
+from .conversion_tests import ConversionTests
+from .conversion_tests import ConversionTestData
+
 __all__ = [
     "BuilderTests",
     "BuilderTestData",
     "BuilderReportSender",
     "DesktopTest",
     "DesktopTestData",
-    "DesktopReport"
+    "DesktopReport",
+    "ConversionTests",
+    "ConversionTestData",
 ]

@@ -29,7 +29,23 @@ from tests import (
     DesktopReport,
     DesktopTest,
     DesktopTestData,
+    ConversionTestData,
+    ConversionTests
 )
+
+@task
+def conversion_test(c, version: str):
+    """
+    Run conversion tests.
+    """
+    test_data = ConversionTestData(
+        version=version,
+        config_path=join(getcwd(), "conversions_tests_config.json"),
+    )
+    test_data.status_bar = True
+
+    for vm_name in test_data.vm_names:
+        ConversionTests(vm_name=vm_name, test_data=test_data).run()
 
 
 @task
