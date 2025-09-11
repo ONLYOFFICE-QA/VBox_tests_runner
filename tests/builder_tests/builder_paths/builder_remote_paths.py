@@ -22,5 +22,6 @@ class BuilderRemotePaths(RemotePaths):
         self.tests_scripts: dict[str, Optional[str]] = {
             self._join_path(self.docbuilder_path, 'check-framework.py'): None,
             self._join_path(self.docbuilder_path, 'check-docs.py'): None,
-            self._join_path(self.docbuilder_path, 'check-tests.py'): None
+            self._join_path(self.docbuilder_path, 'check-tests.py'): None,
+            self._join_path(self.docbuilder_path, 'check-pip-package.py'): None
         }
