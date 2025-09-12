@@ -49,15 +49,39 @@ class BuilderReportSender:
     def df(self):
         """
         Load and return the DataFrame from the report path.
-
         :return: The loaded DataFrame or None if not available.
         """
         if self.__df is None:
             if isfile(self.report_path):
                 self.__df = self.report.read(self.report_path)
+                if not self.__df.empty:
+                    # Optimize data types to reduce memory usage
+                    self.__df = self._optimize_dataframe_dtypes(self.__df)
             else:
                 self.console.print("[red]|ERROR| Can't read report.csv. Check path: ", self.report_path)
         return self.__df
+
+    def _optimize_dataframe_dtypes(self, df):
+        """
+        Optimize DataFrame data types for better memory usage
+        :param df: DataFrame to optimize
+        :return: Optimized DataFrame
+        """
+        # Convert exit codes to category for memory efficiency
+        if 'Exit_code' in df.columns:
+            df['Exit_code'] = df['Exit_code'].astype('category')
+
+        # Convert OS names to category
+        if 'Os' in df.columns:
+            df['Os'] = df['Os'].astype('category')
+
+        # Reduce string memory usage
+        string_columns = ['Version', 'Test_name', 'Builder_samples']
+        for col in string_columns:
+            if col in df.columns:
+                df[col] = df[col].astype('string')
+
+        return df
 
     @property
     def version(self):
@@ -91,19 +115,26 @@ class BuilderReportSender:
 
     def get_errors_only_df(self) -> Optional[pd.DataFrame]:
         """
-        Get DataFrame with only failed tests (Exit_code != 0 or Stderr is not empty).
-
+        Get DataFrame with only failed tests using optimized filtering.
         :return: DataFrame with failed tests or None if no data
         """
         df = self.df
         if df is None or df.empty:
             return None
 
-        failed = df[
-            (df['Exit_code'].fillna(0) != 0) |
-            (df['Stderr'].notna() & df['Stderr'].astype(str).str.strip().ne(''))
-            ]
-        return failed
+        # Optimize filtering by using vectorized operations
+        has_exit_error = df['Exit_code'].fillna(0) != 0
+
+        # Check if Stderr column exists and is not empty
+        has_stderr_error = False
+        if 'Stderr' in df.columns:
+            stderr_series = df['Stderr'].fillna('')
+            has_stderr_error = stderr_series.astype(str).str.strip() != ''
+
+        # Combine conditions using bitwise OR
+        error_mask = has_exit_error | has_stderr_error
+
+        return df[error_mask] if error_mask.any() else None
 
     def to_telegram(self) -> None:
         """
@@ -117,9 +148,22 @@ class BuilderReportSender:
         self.tg.send_media_group([self.report_path, self.errors_only_report], caption=self.get_caption(errors_only_df))
 
     def _get_os_list_by_status(self, status: str):
-        df = self.df.copy()
-        filtered_df = df[df['Stdout'] == status]
-        return list(filtered_df['Os'].unique()) if not filtered_df.empty else []
+        """
+        Get list of OS names filtered by status with optimized operations
+        :param status: Status to filter by
+        :return: List of unique OS names
+        """
+        df = self.df
+        if df is None or df.empty or 'Stdout' not in df.columns or 'Os' not in df.columns:
+            return []
+
+        # Use vectorized comparison for better performance
+        mask = df['Stdout'] == status
+        if not mask.any():
+            return []
+
+        # Get unique values without copying the entire DataFrame
+        return df.loc[mask, 'Os'].unique().tolist()
 
     def get_caption(self, errors_only_df: pd.DataFrame) -> str:
         """

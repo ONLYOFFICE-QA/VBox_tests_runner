@@ -1,22 +1,19 @@
 # -*- coding: utf-8 -*-
 from os import getcwd
-from typing import Dict, Optional, Union, List
+from typing import Optional, Union, List
 
 from dataclasses import dataclass, field
-from os.path import join, isfile
-from host_tools import File
+from os.path import join
 
 from frameworks.VersionHandler import VersionHandler
-from frameworks.test_data.TestData import TestData
+from tests.common import BaseTestData
 
 from .desktop_paths import DesktopLocalPaths
 from .desktop_report import DesktopReport
 
 
 @dataclass
-class DesktopTestData(TestData):
-    version: Union[str, VersionHandler]
-    config_path: str
+class DesktopTestData(BaseTestData):
     status_bar: bool = True
     telegram: bool = False
     custom_config_mode: Union[bool, str] = False
@@ -27,33 +24,30 @@ class DesktopTestData(TestData):
     open_retries: int = None
     retest: bool = False
 
+    # Computed fields
     desktop_testing_url: str = field(init=False)
     branch: str = field(init=False)
     title: str = field(init=False)
     report_dir: str = field(init=False)
     full_report_path: str = field(init=False)
     local_paths: DesktopLocalPaths = field(init=False)
-    __config: Optional[Dict] = None
 
     def __post_init__(self):
+        super().__post_init__()
+
         if not isinstance(self.version, VersionHandler):
             self.version = VersionHandler(version=self.version)
 
-        self.desktop_testing_url = self.config['desktop_script']
-        self.branch = self.config['branch']
-        self.title = self.config.get('title', 'Undefined_title')
-        self.portal_project_name = self.config.get('report_portal').get('project_name')
+        # Access config
+        config = self.config
+        self.desktop_testing_url = config['desktop_script']
+        self.branch = config['branch']
+        self.title = config.get('title', 'Undefined_title')
+        self.portal_project_name = config.get('report_portal', {}).get('project_name')
         self.report_dir = self._get_report_dir()
         self.full_report_path = join(self.report_dir, f"{self.version}_{self.title}_desktop_tests_report.csv")
         self.local_paths = DesktopLocalPaths()
         self._check_package_options()
-
-    @property
-    def config(self) -> dict:
-        if self.__config is None:
-            self.__config = self._read_config()
-
-        return self.__config
 
     @property
     def vm_names(self) -> List[str]:
@@ -86,8 +80,3 @@ class DesktopTestData(TestData):
             f"{'_flatpak' if self.flatpak else ''}"
         )
         return join(getcwd(), 'reports', f"{self.title}_desktop_tests", dir_name)
-
-    def _read_config(self) -> Dict:
-        if not isfile(self.config_path):
-            raise FileNotFoundError(f"[red]|ERROR| Configuration file not found: {self.config_path}")
-        return File.read_json(self.config_path)

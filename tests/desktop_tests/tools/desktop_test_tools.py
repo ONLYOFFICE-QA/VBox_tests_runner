@@ -1,23 +1,21 @@
 # -*- coding: utf-8 -*-
-from os.path import join, isfile, dirname, realpath
+from os.path import join, isfile
 from typing import Optional
 
 from rich import print
 
-from host_tools import File
 from host_tools.utils import Dir
 
 from frameworks.VboxMachine import VboxMachine
 from frameworks.decorators import vm_data_created
-from frameworks.package_checker.report import CSVReport
 from frameworks.test_tools import TestTools, TestToolsWindows, TestToolsLinux
-from frameworks.package_checker.check_packages import PackageURLChecker
 from frameworks.test_data import PortalData
 
 from vboxwrapper import VirtualMachinException
 
 from .desktop_paths import DesktopPaths
 from .desktop_report import DesktopReport
+from .desktop_package_manager import DesktopPackageManager
 from .run_script import RunScript
 
 
@@ -29,28 +27,22 @@ class DesktopTestTools:
         self.vm = VboxMachine(vm_name)
         self.test_tools = self._get_test_tools()
         self._initialize_report()
-        self.package_checker = PackageURLChecker()
-        self.__package_name: Optional[str] = None
-        self.__package_report: Optional[CSVReport] = None
-        self.__packages_config: Optional[dict] = None
+        self.package_manager = DesktopPackageManager(vm_name, str(test_data.version), self.vm.os_name)
 
     @property
     def packages_config(self) -> dict:
-        if self.__packages_config is None:
-            self.__packages_config = self._load_packages_config()
-        return self.__packages_config
+        """Returns the packages configuration."""
+        return self.package_manager.packages_config
 
     @property
     def package_name(self) -> str:
-        if self.__package_name is None:
-            self.__package_name = self._get_package_name(os_name=self.vm.os_name)
-        return self.__package_name
+        """Returns the package name for the current OS."""
+        return self.package_manager.package_name
 
     @property
-    def package_report(self) ->  CSVReport:
-        if self.__package_report is None:
-            self.__package_report = self.package_checker.get_report(self.data.version.without_build)
-        return self.__package_report
+    def package_report(self):
+        """Returns the package report for the current version."""
+        return self.package_manager.package_report
 
     def run_test(self, headless: bool) -> None:
         self.test_tools.run_vm(headless=headless)
@@ -63,24 +55,12 @@ class DesktopTestTools:
 
     def check_package_exists(self) -> bool:
         """
-        Check if package exists and handle if not
+        Check if package exists using optimized package manager
         :return: True if package exists, False otherwise
         """
-        if not self.package_name:
-            print(f"[bold red]|ERROR|{self.vm.name}| Package name is not found in packages_config.json")
-            return True
-
-        report_result = self.package_report.get_result(
-            version=str(self.data.version),
-            name=self.package_name,
-            category="desktop"
-        )
-
-        if not report_result:
-            result = self.package_checker.run(versions=self.data.version, names=[self.package_name], categories=["desktop"])
-            if not result[str(self.data.version)]["desktop"][self.package_name]['result']:
-                self.handle_package_not_exists()
-                return False
+        if not self.package_manager.check_package_exists('desktop'):
+            self.package_manager.handle_package_not_exists(self.report)
+            return False
         return True
 
     def is_incompatible_package(self) -> bool:
@@ -100,22 +80,12 @@ class DesktopTestTools:
         return True
 
     def handle_package_not_exists(self):
-        print(f"[bold red]|ERROR|{self.vm.name}| Package {self.package_name} is not exists")
-        self.report.write(
-            version=self.data.version,
-            vm_name=self.vm.name,
-            exit_code=0,
-            stdout=self.portal_data.test_status.not_exists_package
-        )
+        """Handle package not exists using package manager"""
+        self.package_manager.handle_package_not_exists(self.report)
 
     def handle_vm_creation_failure(self):
-        print(f"[bold red]|ERROR|{self.vm.name}| Failed to create a virtual machine")
-        self.report.write(
-            version=self.data.version,
-            vm_name=self.vm.name,
-            exit_code=0,
-            stdout=self.portal_data.test_status.failed_create_vm
-        )
+        """Handle VM creation failure using package manager"""
+        self.package_manager.handle_vm_creation_failure(self.report)
 
     def get_upload_files(self) -> list:
         files = [
@@ -168,24 +138,3 @@ class DesktopTestTools:
         if 'windows' in self.vm.os_type:
             return TestToolsWindows(vm=self.vm, test_data=self.data)
         return TestToolsLinux(vm=self.vm, test_data=self.data)
-
-    def _load_packages_config(self) -> dict:
-        """
-        Load packages configuration from JSON file
-        :param self: DesktopTestTools instance
-        :return: Packages configuration dictionary
-        """
-        config_path = join(dirname(realpath(__file__)), './packages_config.json')
-        return File.read_json(config_path)
-
-    def _get_package_name(self, os_name: str) -> Optional[str]:
-        """
-        Get the package name for the current OS
-        :param packages_config: Packages configuration dictionary
-        :param os_name: Name of the OS
-        :return: Package name string
-        """
-        for os_family, os_list in self.packages_config.get('os_family', {}).items():
-            if os_name in os_list:
-                return os_family
-        return None

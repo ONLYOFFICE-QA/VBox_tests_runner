@@ -1,30 +1,29 @@
 # -*- coding: utf-8 -*-
 from dataclasses import dataclass
-from os.path import isfile, join
-from typing import Dict, List
+from os.path import join
+from typing import List
 
-from host_tools import File, HostInfo
+from host_tools import HostInfo
 
-from frameworks.test_data import TestData
+from tests.common import BaseTestData
 from tests.builder_tests.builder_paths import BuilderLocalPaths
 
 from .builder_report import BuilderReport
 
 
 @dataclass
-class BuilderTestData(TestData):
-    version: str
-    config_path: str
+class BuilderTestData(BaseTestData):
     __status_bar: bool | None = None
-    __config = None
 
     def __post_init__(self):
         super().__post_init__()
-        self.dep_test_branch = self.config.get('dep_test_branch')
-        self.build_tools_branch = self.config.get('build_tools_branch')
-        self.portal_project_name = self.config.get('report_portal').get('project_name')
-        self.office_js_api_branch = self.config.get('office_js_api_branch')
-        self.document_builder_samples_branch = self.config.get('document_builder_samples_branch')
+        # Access config values
+        config = self.config
+        self.dep_test_branch = config.get('dep_test_branch')
+        self.build_tools_branch = config.get('build_tools_branch')
+        self.portal_project_name = config.get('report_portal', {}).get('project_name')
+        self.office_js_api_branch = config.get('office_js_api_branch')
+        self.document_builder_samples_branch = config.get('document_builder_samples_branch')
         self.full_report_path = self._get_full_report_path()
         self.report = BuilderReport(self.full_report_path)
 
@@ -39,21 +38,14 @@ class BuilderTestData(TestData):
         self.__status_bar = value
 
     @property
-    def config(self) -> dict:
-        if self.__config is None:
-            self.__config = self._read_config()
-        return self.__config
-
-    @property
     def vm_names(self) -> List[str]:
-        return [name for name in self.config.get('hosts', []) if ('arm64' in name.lower()) == HostInfo().is_mac]
-
-    def _read_config(self) -> Dict:
-        if not isfile(self.config_path):
-            raise FileNotFoundError(f"[red]|ERROR| Configuration file not found: {self.config_path}")
-        return File.read_json(self.config_path)
+        """Filter VM names based on architecture compatibility"""
+        hosts = self.config.get('hosts', [])
+        is_mac_arm = HostInfo().is_mac
+        return [name for name in hosts if ('arm64' in name.lower()) == is_mac_arm]
 
     def _get_full_report_path(self) -> str:
+        """Get full report path with optimized path construction"""
         return join(
             BuilderLocalPaths().builder_report_dir,
             self.version,

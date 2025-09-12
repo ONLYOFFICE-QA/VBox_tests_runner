@@ -71,12 +71,21 @@ class VboxMachine:
             self.__os_name = re.sub(r' \([^)]*bit\)', '', os_type).lower()
         return self.__os_name
 
-    def run(self, headless: bool = True, status_bar: bool = False, timeout: int = 600):
+    def run(
+        self,
+        headless: bool = True,
+        status_bar: bool = False,
+        timeout: int = 600,
+        restore: bool = True,
+        configurate: bool = True
+    ):
         if self.vm.power_status():
             self.vm.stop()
 
-        self.vm.snapshot.restore()
-        self.configurate()
+        if restore:
+            self.vm.snapshot.restore()
+        if configurate:
+            self.configurate()
         self.vm.run(headless=headless)
         self.vm.network.wait_up(status_bar=status_bar, timeout=timeout)
         self.vm.wait_logged_user(status_bar=status_bar, timeout=timeout)
