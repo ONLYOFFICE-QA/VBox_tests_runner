@@ -98,7 +98,8 @@ class ReportPortalManager():
                     f"[cyan]|INFO| Created suite {row['Builder_samples']} "
                     f"launchers for {row['Version']} test."
                 )
-                launch.create_suite(row['Builder_samples'])
+                os_suite_uuid = launch.create_suite(row['Os'])
+                launch.create_suite(row['Builder_samples'], parent_suite_uuid=os_suite_uuid)
 
     @staticmethod
     def _get_thread_result(future):
