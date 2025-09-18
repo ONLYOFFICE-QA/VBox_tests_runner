@@ -7,8 +7,15 @@ from report_portal import ReportPortal
 class PortalManager:
     _suite_cache = {}
 
-    def __init__(self, project_name: str, launch_name: str):
+    def __init__(self,
+            project_name: str,
+            launch_name: str,
+            launch_attributes: list[dict] = None,
+            last_launch_connect: bool = True
+        ):
+        self.last_launch_connect = last_launch_connect
         self.launch_name = launch_name
+        self.launch_attributes = launch_attributes
         self.rp = ReportPortal(project_name=project_name)
         self.__suites = None
         self.__suite_names = None
@@ -40,7 +47,7 @@ class PortalManager:
         self.finish_launcher()
 
     def start_launch(self):
-        self.rp.launch.start(name=self.launch_name, last_launch_connect=True)
+        self.rp.launch.start(name=self.launch_name, last_launch_connect=self.last_launch_connect, attributes=self.launch_attributes)
 
     def set_test_result(
             self,
