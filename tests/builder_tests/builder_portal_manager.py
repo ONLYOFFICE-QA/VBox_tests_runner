@@ -7,7 +7,7 @@ import pandas as pd
 from rich import print
 from typing import Optional
 
-class ReportPortalManager():
+class BuilderPortalManager():
     """
     Manager for sending test results to Report Portal.
 

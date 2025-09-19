@@ -10,7 +10,7 @@ from telegram import Telegram
 from frameworks import Report
 from frameworks.test_data import PortalData
 from tests.builder_tests.builder_test_data import BuilderTestData
-from .report_portal_manager import ReportPortalManager
+from .builder_portal_manager import BuilderPortalManager
 
 
 class BuilderReportSender:
@@ -160,4 +160,4 @@ class BuilderReportSender:
         if df.empty:
             raise ValueError(f"Report is empty: {self.report_path}")
 
-        ReportPortalManager(project_name=project_name, df=df, version=self.version).send()
+        BuilderPortalManager(project_name=project_name, df=df, version=self.version).send()
