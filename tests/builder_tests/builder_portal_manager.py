@@ -132,13 +132,13 @@ class BuilderPortalManager():
         :return: Dictionary where keys are OS names and values are DataFrames for each OS
         """
         if 'Os' not in self.df.columns:
-            print(f"[red]|ERROR| Column 'Os' not found in report")
+            print("[red]|ERROR| Column 'Os' not found in report")
             return {}
 
         unique_os = self.df['Os'].dropna().unique()
 
         if len(unique_os) == 0:
-            print(f"[yellow]|WARNING| No valid OS values found in report")
+            print("[yellow]|WARNING| No valid OS values found in report")
             return {}
 
         os_dataframes = {}

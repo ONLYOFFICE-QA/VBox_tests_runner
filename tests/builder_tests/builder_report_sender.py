@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import concurrent.futures
 from os.path import join, dirname, isfile, expanduser
 from typing import Optional
 from rich.console import Console
