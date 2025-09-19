@@ -7,6 +7,12 @@ from rich import print
 
 
 def class_cache(class_):
+    """
+    Decorator that caches class instances to implement singleton pattern.
+
+    :param class_: The class to be cached
+    :return: Wrapper function that returns cached instances
+    """
     __instances = {}
 
     @wraps(class_)
@@ -19,6 +25,13 @@ def class_cache(class_):
     return wrapper
 
 def vm_data_created(method):
+    """
+    Decorator to ensure VM data is created before calling the decorated method.
+
+    :param method: The method to be decorated
+    :return: Wrapped method that checks for VM data existence
+    :raises VirtualMachinException: If VM data has not been created
+    """
     @wraps(method)
     def wrapper(self, *args, **kwargs):
 
@@ -30,6 +43,13 @@ def vm_data_created(method):
     return wrapper
 
 def vm_is_turn_on(method):
+    """
+    Decorator to ensure VM is powered on before calling the decorated method.
+
+    :param method: The method to be decorated
+    :return: Wrapped method that checks VM power status
+    :raises VirtualMachinException: If virtual machine is not turned on
+    """
     @wraps(method)
     def wrapper(self, *args, **kwargs):
 
@@ -47,6 +67,16 @@ def retry(
         exception: bool = True,
         exception_type: object | tuple = None
 ):
+    """
+    Decorator to retry function execution on exception with configurable parameters.
+
+    :param max_attempts: Maximum number of retry attempts
+    :param interval: Interval between retry attempts in seconds
+    :param stdout: Whether to print exception messages to stdout
+    :param exception: Whether to raise exception after max attempts
+    :param exception_type: Specific exception type(s) to catch
+    :return: Decorated function with retry logic
+    """
     def wrapper(func):
         @wraps(func)
         def inner(*args, **kwargs):

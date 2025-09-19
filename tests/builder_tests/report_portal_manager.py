@@ -8,6 +8,12 @@ from rich import print
 from typing import Optional
 
 class ReportPortalManager():
+    """
+    Manager for sending test results to Report Portal.
+
+    Handles the process of splitting test results by OS and sending them
+    to Report Portal with proper suite organization and concurrent processing.
+    """
 
     def __init__(self, project_name: str, df: pd.DataFrame, version: str):
         self.project_name = project_name
@@ -17,13 +23,19 @@ class ReportPortalManager():
         self.portal_data = PortalData()
 
     def send(self):
+        """
+        Send test results to Report Portal organized by operating system.
+
+        Splits test results by OS and processes them concurrently,
+        creating appropriate suites and sending test results to Report Portal.
+        """
         for os_name, df in self.split_by_os().items():
             with PortalManager(
                 project_name=self.project_name,
                 launch_name=os_name,
                 launch_attributes=[{'name': 'Version', 'value': self.version}],
                 last_launch_connect=False
-                ) as launch:
+            ) as launch:
 
                 self._create_suites(df, launch)
                 with self.console.status('') as status:
@@ -115,10 +127,9 @@ class ReportPortalManager():
 
     def split_by_os(self) -> dict[str, pd.DataFrame]:
         """
-        Reads CSV report and splits it into multiple DataFrames by unique OS values.
-        :param csv_path: Path to the CSV report file.
-        :param delimiter: Delimiter used in the CSV file (default is ',').
-        :return: Dictionary where keys are OS names and values are DataFrames for each OS.
+        Split the DataFrame into multiple DataFrames by unique OS values.
+
+        :return: Dictionary where keys are OS names and values are DataFrames for each OS
         """
         if 'Os' not in self.df.columns:
             print(f"[red]|ERROR| Column 'Os' not found in report")
