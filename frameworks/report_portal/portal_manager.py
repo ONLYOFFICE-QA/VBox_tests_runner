@@ -85,7 +85,7 @@ class PortalManager:
         step.finish(return_code=return_code, status=status)
 
     def create_suite(self, suite_name: str, parent_suite_uuid: Optional[str] = None):
-        cache_key = f"{suite_name}_{parent_suite_uuid}"
+        cache_key = f"{suite_name}_{parent_suite_uuid or self.rp.launch.uuid}"
 
         if cache_key not in self._suite_cache:
             suite = self.rp.get_launch_suite()

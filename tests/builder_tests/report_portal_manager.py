@@ -43,8 +43,7 @@ class ReportPortalManager():
         :return: A status message string or an empty string if the test failed.
         """
         ret_code = self._get_exit_code(row)
-        os_suite_uuid = launch.create_suite(row['Os'])
-        samples_suite_uuid = launch.create_suite(row['Builder_samples'], parent_suite_uuid=os_suite_uuid)
+        suite_uuid = launch.create_suite(row['Builder_samples'])
 
         log = self._get_log(row)
 
@@ -52,7 +51,7 @@ class ReportPortalManager():
             test_name=row['Test_name'],
             log_message=log,
             return_code=ret_code,
-            suite_uuid=samples_suite_uuid,
+            suite_uuid=suite_uuid,
             status=self.portal_data.get_status(row['Stdout'])
         )
 
@@ -98,8 +97,7 @@ class ReportPortalManager():
                     f"[cyan]|INFO| Created suite {row['Builder_samples']} "
                     f"launchers for {row['Version']} test."
                 )
-                os_suite_uuid = launch.create_suite(row['Os'])
-                launch.create_suite(row['Builder_samples'], parent_suite_uuid=os_suite_uuid)
+                launch.create_suite(row['Builder_samples'])
 
     @staticmethod
     def _get_thread_result(future):
