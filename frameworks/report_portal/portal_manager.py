@@ -5,10 +5,31 @@ from typing import Optional
 from report_portal import ReportPortal
 
 class PortalManager:
+    """
+    Manager for Report Portal operations including launches, suites, and test results.
+
+    Provides high-level interface for managing Report Portal launches,
+    creating test suites, and sending test results with proper caching.
+    """
     _suite_cache = {}
 
-    def __init__(self, project_name: str, launch_name: str):
+    def __init__(self,
+            project_name: str,
+            launch_name: str,
+            launch_attributes: list[dict] = None,
+            last_launch_connect: bool = True
+        ):
+        """
+        Initialize PortalManager with project and launch configuration.
+
+        :param project_name: Name of the Report Portal project
+        :param launch_name: Name of the test launch
+        :param launch_attributes: Optional attributes for the launch
+        :param last_launch_connect: Whether to connect to the last launch
+        """
+        self.last_launch_connect = last_launch_connect
         self.launch_name = launch_name
+        self.launch_attributes = launch_attributes
         self.rp = ReportPortal(project_name=project_name)
         self.__suites = None
         self.__suite_names = None
@@ -16,31 +37,61 @@ class PortalManager:
 
     @property
     def suites(self) -> list:
+        """
+        Get list of test suites from the current launch.
+
+        :return: List of suite items from Report Portal
+        """
         if self.__suites is None:
             self.__suites = self.rp.get_launch_suite().get_items_by_type()
         return self.__suites
 
     @property
     def suite_names(self) -> list:
+        """
+        Get list of suite names from the current launch.
+
+        :return: List of suite names
+        """
         if self.__suites is None:
             self.__suite_names = [suite.get("name") for suite in self.suites]
         return self.__suite_names
 
     @property
     def steps_items(self) -> list:
+        """
+        Get list of step items from the current launch.
+
+        :return: List of step items from Report Portal
+        """
         if self.__steps_items is None:
             self.__steps_items = self.rp.get_launch_step().get_items_by_type()
         return self.__steps_items
 
     def __enter__(self):
+        """
+        Context manager entry point.
+
+        :return: Self instance for context management
+        """
         self.start_launch()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Context manager exit point.
+
+        :param exc_type: Exception type if any
+        :param exc_val: Exception value if any
+        :param exc_tb: Exception traceback if any
+        """
         self.finish_launcher()
 
     def start_launch(self):
-        self.rp.launch.start(name=self.launch_name, last_launch_connect=True)
+        """
+        Start a new Report Portal launch.
+        """
+        self.rp.launch.start(name=self.launch_name, last_launch_connect=self.last_launch_connect, attributes=self.launch_attributes)
 
     def set_test_result(
             self,
@@ -50,6 +101,15 @@ class PortalManager:
             suite_uuid: str = None,
             status: str = None
     ):
+        """
+        Set test result in Report Portal with logs and status.
+
+        :param test_name: Name of the test
+        :param return_code: Test execution return code
+        :param log_message: Optional log message for the test
+        :param suite_uuid: UUID of the parent suite
+        :param status: Optional status override
+        """
         step = self.rp.get_launch_step()
         suite_id = self.rp.launch.rp_client.get_id(item_type='suite', uuid=suite_uuid, cache=True)
         exist_step = self.get_exist_item(self.steps_items, test_name, suite_id)
@@ -78,7 +138,14 @@ class PortalManager:
         step.finish(return_code=return_code, status=status)
 
     def create_suite(self, suite_name: str, parent_suite_uuid: Optional[str] = None):
-        cache_key = f"{suite_name}_{parent_suite_uuid}"
+        """
+        Create or get existing test suite with caching.
+
+        :param suite_name: Name of the suite to create
+        :param parent_suite_uuid: Optional UUID of parent suite
+        :return: Suite UUID
+        """
+        cache_key = f"{suite_name}_{parent_suite_uuid or self.rp.launch.uuid}"
 
         if cache_key not in self._suite_cache:
             suite = self.rp.get_launch_suite()
@@ -96,6 +163,14 @@ class PortalManager:
 
     @staticmethod
     def get_exist_item(items: list, target_name: str, parent_id: Optional[str] = None) -> Optional[dict]:
+        """
+        Find existing item by name and parent ID.
+
+        :param items: List of items to search in
+        :param target_name: Name of the target item
+        :param parent_id: Optional parent ID to match
+        :return: Matching item dictionary or None
+        """
         matching_item = next(
             (item for item in items if item.get('name') == target_name and item.get('parent') == parent_id),
             None
@@ -103,4 +178,7 @@ class PortalManager:
         return matching_item
 
     def finish_launcher(self):
+        """
+        Finish and close the Report Portal launch.
+        """
         self.rp.launch.finish()

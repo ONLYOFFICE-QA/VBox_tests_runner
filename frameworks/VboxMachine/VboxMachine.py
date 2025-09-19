@@ -10,8 +10,20 @@ from .configs import VmConfig
 
 @class_cache
 class VboxMachine:
+    """
+    VirtualBox machine wrapper providing high-level operations and configuration management.
+
+    This class provides a simplified interface for managing VirtualBox VMs with
+    automatic configuration, network setup, and data management capabilities.
+    """
 
     def __init__(self, name: str, config_path: str = None):
+        """
+        Initialize VboxMachine with specified VM name and optional configuration.
+
+        :param name: Name of the VirtualBox virtual machine
+        :param config_path: Optional path to configuration file
+        """
         self.vm_config = VmConfig(config_path=config_path)
         self.vm = VirtualMachine(name)
         self.name = name
@@ -22,6 +34,14 @@ class VboxMachine:
 
     @vm_is_turn_on
     def create_data(self):
+        """
+        Create VM data object with network and user information.
+
+        Collects VM's IP address, logged user, and configuration file path
+        to create a VmData object for further operations.
+
+        :raises ValueError: If IP address or logged user is not available
+        """
         ip = self.vm.network.get_ip()
         if ip is None:
             raise ValueError("IP address is not available")
@@ -39,12 +59,22 @@ class VboxMachine:
 
     @property
     def adapter_name(self) -> str:
+        """
+        Get the name of the bridge adapter used by the VM.
+
+        :return: Bridge adapter name
+        """
         if self.__adapter_name is None:
             self.__adapter_name = self.vm.get_parameter('bridgeadapter1')
         return self.__adapter_name
 
     @property
     def os_type(self) -> str:
+        """
+        Get the operating system type of the VM.
+
+        :return: OS type ('windows', 'linux', or 'unknown')
+        """
         if self.__os_type is None:
             type = self.vm.get_os_type().lower()
             if 'windows' in type:
@@ -57,6 +87,11 @@ class VboxMachine:
 
     @property
     def os_info(self) -> dict:
+        """
+        Get comprehensive OS information including type and name.
+
+        :return: Dictionary containing OS type and name
+        """
         return {
             'type': self.os_type,
             'name': self.os_name
@@ -64,6 +99,12 @@ class VboxMachine:
 
     @property
     def os_name(self) -> str:
+        """
+        Get the detailed OS name without bit information.
+
+        :return: OS name with bit information removed
+        :raises ValueError: If OS type is not available
+        """
         if self.__os_name is None:
             os_type = self.vm.get_parameter('ostype')
             if os_type is None:
@@ -72,6 +113,16 @@ class VboxMachine:
         return self.__os_name
 
     def run(self, headless: bool = True, status_bar: bool = False, timeout: int = 600):
+        """
+        Start the VM with proper configuration and wait for readiness.
+
+        Stops existing VM if running, restores snapshot, applies configuration,
+        starts VM, and waits for network and user login.
+
+        :param headless: Whether to run VM in headless mode
+        :param status_bar: Whether to show progress status bar
+        :param timeout: Timeout in seconds for network and user readiness
+        """
         if self.vm.power_status():
             self.vm.stop()
 
@@ -83,6 +134,12 @@ class VboxMachine:
         self.create_data()
 
     def configurate(self):
+        """
+        Apply VM configuration including network, CPU, memory and other settings.
+
+        Configures network adapter, CPU count, nested virtualization,
+        memory allocation, audio settings, and speculative execution control.
+        """
         self.set_network_adapter()
         self.vm.set_cpus(self._get_cpu_num())
         self.vm.nested_virtualization(self.vm_config.nested_virtualization)
@@ -91,9 +148,18 @@ class VboxMachine:
         self.vm.speculative_execution_control(self.vm_config.speculative_execution_control)
 
     def stop(self):
+        """
+        Stop the virtual machine.
+        """
         self.vm.stop()
 
     def set_network_adapter(self) -> None:
+        """
+        Configure VM network adapter based on configuration settings.
+
+        Sets network adapter based on specified configuration or selects
+        the first available host adapter if current one is not suitable.
+        """
         specified = self.vm_config.network.adapter_name
         host_adapters = self.vm_config.host_adapters
         target_adapter = None
@@ -113,9 +179,19 @@ class VboxMachine:
 
     # TODO
     def _get_memory_num(self) -> int:
+        """
+        Get memory allocation for the VM based on host OS and configuration.
+
+        :return: Memory allocation in MB
+        """
         if HostInfo().os == 'mac':
             return 2048
         return self.vm_config.memory
 
     def _get_cpu_num(self) -> int:
+        """
+        Get CPU count configuration for the VM.
+
+        :return: Number of CPU cores to assign to VM
+        """
         return self.vm_config.cpus
