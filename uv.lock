@@ -1104,7 +1104,7 @@ wheels = [
 [[package]]
 name = "report-portal"
 version = "0.1.0"
-source = { git = "https://github.com/l8556/report_portal.git?branch=master#1398de6de4017d50dc4727dd04bdf50083734792" }
+source = { git = "https://github.com/l8556/report_portal.git?branch=master#a469e5266634c8d185a0e491d9144e372ba06806" }
 dependencies = [
     { name = "reportportal-client" },
 ]
