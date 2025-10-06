@@ -43,7 +43,7 @@ class PortalManager:
         :return: List of suite items from Report Portal
         """
         if self.__suites is None:
-            self.__suites = self.rp.get_launch_suite().get_items_by_type()
+            self.__suites = self.rp.get_suite().get_items_by_type()
         return self.__suites
 
     @property
@@ -65,7 +65,7 @@ class PortalManager:
         :return: List of step items from Report Portal
         """
         if self.__steps_items is None:
-            self.__steps_items = self.rp.get_launch_step().get_items_by_type()
+            self.__steps_items = self.rp.get_step().get_items_by_type()
         return self.__steps_items
 
     def __enter__(self):
@@ -110,7 +110,7 @@ class PortalManager:
         :param suite_uuid: UUID of the parent suite
         :param status: Optional status override
         """
-        step = self.rp.get_launch_step()
+        step = self.rp.get_step()
         suite_id = self.rp.launch.rp_client.get_id(item_type='suite', uuid=suite_uuid, cache=True)
         exist_step = self.get_exist_item(self.steps_items, test_name, suite_id)
 
@@ -148,7 +148,7 @@ class PortalManager:
         cache_key = f"{suite_name}_{parent_suite_uuid or self.rp.launch.uuid}"
 
         if cache_key not in self._suite_cache:
-            suite = self.rp.get_launch_suite()
+            suite = self.rp.get_suite()
             parent_id = suite.get_id(parent_suite_uuid) if parent_suite_uuid else None
             exists_suite = self.get_exist_item(self.suites, suite_name, parent_id)
 
