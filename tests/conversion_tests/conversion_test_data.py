@@ -14,6 +14,9 @@ class ConversionTestData(TestData):
     config_path: str
     __status_bar: bool | None = None
     __config = None
+    __restore_snapshot: bool = True
+    __snapshot_name: str = None
+    __configurate: bool = True
 
     def __post_init__(self):
         super().__post_init__()
@@ -33,6 +36,36 @@ class ConversionTestData(TestData):
         if self.__config is None:
             self.__config = self._read_config()
         return self.__config
+
+    @property
+    def restore_snapshot(self) -> bool:
+        return self.__restore_snapshot
+
+    @property
+    def snapshot_name(self) -> str:
+        return self.__snapshot_name
+
+    @property
+    def configurate(self) -> bool:
+        return self.__configurate
+
+    @restore_snapshot.setter
+    def restore_snapshot(self, value: bool):
+        if not isinstance(value, bool):
+            raise TypeError("restore_snapshot must be a boolean value")
+        self.__restore_snapshot = value
+
+    @snapshot_name.setter
+    def snapshot_name(self, value: str):
+        if not isinstance(value, str):
+            raise TypeError("snapshot_name must be a string value")
+        self.__snapshot_name = value
+
+    @configurate.setter
+    def configurate(self, value: bool):
+        if not isinstance(value, bool):
+            raise TypeError("configurate must be a boolean value")
+        self.__configurate = value
 
     @property
     def vm_names(self) -> List[str]:

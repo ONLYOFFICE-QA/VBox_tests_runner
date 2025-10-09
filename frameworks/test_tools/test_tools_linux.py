@@ -12,7 +12,7 @@ from frameworks.test_data import TestData
 
 class TestToolsLinux(TestTools):
 
-    def __init__(self,  vm: VboxMachine, test_data: TestData):
+    def __init__(self, vm: VboxMachine, test_data: TestData):
         super().__init__(vm=vm, test_data=test_data)
         self.server = None
         self.remote_report_path = None
@@ -22,7 +22,13 @@ class TestToolsLinux(TestTools):
 
     @retry(max_attempts=2, exception_type=VirtualMachinException)
     def run_vm(self, headless: bool = True) -> None:
-        self.vm.run(headless=headless, status_bar=self.data.status_bar)
+        self.vm.run(
+            headless=headless,
+            status_bar=self.data.status_bar,
+            restore_snapshot=self.data.restore_snapshot,
+            snapshot_name=self.data.snapshot_name,
+            configurate=self.data.configurate
+        )
         self.server = self._get_server()
 
     def initialize_libs(self, report, paths) -> None:
