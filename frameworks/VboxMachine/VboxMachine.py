@@ -139,7 +139,7 @@ class VboxMachine:
             self.vm.stop()
 
         if restore_snapshot:
-            self.vm.snapshot.restore(snapshot_name=snapshot_name)
+            self.vm.snapshot.restore(name=snapshot_name)
 
         if configurate:
             self.configurate()

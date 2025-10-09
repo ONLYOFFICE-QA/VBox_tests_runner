@@ -20,6 +20,10 @@ from .run_script import RunScript
 
 import subprocess as sb
 
+class Report:
+    pass
+
+
 class ConversionTests:
 
     def __init__(self, vm_name: str, test_data: ConversionTestData):
@@ -120,9 +124,13 @@ class ConversionTests:
         """
         local_paths = ConversionLocalPaths()
         sb.call(f"cd {local_paths.x2ttesting_dir} && git pull", shell=True)
-        sb.call(f"cd {local_paths.fonts_dir} && git pull", shell=True)
-        sb.call(f"cd {local_paths.opencv_dir} && git pull", shell=True)
-        command = f"cd {local_paths.x2ttesting_dir} && {self.data.config.get('run_script_cmd')} --version {self.data.version}"
+        # TODO
+        # sb.call(f"cd {local_paths.fonts_dir} && git pull", shell=True)
+        # sb.call(f"cd {local_paths.opencv_dir} && git pull", shell=True)
+        # TODO
+        executer = "powershell.exe " if self.host.is_windows else ""
+        sb.call(f"{executer}allrepoup", shell=True)
+        command = f"cd {local_paths.x2ttesting_dir} && {executer}{self.data.config.get('run_script_cmd')} --version {self.data.version}"
         sb.call(command, shell=True)
 
     def _initialize_libs(self) -> None:
@@ -130,6 +138,10 @@ class ConversionTests:
         Initializes the libraries required for the tests.
         """
         self._initialize_paths()
+        self.test_tools.initialize_libs(
+            report=Report(),
+            paths=self.paths
+        )
 
     @vm_data_created
     def _initialize_paths(self) -> ConversionPaths:
@@ -145,6 +157,8 @@ class ConversionTests:
         Returns the appropriate test tools based on the OS type.
         :return: A TestTools object for the current OS.
         """
+        self.data.restore_snapshot = False
+        self.data.configurate = False
         return TestToolsLinux(vm=self.vm, test_data=self.data)
 
     @vm_data_created

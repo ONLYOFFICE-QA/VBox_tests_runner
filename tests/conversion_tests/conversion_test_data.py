@@ -17,6 +17,8 @@ class ConversionTestData(TestData):
     __restore_snapshot: bool = True
     __snapshot_name: str = None
     __configurate: bool = True
+    __update_interval: int = 60
+
 
     def __post_init__(self):
         super().__post_init__()
@@ -48,6 +50,10 @@ class ConversionTestData(TestData):
     @property
     def configurate(self) -> bool:
         return self.__configurate
+
+    @property
+    def update_interval(self) -> int:
+        return self.__update_interval
 
     @restore_snapshot.setter
     def restore_snapshot(self, value: bool):
