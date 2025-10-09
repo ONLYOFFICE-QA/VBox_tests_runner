@@ -37,6 +37,18 @@ class TestData(ABC):
         return self._get_file_path('token_file', 'token')
 
     @property
+    def restore_snapshot(self) -> bool:
+        return self.config.get('restore_snapshot', True)
+
+    @property
+    def snapshot_name(self) -> str:
+        return self.config.get('snapshot_name', None)
+
+    @property
+    def configurate(self) -> bool:
+        return self.config.get('configurate', True)
+
+    @property
     def tg_chat_id(self) -> str:
         return self._read_file(self.chat_id_file).strip()
 
