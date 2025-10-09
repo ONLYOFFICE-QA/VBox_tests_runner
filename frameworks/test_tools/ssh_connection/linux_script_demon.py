@@ -35,6 +35,11 @@ class LinuxScriptDemon:
     Type=simple
     ExecStart=/bin/bash {self.exec_script_path}
     User={self.user}
+    Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/{self.user}/.local/bin"
+    Environment="HOME=/home/{self.user}"
+    Environment="SHELL=/bin/bash"
+    Environment="ZDOTDIR=/tmp"
+    Environment="BASH_ENV="
 
     [Install]
     WantedBy=multi-user.target\

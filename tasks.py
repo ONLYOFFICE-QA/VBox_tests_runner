@@ -51,7 +51,7 @@ from tests import (
 )
 
 @task
-def conversion_test(c, version: str):
+def conversion_test(c, version: str, name: Optional[str] = None):
     """
     Run conversion tests.
     """
@@ -61,7 +61,7 @@ def conversion_test(c, version: str):
     )
     test_data.status_bar = True
 
-    for vm_name in test_data.vm_names:
+    for vm_name in test_data.vm_names if not name else [name]:
         ConversionTests(vm_name=vm_name, test_data=test_data).run()
 
 

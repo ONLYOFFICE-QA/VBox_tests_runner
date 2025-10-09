@@ -21,22 +21,24 @@ class RunScript:
     def generate(self) -> str:
         commands = [
             self.get_shebang(),
-            self.get_update_command(self._path.remote.opencv_dir),
-            self.get_update_command(self._path.remote.fonts_dir),
+            self.get_allrepoup_command(self._path.remote.x2ttesting_dir),
             self.get_change_dir_command(self._path.remote.x2ttesting_dir),
-            self.get_run_script_cmd(),
+            self.get_run_script_cmd(self._path.remote.x2ttesting_dir),
         ]
 
         script_content = [line.strip() for line in filter(None, commands)]
         return ' && '.join(script_content) if self.is_bat else '\n'.join(script_content)
+
+    def get_allrepoup_command(self, dir_path: str) -> str:
+        return f"cd {dir_path} && uv run invoke all-repo-update"
 
     def get_shebang(self) -> str:
         if self.is_windows:
             return ''
         return '#!/bin/bash'
 
-    def get_run_script_cmd(self) -> str:
-        return self.data.config.get('run_script_cmd')
+    def get_run_script_cmd(self, dir_path: str) -> str:
+        return f"cd {dir_path} && uv run {self.data.config.get('run_script_cmd')}"
 
     def get_change_dir_command(self, dir_path: str) -> str:
         return f"cd {dir_path}"

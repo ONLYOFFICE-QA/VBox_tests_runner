@@ -48,10 +48,10 @@ class SSHConnection:
     def clean_log_journal(self):
         self.exec_cmd("sudo rm /var/log/journal/*/*.journal")
 
-    def wait_execute_service(self, timeout: int = None, status_bar: bool = False):
+    def wait_execute_service(self, timeout: int = None, status_bar: bool = False, interval: int = 0.5):
         service_name = self.my_service_name
         server_info = f"{self.ssh.server.custom_name}|{self.ssh.server.ip}"
-        msg = f"[cyan]|INFO|{server_info}| Waiting for execution of {service_name}"
+        msg = f"[cyan]|INFO|{server_info}| Waiting for execution of {service_name} with interval {interval} seconds"
 
         print(f"[bold cyan]{'-' * 90}\n|INFO|{server_info}| Waiting for script execution on VM\n{'-' * 90}")
 
@@ -59,8 +59,8 @@ class SSHConnection:
             print(msg) if not status_bar else None
             start_time = time.time()
             while self.service_is_active(service_name=service_name):
-                status.update(f"{msg}\n{self.get_my_service_log(stdout=False)}") if status_bar else None
-                time.sleep(0.5)
+                status.update(f"{msg}\n{self.get_my_service_log()}") if status_bar else None
+                time.sleep(interval)
 
                 if isinstance(timeout, int) and (time.time() - start_time) >= timeout:
                     raise SshException(
@@ -68,13 +68,13 @@ class SSHConnection:
                     )
         print(
             f"[blue]{'-' * 90}\n|INFO|{server_info}| Service {service_name} log:\n{'-' * 90}\n\n"
-            f"{self.get_my_service_log(1000, stdout=False)}\n{'-' * 90}"
+            f"{self.get_my_service_log(1000)}\n{'-' * 90}"
         )
 
     def service_is_active(self, service_name: str) -> bool:
         return self.exec_cmd(f'systemctl is-active {service_name}', stderr=True).stdout.lower() == 'active'
 
-    def get_my_service_log(self, line_num: str | int = 20, stdout: bool = True, stderr: bool = True) -> str:
+    def get_my_service_log(self, line_num: str | int = 20, stdout: bool = False, stderr: bool = False) -> str:
         command = f'sudo journalctl -n {line_num} -u {self.my_service_name}'
         return self.exec_cmd(command, stdout=stdout, stderr=stderr).stdout
 
