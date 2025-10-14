@@ -29,8 +29,36 @@ class S3Vbox:
         self.config = Config.load_from_file(path=s3_config_path)
         self.cores = cores or cpu_count() // 2
         self.s3 = S3Wrapper(bucket_name=self.config.bucket_name, region=self.config.region)
-        self.s3_files = self.s3.get_files()
         self.console = Console()
+        self.__s3_files = None
+
+    @property
+    def s3_files(self) -> list:
+        """
+        Get the list of files in the S3 bucket.
+        """
+        if self.__s3_files is None:
+            self.update_s3_files()
+        return self.__s3_files
+
+    @property
+    def s3_files_count(self) -> int:
+        """
+        Get the count of files in the S3 bucket.
+        """
+        return len(self.s3_files)
+
+    def update_s3_files(self) -> None:
+        """
+        Update the list of files in the S3 bucket.
+        """
+        self.__s3_files = self.s3.get_files()
+
+    def get_file_data(self, object_key: str) -> dict:
+        """
+        Get the data of a file in the S3 bucket.
+        """
+        return self.s3.get_headers(object_key).get('LastModified')
 
     def upload_from_dir(self, upload_dir: str, delete_exists: bool = False) -> None:
         """
@@ -88,6 +116,7 @@ class S3Vbox:
         )
 
         self.s3.upload(file_path=upload_file, object_key=object_key, stdout=False)
+        self.__s3_files = None
         return f'[green]|INFO| File [cyan]{upload_file}[/] to [cyan]{self.config.bucket_name}/{object_key}[/] uploaded'
 
     def download_file(self, s3_object_key: str, download_path: str) -> str:

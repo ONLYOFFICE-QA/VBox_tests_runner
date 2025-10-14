@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-import os
-from os.path import join
-
 from pydantic import BaseModel, Field, model_validator
 import json
 from pathlib import Path
@@ -40,6 +37,6 @@ class Config(BaseModel):
         :raises json.JSONDecodeError: If the file is not valid JSON.
         :raises pydantic.ValidationError: If the data is invalid.
         """
-        with open(path or join(os.getcwd(), 's3_config.json'), "r", encoding="utf-8") as f:
+        with open(path or str(Path.cwd().joinpath('s3_config.json')), "r", encoding="utf-8") as f:
             data = json.load(f)
         return cls(**data)
