@@ -60,7 +60,19 @@ class S3Vbox:
         """
         return self.s3.get_headers(object_key).get('LastModified')
 
-    def upload_from_dir(self, upload_dir: str, delete_exists: bool = False) -> None:
+    def upload_files(self, upload_files: list | str, delete_exists: bool = False, warning_msg: bool = True) -> None:
+        if delete_exists:
+            self.delete_files_from_s3(files=upload_files, warning_msg=warning_msg)
+
+        with self.console.status('[cyan]Uploading files...') as status:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=self.cores) as executor:
+                futures = [
+                    executor.submit(self.upload_file, upload_file, basename(upload_file))
+                    for upload_file in upload_files if upload_file
+                ]
+                status.update(self._process_results(futures))
+
+    def upload_from_dir(self, upload_dir: str, delete_exists: bool = False, warning_msg: bool = True) -> None:
         """
         Uploads all .zip files from the specified directory to S3.
 
@@ -68,17 +80,7 @@ class S3Vbox:
         :param delete_exists: Whether to delete files from S3 that already exist before uploading.
         """
         upload_files = File.get_paths(upload_dir, extension='zip')
-
-        if delete_exists:
-            self.delete_files_from_s3(files=upload_files)
-
-        with self.console.status('[cyan]Uploading files...') as status:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=self.cores) as executor:
-                futures = [
-                    executor.submit(self.upload_file, upload_file, basename(upload_file))
-                    for upload_file in upload_files
-                ]
-                status.update(self._process_results(futures))
+        self.upload_files(upload_files=upload_files, delete_exists=delete_exists, warning_msg=warning_msg)
 
     def download(self, download_dir: str = None, download_files: list = None) -> None:
         """
@@ -136,16 +138,16 @@ class S3Vbox:
         self.s3.download(object_key=s3_object_key, download_path=download_path, stdout=False)
         return f"[green]|INFO| File [cyan]{s3_object_key}[/] downloaded to [cyan]{download_path}[/]"
 
-    def delete_files_from_s3(self, files: list) -> None:
+    def delete_files_from_s3(self, files: list | str, warning_msg: bool = True) -> None:
         """
         Deletes existing files in S3 that match the upload file names.
 
         :param files: List of local files to match for deletion in S3.
         """
-        for file in files:
+        for file in files.unique() if isinstance(files, list) else [files]:
             s3_key = basename(file)
             if s3_key in self.s3_files:
-                self.s3.delete(s3_key)
+                self.s3.delete(s3_key, warning_msg=warning_msg)
 
     def _process_results(self, futures: list) -> Any | None:
         """
