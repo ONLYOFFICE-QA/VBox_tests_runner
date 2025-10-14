@@ -53,7 +53,7 @@ class TestScheduler:
         """
         if isfile(self.tested_versions_file):
             return File.read_json(self.tested_versions_file)
-        return {"builder": [], "desktop": []}
+        return {"builder": [], "desktop": [], "core": []}
 
     def save_tested_versions(self, tested_versions: Dict[str, List[str]]) -> None:
         """
@@ -216,7 +216,7 @@ class TestScheduler:
         :return: True if successful, False otherwise
         """
         try:
-            empty_versions = {"builder": [], "desktop": []}
+            empty_versions = {"builder": [], "desktop": [], "core": []}
             self.save_tested_versions(empty_versions)
             print("[green]|INFO| Tested versions cache cleared successfully[/]")
             return True
@@ -266,6 +266,7 @@ class TestScheduler:
         latest_versions = {
             "builder": report.get_last_exists_version(category="builder", any_exists=self.config.any_package_exists),
             "desktop": report.get_last_exists_version(category="desktop", any_exists=self.config.any_package_exists),
+            "core": report.get_last_exists_version(category="core", any_exists=self.config.any_package_exists),
         }
 
         new_versions = {}
