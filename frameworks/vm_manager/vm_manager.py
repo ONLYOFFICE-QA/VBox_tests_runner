@@ -69,7 +69,7 @@ class VmManager:
             print(f"[red]Failed to read data file for {vm_name}: {e}[/red]")
             return None
 
-    def download_vm_images(self, cores: Optional[int] = None, download_dir: Optional[str] = None) -> bool:
+    def download_vm_images(self, cores: Optional[int] = None, download_dir: Optional[str] = None, all_vm: bool = False) -> bool:
         """
         Download VM images from S3 storage.
 
@@ -79,7 +79,7 @@ class VmManager:
         """
         try:
             s3 = S3Vbox(cores=cores) if cores else self.s3
-            s3.download(download_dir=download_dir, download_files=self._get_s3_object_keys())
+            s3.download(download_dir=download_dir, download_files=self._get_s3_object_keys() if not all_vm else None)
             print("[green]VM images download completed[/green]")
             return True
         except Exception as e:

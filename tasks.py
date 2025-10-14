@@ -398,14 +398,15 @@ def reset_last_snapshot(c, group_name: Optional[str] = None):
 
 
 @task
-def download_os(c, cores: Optional[int] = None):
+def download_os(c, cores: Optional[int] = None, all_vm: bool = False):
     """
     Download VM images.
 
     :param c: Context (invoke requirement)
     :param cores: Number of CPU cores to use (optional)
+    :param all_vm: Download all VM images (optional)
     """
-    VmManager().download_vm_images(cores=cores)
+    VmManager().download_vm_images(cores=cores, all_vm=all_vm)
 
 
 @task
