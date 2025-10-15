@@ -60,6 +60,13 @@ class S3Vbox:
         """
         return self.s3.get_headers(object_key).get('LastModified')
 
+    def get_file_metadata(self, object_key: str) -> dict:
+        """
+        Get the metadata of a file in the S3 bucket.
+        """
+        metadata = self.s3.get_metadata(object_key)
+        return metadata or {}
+
     def upload_files(self, upload_files: list | str, delete_exists: bool = False, warning_msg: bool = True, metadata: dict = None) -> None:
         """
         Upload files to S3.
@@ -67,7 +74,7 @@ class S3Vbox:
         :param upload_files: File path or list of file paths to upload
         :param delete_exists: Delete existing files in S3 before uploading
         :param warning_msg: Show warning messages
-        :param metadata: Dictionary of metadata to attach to uploaded files
+        :param metadata: Dictionary of metadata to attach to uploaded files { 'file_name:': { 'key': 'value' } }
         """
         if delete_exists:
             self.delete_files_from_s3(files=upload_files, warning_msg=warning_msg)
@@ -77,7 +84,7 @@ class S3Vbox:
         with self.console.status('[cyan]Uploading files...') as status:
             with concurrent.futures.ThreadPoolExecutor(max_workers=self.cores) as executor:
                 futures = [
-                    executor.submit(self.upload_file, upload_file, basename(upload_file), metadata)
+                    executor.submit(self.upload_file, upload_file, basename(upload_file), metadata.get(basename(upload_file), None))
                     for upload_file in _upload_files
                 ]
                 status.update(self._process_results(futures))

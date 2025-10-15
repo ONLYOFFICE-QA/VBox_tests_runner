@@ -32,43 +32,6 @@ class VmManager:
         self.download_dir = Path(self.s3.config.download_dir)
         self._vm_dirs_cache: Dict[str, Path] = {}
 
-    def get_data_file(self, vm_name: str) -> Path:
-        """
-        Get data file for VM.
-        """
-        return self.get_vm_dir(vm_name).joinpath(self.config.data_file_name)
-
-    def write_data_file(self, vm_name: str, data: Optional[str] = None) -> bool:
-        """
-        Write data to data file for VM.
-
-        :param vm_name: Name of the virtual machine
-        :param data: Optional data string, if not provided will fetch from S3
-        :return: True if successful, False otherwise
-        """
-        try:
-            s3_data = data or str(self.s3.get_file_data(self._get_s3_object_key(vm_name)))
-            self.get_data_file(vm_name).write_text(s3_data, encoding=self.DATA_FILE_ENCODING)
-            print(f"[green]Updated data file for {vm_name}[/green]")
-            return True
-        except Exception as e:
-            print(f"[red]Failed to write data file for {vm_name}: {e}[/red]")
-            return False
-
-    def get_vm_data(self, vm_name: str) -> Optional[str]:
-        """
-        Get VM data from local data file.
-
-        :param vm_name: Name of the virtual machine
-        :return: VM data string if exists, None otherwise
-        """
-        try:
-            data_file = self.get_data_file(vm_name)
-            return data_file.read_text(encoding=self.DATA_FILE_ENCODING).strip() if data_file.is_file() else None
-        except Exception as e:
-            print(f"[red]Failed to read data file for {vm_name}: {e}[/red]")
-            return None
-
     def download_vm_images(self, cores: Optional[int] = None, download_dir: Optional[str] = None, all_vm: bool = False) -> bool:
         """
         Download VM images from S3 storage.
@@ -100,43 +63,24 @@ class VmManager:
         normalized_names = self._normalize_vm_names(vm_names or self.testing_hosts)
         print(f"[blue]Preparing {len(normalized_names)} VM(s) for S3 update...[/blue]")
 
-        # Prepare VMs for upload in parallel
-        for vm_name in normalized_names:
-            self._prepare_vm_for_update_on_s3(vm_name)
+        snapshot_uuids_info = {}
 
-        # Compress VMs in parallel
-        upload_paths = self._execute_parallel_tasks(
+        for vm_name in normalized_names:
+            snapshot_uuids_info[vm_name] = self._prepare_vm_for_update_on_s3(vm_name)
+
+        compress_info = self._execute_parallel_tasks(
             self._compress_vm,
             normalized_names,
-            cores,
-            "Compressing VMs..."
+            cores=cores,
+            description="Compressing VMs...",
+            task_kwargs={'snapshot_uuids_info': snapshot_uuids_info}
         )
-
+        upload_paths = self._prepare_upload_file(compress_info)
         if upload_paths:
             print(f"[blue]Uploading {len(upload_paths)} VM(s) to S3...[/blue]")
-            self.s3.upload_files(upload_paths, delete_exists=True, warning_msg=False)
-            self.update_data_files(vm_names, cores)
-            print("[green]S3 update completed successfully[/green]")
+            self.s3.upload_files(upload_paths, delete_exists=True, warning_msg=False, metadata=self._prepare_upload_metadata(compress_info))
         else:
             print("[yellow]No VMs to upload[/yellow]")
-
-    def update_data_files(self, vm_names: Union[str, List[str]], cores: Optional[int] = None) -> None:
-        """
-        Update data files for VMs in parallel.
-
-        :param vm_names: Name(s) of virtual machines to update data files for
-        :param cores: Number of CPU cores to use for parallel processing
-        """
-        normalized_names = self._normalize_vm_names(vm_names)
-
-        self._execute_parallel_tasks(
-            self.write_data_file,
-            normalized_names,
-            cores,
-            f"Updating data files for {len(normalized_names)} VM(s)..."
-        )
-
-        print(f"[green]Data files updated for {len(normalized_names)} VM(s)[/green]")
 
     def update_vm_on_host(
         self,
@@ -182,6 +126,43 @@ class VmManager:
 
         print(f"[green]Successfully updated {len(vms_to_update)} VM(s).[/green]")
 
+    def get_s3_snapshot_uuid(self, vm_name: str) -> str:
+        """
+        Get snapshot UUID for VM from S3.
+        """
+        return self.s3.get_file_metadata(self._get_s3_object_key(vm_name)).get('current_snapshot_uuid', 'NotFound')
+
+    def get_archive_snapshot_uuid(self, vm_name: str) -> str:
+        """
+        Get snapshot UUID for VM from archive.
+        """
+        return File.get_archive_comment(str(self.get_archive_path(vm_name)))
+
+    def get_archive_path(self, vm_name: str) -> Path:
+        """
+        Get archive path for VM.
+        """
+        return self.download_dir.joinpath(basename(self._get_s3_object_key(vm_name)))
+
+    def get_snapshot_uuid(self, vm: str | VirtualMachine) -> str:
+        """
+        Get snapshot UUID for VM from snapshot info or current snapshot info.
+        """
+        if isinstance(vm, str):
+            vm = VirtualMachine(vm)
+        return vm.snapshot.get_current_snapshot_info().get('uuid')
+
+    def get_vm_dir(self, vm_name: str) -> Path:
+        """
+        Get VM directory with caching.
+
+        :param vm_name: Name of the virtual machine
+        :return: Path to VM directory
+        """
+        if vm_name not in self._vm_dirs_cache:
+            self._vm_dirs_cache[vm_name] = Path(VirtualMachine(vm_name).get_parameter('CfgFile')).parent
+        return self._vm_dirs_cache[vm_name]
+
     def _check_vm_needs_update(self, vm_name: str) -> Optional[Dict[str, Any]]:
         """
         Check if VM needs updating by comparing local and S3 data.
@@ -190,16 +171,17 @@ class VmManager:
         :return: VM update data if update is needed, None otherwise
         """
         try:
-            vm_data = self.get_vm_data(vm_name)
+            host_snapshot_uuid = VirtualMachine(vm_name).snapshot.get_current_snapshot_info().get('uuid')
             s3_object_key = self._get_s3_object_key(vm_name)
-            s3_vm_data = str(self.s3.get_file_data(s3_object_key))
+            s3_snapshot_uuid = self.s3.get_file_metadata(s3_object_key).get('current_snapshot_uuid', 'NotFound')
 
-            if s3_vm_data != vm_data:
+            if s3_snapshot_uuid != host_snapshot_uuid:
                 return {
                     'vm_name': vm_name,
                     'vm_dir': self.get_vm_dir(vm_name),
                     's3_object_key': s3_object_key,
-                    's3_vm_data': s3_vm_data,
+                    's3_snapshot_uuid': s3_snapshot_uuid,
+                    'host_snapshot_uuid': host_snapshot_uuid,
                     'download_path': str(self.download_dir.joinpath(basename(s3_object_key)))
                 }
             return None
@@ -246,33 +228,18 @@ class VmManager:
             vm_name = vm_data['vm_name']
             vm_dir = vm_data['vm_dir']
             download_path = vm_data['download_path']
-            s3_vm_data = vm_data['s3_vm_data']
 
             print(f"[blue]Unpacking {vm_name}...[/blue]")
             File.delete(str(vm_dir), stdout=False, stderr=False)
             File.unpacking(download_path, str(vm_dir), stdout=False)
             self._fix_unpacking_duplication(vm_dir)
-            self.write_data_file(vm_name, s3_vm_data)
             print(f"[green]Installed {vm_name}[/green]")
             return True
         except Exception as e:
             print(f"[red]Error unpacking VM {vm_data.get('vm_name', 'unknown')}: {e}[/red]")
             return False
 
-
-    def get_vm_dir(self, vm_name: str) -> Path:
-        """
-        Get VM directory with caching.
-
-        :param vm_name: Name of the virtual machine
-        :return: Path to VM directory
-        """
-        if vm_name not in self._vm_dirs_cache:
-            self._vm_dirs_cache[vm_name] = Path(VirtualMachine(vm_name).get_parameter('CfgFile')).parent
-        return self._vm_dirs_cache[vm_name]
-
-
-    def _prepare_vm_for_update_on_s3(self, vm_name: str) -> Optional[bool]:
+    def _prepare_vm_for_update_on_s3(self, vm_name: str) -> Optional[str]:
         """
         Prepare VM for update on S3 by stopping, restoring snapshot and compressing.
 
@@ -285,12 +252,12 @@ class VmManager:
             if vm.power_status():
                 vm.stop()
             vm.snapshot.restore()
-            return True
+            return self.get_snapshot_uuid(vm)
         except Exception as e:
             print(f"[red]Failed to prepare VM {vm_name} for S3 upload: {e}[/red]")
             return None
 
-    def _compress_vm(self, vm_name: str, progress_bar: bool = False) -> Optional[str]:
+    def _compress_vm(self, vm_name: str, progress_bar: bool = False, snapshot_uuids_info: Optional[dict] = None) -> Optional[dict]:
         """
         Compress VM directory to archive.
 
@@ -298,13 +265,53 @@ class VmManager:
         :return: Path to created archive if successful, None otherwise
         """
         try:
-            archive_path = str(self.download_dir.joinpath(self._get_s3_object_key(vm_name)))
-            File.delete(archive_path, stdout=False, stderr=False)
-            File.compress(str(self.get_vm_dir(vm_name)), archive_path, progress_bar=progress_bar)
-            return archive_path
+            snapshot_uuid = snapshot_uuids_info.get(vm_name)
+            archive_path = self.get_archive_path(vm_name)
+            if not archive_path.is_file() or self.get_archive_snapshot_uuid(vm_name) != snapshot_uuid:
+                archive_path = str(archive_path)
+                File.delete(archive_path, stdout=False, stderr=False)
+                File.compress(str(self.get_vm_dir(vm_name)), archive_path, progress_bar=progress_bar, comment=snapshot_uuid)
+            else:
+                print(f"[magenta]|INFO| Snapshot UUID already exists for {vm_name} in host {archive_path}[/magenta]")
+            return {
+                'archive_path': str(archive_path),
+                'vm_name': vm_name,
+                'current_snapshot_uuid': snapshot_uuid
+            }
         except Exception as e:
             print(f"[red]Failed to compress VM {vm_name}: {e}[/red]")
             return None
+
+    def _prepare_upload_file(self, upload_paths: List[str]) -> list[str]:
+        """
+        Prepare archive for upload.
+        """
+        paths = []
+        for upload_path in upload_paths:
+            if upload_path.get('archive_path'):
+                s3_metadata = self.s3.get_file_metadata(self._get_s3_object_key(upload_path['vm_name']))
+                if s3_metadata.get('current_snapshot_uuid', 'NotFound') != upload_path['current_snapshot_uuid']:
+                    paths.append(upload_path['archive_path'])
+                else:
+                    print(f"[magenta]|INFO| Snapshot UUID already exists for {upload_path['vm_name']}[/magenta]")
+        return paths
+
+    def _prepare_upload_metadata(
+        self,
+        upload_paths: List[str]
+        ) -> Dict[str, Dict[str, str]]:
+        """
+        Prepare metadata for S3 upload with snapshot UUIDs.
+
+        :param upload_paths: List of paths to archives for upload
+        :return: Metadata dictionary mapping file basename to snapshot UUID
+        """
+        return {
+            basename(upload_path['archive_path']): {
+                'current_snapshot_uuid': upload_path['current_snapshot_uuid']
+            }
+            for upload_path in upload_paths
+        }
 
     def _get_s3_object_keys(self) -> List[str]:
         """
@@ -354,7 +361,9 @@ class VmManager:
         task_func: Callable,
         items: List[Any],
         cores: Optional[int] = None,
-        description: Optional[str] = None
+        description: Optional[str] = None,
+        task_args: Optional[tuple] = None,
+        task_kwargs: Optional[dict] = None
         ) -> List[Any]:
         """
         Execute tasks in parallel and collect results.
@@ -363,6 +372,8 @@ class VmManager:
         :param items: List of items to process
         :param cores: Number of CPU cores to use
         :param description: Optional description for logging
+        :param task_args: Additional positional arguments to pass to task_func
+        :param task_kwargs: Additional keyword arguments to pass to task_func
         :return: List of successful results
         """
         if not items:
@@ -372,7 +383,7 @@ class VmManager:
             print(f"[blue]{description}[/blue]")
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=cores or self.s3.cores) as executor:
-            futures = [executor.submit(task_func, item) for item in items]
+            futures = [executor.submit(task_func, item, *(task_args or ()), **(task_kwargs or {})) for item in items]
             return self._process_results(futures)
 
     def _process_results(self, futures: List[concurrent.futures.Future]) -> List[Any]:
