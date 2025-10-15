@@ -2,7 +2,6 @@
 from rich.console import Console
 from vboxwrapper import VirtualMachine
 import concurrent.futures
-from rich import print
 from os.path import basename
 from pathlib import Path
 from host_tools import File
@@ -11,7 +10,7 @@ from typing import Any, Dict, List, Optional, Union, Callable
 from .vm_updater import VmUpdater
 from .config import Config
 from ..s3 import S3Vbox
-
+from ..console_lock import print
 
 class VmManager:
     """
@@ -143,7 +142,7 @@ class VmManager:
         """
         Get VM updaters for list of VM names.
         """
-        return [VmUpdater(vm_name, self.s3, console=self.console) for vm_name in vm_names]
+        return [VmUpdater(vm_name, self.s3) for vm_name in vm_names]
 
     def _download_vm(self, vm_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
@@ -334,9 +333,10 @@ class VmManager:
         if not objects:
             return []
 
-        self.console.print(f'[cyan]{description}[/cyan]')
+        if description:
+            print(f'[cyan]{description}[/cyan]')
 
-        with self.console.status(f'[cyan]{description}[/cyan]') as status:
+        with self.console.status(f'[cyan]{description or ""}[/cyan]') as status:
             with concurrent.futures.ThreadPoolExecutor(max_workers=cores or self.s3.cores) as executor:
                 futures = [executor.submit(getattr(obj, method), *(method_args or ()), **(method_kwargs or {})) for obj in objects]
                 status.update(self._process_result(futures))
@@ -352,7 +352,7 @@ class VmManager:
             try:
                 return future.result()
             except Exception as e:
-                self.console.print(f'[bold red] Exception occurred: {e}')
+                print(f'[bold red] Exception occurred: {e}')
                 return None
         return None
 

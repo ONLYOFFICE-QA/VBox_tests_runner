@@ -10,7 +10,7 @@ from host_tools import File
 from host_tools.utils import Dir
 from s3wrapper import S3Wrapper
 
-
+from ..console_lock import console_lock
 from .config import Config
 
 
@@ -123,18 +123,24 @@ class S3Vbox:
                 ]
                 self._process_results(futures)
 
-    def upload_file(self, upload_file: str, object_key: str, metadata: dict = None) -> str:
+    def upload_file(self, upload_file: str, object_key: str, delete_exists: bool = False, warning_msg: bool = True, metadata: dict = None) -> str:
         """
         Uploads a single file to S3.
 
         :param upload_file: Local path of the file to upload.
         :param object_key: S3 object key under which to store the file.
+        :param delete_exists: Delete existing file in S3 before uploading
+        :param warning_msg: Show warning messages
         :param metadata: Dictionary of metadata to attach to the file
         :return: A success message.
         """
-        self.console.print(
-            f"[cyan]|INFO| Uploading file [cyan]{upload_file}[/] to [cyan]{self.config.bucket_name}/{object_key}[/]"
-        )
+        if delete_exists:
+            self.delete_files_from_s3(files=upload_file, warning_msg=warning_msg)
+
+        with console_lock:
+            self.console.print(
+                f"[cyan]|INFO| Uploading file [cyan]{upload_file}[/] to [cyan]{self.config.bucket_name}/{object_key}[/]"
+            )
 
         self.s3.upload(file_path=upload_file, object_key=object_key, stdout=False, metadata=metadata)
         self.__s3_files = None
@@ -149,10 +155,12 @@ class S3Vbox:
         :return: A success message.
         """
         if self._exists_object(download_path, s3_object_key):
-            self.console.print(f"[cyan]|INFO| Object {s3_object_key} already exists")
+            with console_lock:
+                self.console.print(f"[cyan]|INFO| Object {s3_object_key} already exists")
             return ""
 
-        self.console.print(f"[green]|INFO| Downloading file [cyan]{s3_object_key}[/] to [cyan]{download_path}[/]")
+        with console_lock:
+            self.console.print(f"[green]|INFO| Downloading file [cyan]{s3_object_key}[/] to [cyan]{download_path}[/]")
         Dir.create(dirname(download_path), stdout=False)
         self.s3.download(object_key=s3_object_key, download_path=download_path, stdout=False)
         return f"[green]|INFO| File [cyan]{s3_object_key}[/] downloaded to [cyan]{download_path}[/]"
@@ -180,7 +188,8 @@ class S3Vbox:
                 return future.result()
 
             except Exception as e:
-                self.console.print(f'[bold red] Exception occurred: {e}')
+                with console_lock:
+                    self.console.print(f'[bold red] Exception occurred: {e}')
                 return None
 
         return None

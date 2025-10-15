@@ -4,9 +4,8 @@ from typing import Optional
 import zipfile
 from host_tools import File
 from vboxwrapper import VirtualMachine
-from rich.console import Console
-from rich import print
 from ..s3 import S3Vbox
+from ..console_lock import print
 
 
 
@@ -18,11 +17,10 @@ class VmUpdater:
     """
     current_snapshot_uuid_key = 'current_snapshot_uuid'
 
-    def __init__(self, vm_name: str, s3: S3Vbox, console: Console = None):
+    def __init__(self, vm_name: str, s3: S3Vbox):
         """
         Initialize VmUpdater.
         """
-        self.console = console or Console()
         self.s3 = s3
         self.vm = VirtualMachine(vm_name)
         self.download_dir = Path(self.s3.config.download_dir)
@@ -142,4 +140,4 @@ class VmUpdater:
         """
         Print info message.
         """
-        self.console.print(f"[{color}]{level}|[cyan]{self.vm.name}[/cyan]| {msg}[/]")
+        print(f"[{color}]{level}|[cyan]{self.vm.name}[/cyan]| {msg}[/]")
