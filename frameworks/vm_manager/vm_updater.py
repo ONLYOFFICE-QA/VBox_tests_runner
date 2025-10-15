@@ -5,9 +5,10 @@ import zipfile
 from host_tools import File
 from vboxwrapper import VirtualMachine
 from ..s3 import S3Vbox
-from ..console import print
+from ..console import MyConsole
 
-
+console = MyConsole().console
+print = console.print
 
 class VmUpdater:
     """
@@ -134,7 +135,7 @@ class VmUpdater:
                 self._log(msg, color='green')
                 self.__uploaded = True
             else:
-                return self._log(f"Snapshot UUID already exists in S3 [cyan]{self.s3_object_key}[/cyan]", color='magenta')
+                self._log(f"Snapshot UUID already exists in S3 [cyan]{self.s3_object_key}[/cyan]", color='magenta')
 
     def _log(self, msg: str, color: str = 'green', level: str = 'INFO') -> None:
         """

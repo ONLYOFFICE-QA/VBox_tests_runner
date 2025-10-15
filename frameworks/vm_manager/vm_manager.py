@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from rich.console import Console
 from vboxwrapper import VirtualMachine
 import concurrent.futures
 from os.path import basename
@@ -10,7 +9,10 @@ from typing import Any, Dict, List, Optional, Union, Callable
 from .vm_updater import VmUpdater
 from .config import Config
 from ..s3 import S3Vbox
-from ..console import print
+from ..console import MyConsole
+
+console = MyConsole().console
+print = console.print
 
 class VmManager:
     """
@@ -27,7 +29,6 @@ class VmManager:
         """
         Initialize VmManager with configuration and testing hosts.
         """
-        self.console = Console()
         self.config = Config()
         self.testing_hosts = self.config.get_all_hosts()
         self.s3 = S3Vbox()
@@ -316,7 +317,7 @@ class VmManager:
         objects: List[object],
         method: str,
         cores: Optional[int] = None,
-        description: Optional[str] = None,
+        description: Optional[str] = "Processing...",
         method_args: Optional[tuple] = None,
         method_kwargs: Optional[dict] = None
         ) -> List[Any]:
@@ -333,10 +334,7 @@ class VmManager:
         if not objects:
             return []
 
-        if description:
-            print(f'[cyan]{description}[/cyan]')
-
-        with self.console.status(f'[cyan]{description or ""}[/cyan]') as status:
+        with console.status(f'[cyan]{description}[/cyan]') as status:
             with concurrent.futures.ThreadPoolExecutor(max_workers=cores or self.s3.cores) as executor:
                 futures = [executor.submit(getattr(obj, method), *(method_args or ()), **(method_kwargs or {})) for obj in objects]
                 status.update(self._process_result(futures))
