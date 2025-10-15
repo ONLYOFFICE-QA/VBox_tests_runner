@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Union, Callable
 from .vm_updater import VmUpdater
 from .config import Config
 from ..s3 import S3Vbox
-from ..console_lock import print
+from ..console import print
 
 class VmManager:
     """

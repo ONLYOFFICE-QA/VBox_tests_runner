@@ -5,7 +5,7 @@ import zipfile
 from host_tools import File
 from vboxwrapper import VirtualMachine
 from ..s3 import S3Vbox
-from ..console_lock import print
+from ..console import print
 
 
 
