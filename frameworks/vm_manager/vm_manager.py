@@ -7,6 +7,7 @@ from pathlib import Path
 from host_tools import File
 from typing import Any, Dict, List, Optional, Union, Callable
 
+from .vm_updater import VmUpdater
 from .config import Config
 from ..s3 import S3Vbox
 
@@ -64,21 +65,23 @@ class VmManager:
         print(f"[blue]Preparing {len(normalized_names)} VM(s) for S3 update...[/blue]")
 
         snapshot_uuids_info = {}
+        vm_updaters = [VmUpdater(vm_name, self.s3) for vm_name in normalized_names]
 
-        for vm_name in normalized_names:
-            snapshot_uuids_info[vm_name] = self._prepare_vm_for_update_on_s3(vm_name)
+        for vm_updater in vm_updaters:
+            vm_updater.prepare_vm_for_update()
 
-        compress_info = self._execute_parallel_tasks(
-            self._compress_vm,
-            normalized_names,
+        self._execute_parallel_vm_updaters(
+            vm_updaters,
+            'compress',
             cores=cores,
             description="Compressing VMs...",
-            task_kwargs={'snapshot_uuids_info': snapshot_uuids_info}
+            method_kwargs={'progress_bar': True}
         )
-        upload_paths = self._prepare_upload_file(compress_info)
+
+        upload_paths = self._prepare_upload_file(vm_updaters)
         if upload_paths:
             print(f"[blue]Uploading {len(upload_paths)} VM(s) to S3...[/blue]")
-            self.s3.upload_files(upload_paths, delete_exists=True, warning_msg=False, metadata=self._prepare_upload_metadata(compress_info))
+            self.s3.upload_files(upload_paths, delete_exists=True, warning_msg=False, metadata=self._prepare_upload_metadata(vm_updaters))
         else:
             print("[yellow]No VMs to upload[/yellow]")
 
@@ -282,23 +285,23 @@ class VmManager:
             print(f"[red]Failed to compress VM {vm_name}: {e}[/red]")
             return None
 
-    def _prepare_upload_file(self, upload_paths: List[str]) -> list[str]:
+    def _prepare_upload_file(self, vm_updaters: List[VmUpdater]) -> list[str]:
         """
         Prepare archive for upload.
         """
         paths = []
-        for upload_path in upload_paths:
-            if upload_path.get('archive_path'):
-                s3_metadata = self.s3.get_file_metadata(self._get_s3_object_key(upload_path['vm_name']))
-                if s3_metadata.get('current_snapshot_uuid', 'NotFound') != upload_path['current_snapshot_uuid']:
-                    paths.append(upload_path['archive_path'])
+        for vm_updater in vm_updaters:
+            if vm_updater.archive_path.is_file():
+                s3_metadata = self.s3.get_file_metadata(vm_updater.s3_object_key)
+                if s3_metadata.get('current_snapshot_uuid', 'NotFound') != vm_updater.current_snapshot_uuid:
+                    paths.append(vm_updater.archive_path)
                 else:
-                    print(f"[magenta]|INFO| Snapshot UUID already exists for {upload_path['vm_name']}[/magenta]")
+                    print(f"[magenta]|INFO| Snapshot UUID already exists for {vm_updater.vm.name}[/magenta]")
         return paths
 
     def _prepare_upload_metadata(
         self,
-        upload_paths: List[str]
+        vm_updaters: List[VmUpdater]
         ) -> Dict[str, Dict[str, str]]:
         """
         Prepare metadata for S3 upload with snapshot UUIDs.
@@ -307,10 +310,10 @@ class VmManager:
         :return: Metadata dictionary mapping file basename to snapshot UUID
         """
         return {
-            basename(upload_path['archive_path']): {
-                'current_snapshot_uuid': upload_path['current_snapshot_uuid']
+            basename(vm_updater.archive_path): {
+                'current_snapshot_uuid': vm_updater.current_snapshot_uuid
             }
-            for upload_path in upload_paths
+            for vm_updater in vm_updaters
         }
 
     def _get_s3_object_keys(self) -> List[str]:
@@ -356,34 +359,31 @@ class VmManager:
             File.delete(str(duplicated_dir), stdout=False)
             print(f"[green]Fixed duplication: items moved and empty directory removed[/green]")
 
-    def _execute_parallel_tasks(
+    def _execute_parallel_vm_updaters(
         self,
-        task_func: Callable,
-        items: List[Any],
+        vm_updaters: List[VmUpdater],
+        method: Callable,
         cores: Optional[int] = None,
         description: Optional[str] = None,
-        task_args: Optional[tuple] = None,
-        task_kwargs: Optional[dict] = None
+        method_kwargs: Optional[dict] = None
         ) -> List[Any]:
         """
         Execute tasks in parallel and collect results.
 
-        :param task_func: Function to execute for each item
-        :param items: List of items to process
+        :param vm_updaters: List of VmUpdater objects
+        :param method: Method to execute for each VmUpdater
         :param cores: Number of CPU cores to use
         :param description: Optional description for logging
-        :param task_args: Additional positional arguments to pass to task_func
-        :param task_kwargs: Additional keyword arguments to pass to task_func
         :return: List of successful results
         """
-        if not items:
+        if not vm_updaters:
             return []
 
         if description:
             print(f"[blue]{description}[/blue]")
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=cores or self.s3.cores) as executor:
-            futures = [executor.submit(task_func, item, *(task_args or ()), **(task_kwargs or {})) for item in items]
+            futures = [executor.submit(getattr(vm_updater, method), **(method_kwargs or {})) for vm_updater in vm_updaters]
             return self._process_results(futures)
 
     def _process_results(self, futures: List[concurrent.futures.Future]) -> List[Any]:
