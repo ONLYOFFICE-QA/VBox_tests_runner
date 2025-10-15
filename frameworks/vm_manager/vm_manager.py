@@ -86,14 +86,18 @@ class VmManager:
             print(f"[red]Failed to download VM images: {e}[/red]")
             return False
 
-    def update_vm_on_s3(self, vm_names: Union[str, List[str]], cores: Optional[int] = None) -> None:
+    def update_vm_on_s3(
+        self,
+        vm_names: Union[str, List[str]] = None,
+        cores: Optional[int] = None
+        ) -> None:
         """
         Update VM directories and metadata on S3.
 
         :param vm_names: Name(s) of the virtual machine(s) to update
         :param cores: Number of CPU cores to use for parallel processing
         """
-        normalized_names = self._normalize_vm_names(vm_names)
+        normalized_names = self._normalize_vm_names(vm_names or self.testing_hosts)
         print(f"[blue]Preparing {len(normalized_names)} VM(s) for S3 update...[/blue]")
 
         # Prepare VMs for upload in parallel

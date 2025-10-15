@@ -144,7 +144,7 @@ class S3Vbox:
 
         :param files: List of local files to match for deletion in S3.
         """
-        for file in files.unique() if isinstance(files, list) else [files]:
+        for file in list(dict.fromkeys(files)) if isinstance(files, list) else [files]:
             s3_key = basename(file)
             if s3_key in self.s3_files:
                 self.s3.delete(s3_key, warning_msg=warning_msg)
