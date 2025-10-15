@@ -60,27 +60,38 @@ class S3Vbox:
         """
         return self.s3.get_headers(object_key).get('LastModified')
 
-    def upload_files(self, upload_files: list | str, delete_exists: bool = False, warning_msg: bool = True) -> None:
+    def upload_files(self, upload_files: list | str, delete_exists: bool = False, warning_msg: bool = True, metadata: dict = None) -> None:
+        """
+        Upload files to S3.
+
+        :param upload_files: File path or list of file paths to upload
+        :param delete_exists: Delete existing files in S3 before uploading
+        :param warning_msg: Show warning messages
+        :param metadata: Dictionary of metadata to attach to uploaded files
+        """
         if delete_exists:
             self.delete_files_from_s3(files=upload_files, warning_msg=warning_msg)
+
+        _upload_files = upload_files if isinstance(upload_files, list) else [upload_files]
 
         with self.console.status('[cyan]Uploading files...') as status:
             with concurrent.futures.ThreadPoolExecutor(max_workers=self.cores) as executor:
                 futures = [
-                    executor.submit(self.upload_file, upload_file, basename(upload_file))
-                    for upload_file in upload_files if upload_file
+                    executor.submit(self.upload_file, upload_file, basename(upload_file), metadata)
+                    for upload_file in _upload_files
                 ]
                 status.update(self._process_results(futures))
 
-    def upload_from_dir(self, upload_dir: str, delete_exists: bool = False, warning_msg: bool = True) -> None:
+    def upload_from_dir(self, upload_dir: str, delete_exists: bool = False, warning_msg: bool = True, metadata: dict = None) -> None:
         """
         Uploads all .zip files from the specified directory to S3.
 
         :param upload_dir: The directory containing .zip files to upload.
         :param delete_exists: Whether to delete files from S3 that already exist before uploading.
+        :param metadata: Dictionary of metadata to attach to uploaded files
         """
         upload_files = File.get_paths(upload_dir, extension='zip')
-        self.upload_files(upload_files=upload_files, delete_exists=delete_exists, warning_msg=warning_msg)
+        self.upload_files(upload_files=upload_files, delete_exists=delete_exists, warning_msg=warning_msg, metadata=metadata)
 
     def download(self, download_dir: str = None, download_files: list = None) -> None:
         """
@@ -105,19 +116,20 @@ class S3Vbox:
                 ]
                 self._process_results(futures)
 
-    def upload_file(self, upload_file: str, object_key: str) -> str:
+    def upload_file(self, upload_file: str, object_key: str, metadata: dict = None) -> str:
         """
         Uploads a single file to S3.
 
         :param upload_file: Local path of the file to upload.
         :param object_key: S3 object key under which to store the file.
+        :param metadata: Dictionary of metadata to attach to the file
         :return: A success message.
         """
         self.console.print(
             f"[cyan]|INFO| Uploading file [cyan]{upload_file}[/] to [cyan]{self.config.bucket_name}/{object_key}[/]"
         )
 
-        self.s3.upload(file_path=upload_file, object_key=object_key, stdout=False)
+        self.s3.upload(file_path=upload_file, object_key=object_key, stdout=False, metadata=metadata)
         self.__s3_files = None
         return f'[green]|INFO| File [cyan]{upload_file}[/] to [cyan]{self.config.bucket_name}/{object_key}[/] uploaded'
 
