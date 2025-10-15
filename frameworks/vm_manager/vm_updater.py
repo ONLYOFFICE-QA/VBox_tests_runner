@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 from pathlib import Path
 from typing import Optional
+import zipfile
 from host_tools import File
 from vboxwrapper import VirtualMachine
+from rich.console import Console
 from rich import print
 from ..s3 import S3Vbox
 
@@ -14,11 +16,13 @@ class VmUpdater:
 
     Handles updating VM operations.
     """
+    current_snapshot_uuid_key = 'current_snapshot_uuid'
 
-    def __init__(self, vm_name: str, s3: S3Vbox):
+    def __init__(self, vm_name: str, s3: S3Vbox, console: Console = None):
         """
         Initialize VmUpdater.
         """
+        self.console = console or Console()
         self.s3 = s3
         self.vm = VirtualMachine(vm_name)
         self.download_dir = Path(self.s3.config.download_dir)
@@ -27,6 +31,14 @@ class VmUpdater:
         self.__archive_path = None
         self.__archive_snapshot_uuid = None
         self.__vm_dir = None
+        self.__uploaded = False
+
+    @property
+    def uploaded(self) -> bool:
+        """
+        Get uploaded status for VM.
+        """
+        return self.__uploaded
 
     @property
     def vm_dir(self) -> Path:
@@ -61,7 +73,10 @@ class VmUpdater:
         Get archive snapshot UUID for VM.
         """
         if self.__archive_snapshot_uuid is None:
-            self.__archive_snapshot_uuid = File.get_archive_comment(str(self.archive_path))
+            try:
+                self.__archive_snapshot_uuid = File.get_archive_comment(str(self.archive_path))
+            except (FileNotFoundError, zipfile.BadZipFile):
+                self.__archive_snapshot_uuid = None
         return self.__archive_snapshot_uuid
 
     def prepare_vm_for_update(self) -> None:
@@ -74,7 +89,7 @@ class VmUpdater:
         if self.vm.power_status():
             self.vm.stop()
         self.vm.snapshot.restore()
-        print(f"[green]|INFO| Prepared {self.vm.name} current snapshot uuid {self.current_snapshot_uuid} for update on S3|[/green]")
+        self._log(f"Prepared current snapshot uuid [cyan]{self.current_snapshot_uuid}[/cyan] for update on S3")
 
     def compress(self, progress_bar: bool = False) -> None:
         """
@@ -83,9 +98,48 @@ class VmUpdater:
         :param vm_name: Name of the virtual machine
         :return: Path to created archive if successful, None otherwise
         """
-        if not self.archive_path.is_file() or self.archive_snapshot_uuid != self.current_snapshot_uuid:
+        if not self.archive_path.is_file() or self.is_needs_compress():
+            self._log(f"Compressing VM to archive [magenta]{self.archive_path}[/magenta]", color='cyan')
             archive_path = str(self.archive_path)
             File.delete(archive_path, stdout=False, stderr=False)
             File.compress(str(self.vm_dir), archive_path, progress_bar=progress_bar, comment=self.current_snapshot_uuid)
+            self._log(f"Compressed VM to archive [cyan]{self.archive_path}[/cyan]")
         else:
-            print(f"[magenta]|INFO| Snapshot UUID already exists for {self.vm.name} in host {self.archive_path}[/magenta]")
+            self._log(f"Snapshot UUID already exists in host [cyan]{self.archive_path}[/cyan]", color='magenta')
+
+    def is_needs_compress(self) -> bool:
+        """
+        Check if VM needs compress by comparing snapshot UUIDs.
+        """
+        return self.archive_snapshot_uuid != self.current_snapshot_uuid
+
+    def is_needs_upload(self) -> bool:
+        """
+        Check if VM needs upload on S3 by comparing snapshot UUIDs.
+        """
+        metadata = self.s3.get_file_metadata(self.s3_object_key)
+        return metadata.get(self.current_snapshot_uuid_key, 'NotFound') != self.current_snapshot_uuid
+
+    def upload(self) -> None:
+        """
+        Upload VM archive to S3.
+        """
+        if self.archive_path.is_file():
+            if self.is_needs_upload():
+                msg = self.s3.upload_file(
+                    str(self.archive_path),
+                    self.s3_object_key,
+                    metadata={self.current_snapshot_uuid_key: self.current_snapshot_uuid},
+                    delete_exists=True,
+                    warning_msg=False
+                )
+                self._log(msg, color='green')
+                self.__uploaded = True
+            else:
+                return self._log(f"Snapshot UUID already exists in S3 [cyan]{self.s3_object_key}[/cyan]", color='magenta')
+
+    def _log(self, msg: str, color: str = 'green', level: str = 'INFO') -> None:
+        """
+        Print info message.
+        """
+        self.console.print(f"[{color}]{level}|[cyan]{self.vm.name}[/cyan]| {msg}[/]")

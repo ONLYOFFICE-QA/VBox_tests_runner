@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from rich.console import Console
 from vboxwrapper import VirtualMachine
 import concurrent.futures
 from rich import print
@@ -27,6 +28,7 @@ class VmManager:
         """
         Initialize VmManager with configuration and testing hosts.
         """
+        self.console = Console()
         self.config = Config()
         self.testing_hosts = self.config.get_all_hosts()
         self.s3 = S3Vbox()
@@ -64,26 +66,34 @@ class VmManager:
         normalized_names = self._normalize_vm_names(vm_names or self.testing_hosts)
         print(f"[blue]Preparing {len(normalized_names)} VM(s) for S3 update...[/blue]")
 
-        snapshot_uuids_info = {}
-        vm_updaters = [VmUpdater(vm_name, self.s3) for vm_name in normalized_names]
+        vm_updaters = self._get_vm_updaters(normalized_names)
 
         for vm_updater in vm_updaters:
             vm_updater.prepare_vm_for_update()
 
-        self._execute_parallel_vm_updaters(
-            vm_updaters,
-            'compress',
-            cores=cores,
-            description="Compressing VMs...",
-            method_kwargs={'progress_bar': True}
-        )
+        if all(not vm_updater.is_needs_upload() for vm_updater in vm_updaters):
+            return print("[green]All VMs are up to date on S3.[/green]")
 
-        upload_paths = self._prepare_upload_file(vm_updaters)
-        if upload_paths:
-            print(f"[blue]Uploading {len(upload_paths)} VM(s) to S3...[/blue]")
-            self.s3.upload_files(upload_paths, delete_exists=True, warning_msg=False, metadata=self._prepare_upload_metadata(vm_updaters))
+        if any(vm_updater.is_needs_compress() for vm_updater in vm_updaters):
+            self._execute_parallel_methods(
+                vm_updaters,
+                'compress',
+                cores=cores,
+                description="Compressing VMs..."
+            )
+
+        self._execute_parallel_methods(
+                vm_updaters,
+                'upload',
+                cores=cores,
+                description="Uploading VMs to S3...",
+            )
+        if all(vm_updater.uploaded for vm_updater in vm_updaters):
+            print("[green]VMs updated successfully on S3[/green]")
         else:
-            print("[yellow]No VMs to upload[/yellow]")
+            for vm_updater in vm_updaters:
+                if not vm_updater.uploaded:
+                    print(f"[cyan]|INFO| No {vm_updater.vm.name} uploaded on S3[/cyan]")
 
     def update_vm_on_host(
         self,
@@ -129,68 +139,11 @@ class VmManager:
 
         print(f"[green]Successfully updated {len(vms_to_update)} VM(s).[/green]")
 
-    def get_s3_snapshot_uuid(self, vm_name: str) -> str:
+    def _get_vm_updaters(self, vm_names: List[str]) -> List[VmUpdater]:
         """
-        Get snapshot UUID for VM from S3.
+        Get VM updaters for list of VM names.
         """
-        return self.s3.get_file_metadata(self._get_s3_object_key(vm_name)).get('current_snapshot_uuid', 'NotFound')
-
-    def get_archive_snapshot_uuid(self, vm_name: str) -> str:
-        """
-        Get snapshot UUID for VM from archive.
-        """
-        return File.get_archive_comment(str(self.get_archive_path(vm_name)))
-
-    def get_archive_path(self, vm_name: str) -> Path:
-        """
-        Get archive path for VM.
-        """
-        return self.download_dir.joinpath(basename(self._get_s3_object_key(vm_name)))
-
-    def get_snapshot_uuid(self, vm: str | VirtualMachine) -> str:
-        """
-        Get snapshot UUID for VM from snapshot info or current snapshot info.
-        """
-        if isinstance(vm, str):
-            vm = VirtualMachine(vm)
-        return vm.snapshot.get_current_snapshot_info().get('uuid')
-
-    def get_vm_dir(self, vm_name: str) -> Path:
-        """
-        Get VM directory with caching.
-
-        :param vm_name: Name of the virtual machine
-        :return: Path to VM directory
-        """
-        if vm_name not in self._vm_dirs_cache:
-            self._vm_dirs_cache[vm_name] = Path(VirtualMachine(vm_name).get_parameter('CfgFile')).parent
-        return self._vm_dirs_cache[vm_name]
-
-    def _check_vm_needs_update(self, vm_name: str) -> Optional[Dict[str, Any]]:
-        """
-        Check if VM needs updating by comparing local and S3 data.
-
-        :param vm_name: Name of the virtual machine
-        :return: VM update data if update is needed, None otherwise
-        """
-        try:
-            host_snapshot_uuid = VirtualMachine(vm_name).snapshot.get_current_snapshot_info().get('uuid')
-            s3_object_key = self._get_s3_object_key(vm_name)
-            s3_snapshot_uuid = self.s3.get_file_metadata(s3_object_key).get('current_snapshot_uuid', 'NotFound')
-
-            if s3_snapshot_uuid != host_snapshot_uuid:
-                return {
-                    'vm_name': vm_name,
-                    'vm_dir': self.get_vm_dir(vm_name),
-                    's3_object_key': s3_object_key,
-                    's3_snapshot_uuid': s3_snapshot_uuid,
-                    'host_snapshot_uuid': host_snapshot_uuid,
-                    'download_path': str(self.download_dir.joinpath(basename(s3_object_key)))
-                }
-            return None
-        except Exception as e:
-            print(f"[red]Error checking VM {vm_name}: {e}[/red]")
-            return None
+        return [VmUpdater(vm_name, self.s3, console=self.console) for vm_name in vm_names]
 
     def _download_vm(self, vm_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
@@ -359,50 +312,49 @@ class VmManager:
             File.delete(str(duplicated_dir), stdout=False)
             print(f"[green]Fixed duplication: items moved and empty directory removed[/green]")
 
-    def _execute_parallel_vm_updaters(
+    def _execute_parallel_methods(
         self,
-        vm_updaters: List[VmUpdater],
-        method: Callable,
+        objects: List[object],
+        method: str,
         cores: Optional[int] = None,
         description: Optional[str] = None,
+        method_args: Optional[tuple] = None,
         method_kwargs: Optional[dict] = None
         ) -> List[Any]:
         """
-        Execute tasks in parallel and collect results.
+        Execute method in parallel for list of objects and collect results.
 
-        :param vm_updaters: List of VmUpdater objects
-        :param method: Method to execute for each VmUpdater
+        :param objects: List of objects to execute method on
+        :param method: Name of the method to execute for each object
         :param cores: Number of CPU cores to use
         :param description: Optional description for logging
+        :param method_kwargs: Optional keyword arguments to pass to the method
         :return: List of successful results
         """
-        if not vm_updaters:
+        if not objects:
             return []
 
-        if description:
-            print(f"[blue]{description}[/blue]")
+        self.console.print(f'[cyan]{description}[/cyan]')
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=cores or self.s3.cores) as executor:
-            futures = [executor.submit(getattr(vm_updater, method), **(method_kwargs or {})) for vm_updater in vm_updaters]
-            return self._process_results(futures)
+        with self.console.status(f'[cyan]{description}[/cyan]') as status:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=cores or self.s3.cores) as executor:
+                futures = [executor.submit(getattr(obj, method), *(method_args or ()), **(method_kwargs or {})) for obj in objects]
+                status.update(self._process_result(futures))
 
-    def _process_results(self, futures: List[concurrent.futures.Future]) -> List[Any]:
+    def _process_result(self, futures: list) -> Any | None:
         """
-        Process futures results and handle exceptions.
+        Processes the results of futures and handles any exceptions.
 
-        :param futures: List of Future objects from concurrent executions
-        :return: List of results from successful futures
+        :param future: A Future object from concurrent execution.
+        :return: The result of the first successful future, or None if an error occurs.
         """
-        results = []
         for future in concurrent.futures.as_completed(futures):
             try:
-                result = future.result()
-                if result is not None:
-                    results.append(result)
+                return future.result()
             except Exception as e:
-                print(f'[bold red]Exception occurred: {e}[/bold red]')
-
-        return results
+                self.console.print(f'[bold red] Exception occurred: {e}')
+                return None
+        return None
 
     def _normalize_vm_names(self, vm_names: Union[str, List[str]]) -> List[str]:
         """

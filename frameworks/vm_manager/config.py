@@ -12,7 +12,6 @@ class Config:
     Manages test configuration files and extracts host information
     for both builder and desktop testing environments.
     """
-    data_file_name = 'data'
     test_configs: list = [
         join(os.getcwd(), "builder_tests_config.json"),
         join(os.getcwd(), "desktop_tests_config.json")
