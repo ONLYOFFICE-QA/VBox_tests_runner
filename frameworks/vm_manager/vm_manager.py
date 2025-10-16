@@ -69,25 +69,12 @@ class VmManager:
         if not vm_to_update:
             return print("[green]All VMs are up to date on S3.[/green]")
 
-        print(f"[blue]Preparing {len(normalized_names)} VM(s) for S3 update...[/blue]")
-        for vm_updater in vm_to_update:
-            vm_updater.prepare_vm_for_update()
+        vm_to_compress = [vm_updater for vm_updater in vm_to_update if vm_updater.is_needs_compress()]
+        if vm_to_compress:
+            self._prepare_vm_for_compression(vm_to_compress)
+            self._execute_parallel_methods(vm_to_compress, 'compress', cores=cores, description="Compressing VMs...")
 
-        if any(vm_updater.is_needs_compress() for vm_updater in vm_to_update):
-            self._execute_parallel_methods(
-                vm_to_update,
-                'compress',
-                cores=cores,
-                description="Compressing VMs..."
-            )
-
-        self._execute_parallel_methods(
-                vm_to_update,
-                'upload',
-                cores=cores,
-                description="Uploading VMs to S3...",
-            )
-
+        self._execute_parallel_methods(vm_to_update, 'upload', cores=cores, description="Uploading VMs to S3...")
         self._print_s3_update_results(vm_to_update, vm_updaters)
 
     def update_vm_on_host(
@@ -110,24 +97,17 @@ class VmManager:
             return print("[green]All VMs are up to date on host.[/green]")
 
         print(f"[yellow]Found {len(vm_to_update)} VM(s) that need updating.[/yellow]")
-
-        # Step 2: Download required files
-        self._execute_parallel_methods(
-            vm_to_update,
-            'download',
-            cores=cores,
-            description="Downloading VM files..."
-        )
-
-        # Step 3: Unpack and install VMs
-        self._execute_parallel_methods(
-            vm_to_update,
-            'unpack',
-            cores=cores,
-            description="Unpacking and installing VMs..."
-        )
-
+        self._execute_parallel_methods(vm_to_update, 'download', cores=cores, description="Downloading VM files...")
+        self._execute_parallel_methods(vm_to_update, 'unpack', cores=cores, description="Unpacking VMs...")
         print(f"[green]Successfully updated {len(vm_to_update)} VM(s).[/green]")
+
+    def _prepare_vm_for_compression(self, vm_updaters: List[VmUpdater]) -> None:
+        """
+        Prepare VM for compression.
+        """
+        print(f"[blue]Preparing {len(vm_updaters)} VM(s) for compression...[/blue]")
+        for vm_updater in vm_updaters:
+            vm_updater.prepare_vm_for_update()
 
     def _get_vm_updaters(self, vm_names: List[str], ignore_date: bool = False) -> List[VmUpdater]:
         """

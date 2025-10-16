@@ -18,8 +18,8 @@ class VmUpdater:
 
     Handles updating VM operations.
     """
-    current_snapshot_uuid_key = 'current_snapshot_uuid'
-    current_snapshot_date_key = 'current_snapshot_date'
+    snapshot_uuid_key = 'current_snapshot_uuid'
+    snapshot_date_key = 'current_snapshot_date'
     zip_extension = '.zip'
     datetime_format = "%Y-%m-%dT%H:%M:%SZ"
 
@@ -36,6 +36,7 @@ class VmUpdater:
         self.__archive_path = None
         self.__archive_snapshot_uuid = None
         self.__archive_snapshot_date = None
+        self.__s3_object_metadata = None
         self.__vm_dir = None
         self.__archive_comment = None
         self.__uploaded = False
@@ -60,16 +61,38 @@ class VmUpdater:
         """
         Get VM directory for VM.
         """
-        if self.__vm_dir is None:
-            self.__vm_dir = Path(self.vm.get_parameter('CfgFile')).parent
+        if self.__vm_dir is None or not self.__vm_dir.is_dir():
+            self.__vm_dir = Path(self.vm.info.config_path).parent
         return self.__vm_dir
 
     @property
-    def s3_snapshot_metadata(self) -> Optional[dict]:
+    def s3_object_metadata(self) -> dict:
         """
-        Get snapshot metadata for VM on S3.
+        Get metadata for s3 object.
         """
-        return self.s3.get_file_metadata(self.s3_object_key) or {}
+        if self.__s3_object_metadata is None:
+            self.update_s3_object_metadata()
+        return self.__s3_object_metadata
+
+    @property
+    def s3_object_snapshot_date(self) -> Optional[str]:
+        """
+        Get snapshot date for s3 object from metadata.
+        """
+        return self.s3_object_metadata.get(self.snapshot_date_key)
+
+    @property
+    def s3_object_snapshot_uuid(self) -> Optional[str]:
+        """
+        Get snapshot UUID for s3 object from metadata.
+        """
+        return self.s3_object_metadata.get(self.snapshot_uuid_key)
+
+    def update_s3_object_metadata(self) -> None:
+        """
+        Update metadata for s3 object.
+        """
+        self.__s3_object_metadata = self.s3.get_file_metadata(self.s3_object_key) or {}
 
     @property
     def current_snapshot_info(self) -> dict:
@@ -109,11 +132,17 @@ class VmUpdater:
         Get archive comment for VM.
         """
         if self.__archive_comment is None:
-            try:
-                self.__archive_comment = File.get_archive_comment(str(self.archive_path))
-            except (FileNotFoundError, zipfile.BadZipFile):
-                self.__archive_comment = None
+            self.update_archive_comment()
         return self.__archive_comment
+
+    def update_archive_comment(self) -> None:
+        """
+        Update archive comment for VM.
+        """
+        try:
+            self.__archive_comment = File.get_archive_comment(str(self.archive_path))
+        except (FileNotFoundError, zipfile.BadZipFile):
+            self.__archive_comment = None
 
     @property
     def archive_snapshot_uuid(self) -> Optional[str]:
@@ -121,9 +150,8 @@ class VmUpdater:
         Get archive snapshot UUID for VM.
         """
         if self.__archive_snapshot_uuid is None:
-            comment = self.archive_comment
-            if comment:
-                match = re.search(rf"{self.current_snapshot_uuid_key}: (?P<uuid>[^\n]+)", comment)
+            if self.archive_comment:
+                match = re.search(rf"{self.snapshot_uuid_key}: (?P<uuid>[^\n]+)", self.archive_comment)
                 if match:
                     group = match.group('uuid')
                     self.__archive_snapshot_uuid = group.strip() if group else None
@@ -135,9 +163,8 @@ class VmUpdater:
         Get archive snapshot date for VM.
         """
         if self.__archive_snapshot_date is None:
-            comment = self.archive_comment
-            if comment:
-                match = re.search(rf"{self.current_snapshot_date_key}: (?P<date>[^\n]+)", comment)
+            if self.archive_comment:
+                match = re.search(rf"{self.snapshot_date_key}: (?P<date>[^\n]+)", self.archive_comment)
                 if match:
                     self.__archive_snapshot_date = match.group('date')
         return self.__archive_snapshot_date
@@ -165,19 +192,11 @@ class VmUpdater:
             self._log(f"Compressing VM to archive [magenta]{self.archive_path}[/magenta]", color='cyan')
             archive_path = str(self.archive_path)
             File.delete(archive_path, stdout=False, stderr=False)
-            File.compress(str(self.vm_dir), archive_path, progress_bar=progress_bar, comment=self.get_comment_for_archive())
+            File.compress(str(self.vm_dir), archive_path, progress_bar=progress_bar, comment=self._get_comment_for_archive())
             self._log(f"Compressed VM to archive [cyan]{self.archive_path}[/cyan]")
+            self.update_archive_comment()
         else:
             self._log(f"Snapshot UUID already exists in host [cyan]{self.archive_path}[/cyan]", color='magenta')
-
-    def get_comment_for_archive(self) -> str:
-        """
-        Get comment for archive.
-        """
-        return (
-            f"{self.current_snapshot_uuid_key}: {self.current_snapshot_uuid}\n"
-            f"{self.current_snapshot_date_key}: {self.current_snapshot_date}"
-        )
 
     def is_needs_compress(self) -> bool:
         """
@@ -189,40 +208,30 @@ class VmUpdater:
         """
         Check if VM needs update on S3 or update on host by comparing snapshot UUIDs.
         """
-        s3_metadata = self.s3_snapshot_metadata
-        s3_snapshot_date = self._datetime(s3_metadata.get(self.current_snapshot_date_key))
-        s3_snapshot_uuid = s3_metadata.get(self.current_snapshot_uuid_key)
+
+        s3_snapshot_date = self._datetime(self.s3_object_snapshot_date)
         current_snapshot_date = self._datetime(self.current_snapshot_date)
-
         if not self.ignore_date and s3_snapshot_date and current_snapshot_date:
-            isDateDiff = s3_snapshot_date > current_snapshot_date
-            return isDateDiff
-
-        isUuidDiff = s3_snapshot_uuid != self.current_snapshot_uuid
-        return isUuidDiff
-
-
+            return s3_snapshot_date > current_snapshot_date
+        return self.s3_object_snapshot_uuid != self.current_snapshot_uuid
 
     def upload(self) -> None:
         """
         Upload VM archive to S3.
         """
-        if self.archive_path.is_file():
-            if self.is_needs_update():
-                msg = self.s3.upload_file(
-                    str(self.archive_path),
-                    self.s3_object_key,
-                    metadata={
-                        self.current_snapshot_uuid_key: self.current_snapshot_uuid,
-                        self.current_snapshot_date_key: self.current_snapshot_date,
-                    },
-                    delete_exists=True,
-                    warning_msg=False
-                )
-                self._log(msg, color='green')
-                self.__uploaded = True
-            else:
-                self._log(f"Snapshot UUID already exists in S3 [cyan]{self.s3_object_key}[/cyan]", color='magenta')
+        if self.archive_path.is_file() and self.is_needs_update():
+            msg = self.s3.upload_file(
+                str(self.archive_path),
+                self.s3_object_key,
+                metadata=self._get_metadata(),
+                delete_exists=True,
+                warning_msg=False
+            )
+            self._log(msg, color='green')
+            self.__uploaded = True
+            self.update_s3_object_metadata()
+        else:
+            self._log(f"Snapshot UUID already exists in S3 [cyan]{self.s3_object_key}[/cyan]", color='magenta')
 
     def download(self) -> None:
         """
@@ -238,20 +247,36 @@ class VmUpdater:
         """
         Unpack VM archive.
         """
-        if self.archive_path.is_file():
+        if self.archive_path.is_file() and self.is_needs_update():
             self._log(f"Unpacking VM [cyan]{self.vm.name}[/cyan] from [cyan]{self.archive_path}[/cyan]", color='blue')
             File.delete(str(self.vm_dir), stdout=False, stderr=False)
             File.unpacking(str(self.archive_path), str(self.vm_dir), stdout=False)
             self._fix_unpacking_duplication()
             self._log(f"Unpacked VM [cyan]{self.vm.name}[/cyan] to [cyan]{self.vm_dir}[/cyan]", color='green')
         else:
-            self._log(f"Archive not found [cyan]{self.archive_path}[/cyan]", color='red')
+            self._log(f"Archive not found or already updated on host [cyan]{self.archive_path}[/cyan]", color='magenta')
 
     def _log(self, msg: str, color: str = 'green', level: str = 'INFO') -> None:
         """
         Print info message.
         """
         print(f"[{color}]{level}|[cyan]{self.vm.name}[/cyan]| {msg}[/]")
+
+    def _get_metadata(self) -> dict:
+        """
+        Get metadata for s3 object.
+        """
+        return {
+            self.snapshot_uuid_key: self.current_snapshot_uuid,
+            self.snapshot_date_key: self.current_snapshot_date,
+        }
+
+    def _get_comment_for_archive(self) -> str:
+        """
+        Get comment for archive.
+        """
+        metadata = self._get_metadata()
+        return "\n".join(f"{key}: {value}" for key, value in metadata.items())
 
     def _fix_unpacking_duplication(self) -> None:
         """
