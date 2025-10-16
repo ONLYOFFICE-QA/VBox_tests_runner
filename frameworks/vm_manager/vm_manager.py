@@ -54,17 +54,19 @@ class VmManager:
     def update_vm_on_s3(
         self,
         vm_names: Union[str, List[str]] = None,
-        cores: Optional[int] = None
+        cores: Optional[int] = None,
+        ignore_date: bool = False
         ) -> None:
         """
         Update VM directories and metadata on S3.
 
         :param vm_names: Name(s) of the virtual machine(s) to update
+        :param ignore_date: Ignore date comparison when checking if VM needs update
         :param cores: Number of CPU cores to use for parallel processing
         """
         normalized_names = self._normalize_vm_names(vm_names or self.testing_hosts)
-        vm_updaters = self._get_vm_updaters(normalized_names)
-        vm_to_update = [vm_updater for vm_updater in vm_updaters if vm_updater.is_needs_update()]
+        vm_updaters = self._get_vm_updaters(normalized_names, ignore_date=ignore_date)
+        vm_to_update = [vm_updater for vm_updater in vm_updaters if vm_updater.is_needs_update_on_s3()]
 
         if not vm_to_update:
             return print("[green]All VMs are up to date on S3.[/green]")
@@ -91,7 +93,7 @@ class VmManager:
         normalized_names = self._normalize_vm_names(vm_names or self.testing_hosts)
 
         vm_updaters = self._get_vm_updaters(normalized_names)
-        vm_to_update = [vm_updater for vm_updater in vm_updaters if vm_updater.is_needs_update()]
+        vm_to_update = [vm_updater for vm_updater in vm_updaters if vm_updater.is_needs_update_on_host()]
 
         if not vm_to_update:
             return print("[green]All VMs are up to date on host.[/green]")
@@ -158,8 +160,8 @@ class VmManager:
                 message_suffix="not uploaded to S3"
             )
 
-        # Print already updated VMs
-        already_updated = [vm for vm in all_vm_updaters if not vm.is_needs_update()]
+        # Print already updated VMs (those that were not in update list)
+        already_updated = [vm for vm in all_vm_updaters if vm not in vm_updaters_to_update]
         if already_updated:
             self._print_info_block(
                 title=f"Already updated VMs: {len(already_updated)}",

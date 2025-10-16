@@ -29,6 +29,9 @@ class VmUpdater:
     def __init__(self, vm_name: str, s3: S3Vbox, ignore_date: bool = False):
         """
         Initialize VmUpdater.
+        :param vm_name: Name of the virtual machine
+        :param s3: S3Vbox object
+        :param ignore_date: Ignore date comparison when checking if VM needs update
         """
         self.s3 = s3
         self.ignore_date = ignore_date
@@ -212,22 +215,30 @@ class VmUpdater:
         """
         return self.archive_snapshot_uuid != self.current_snapshot_uuid
 
-    def is_needs_update(self) -> bool:
+    def is_needs_update_on_s3(self) -> bool:
         """
-        Check if VM needs update on S3 or update on host by comparing snapshot UUIDs.
+        Check if VM needs update on S3 by comparing snapshot UUIDs.
         """
+        return self._is_needs_update()
 
-        s3_snapshot_date = self._datetime(self.s3_object_snapshot_date)
-        current_snapshot_date = self._datetime(self.current_snapshot_date)
-        if not self.ignore_date and s3_snapshot_date and current_snapshot_date:
-            return s3_snapshot_date > current_snapshot_date
-        return self.s3_object_snapshot_uuid != self.current_snapshot_uuid
+    def is_needs_update_on_host(self) -> bool:
+        """
+        Check if VM needs update on host by comparing snapshot UUIDs.
+        """
+        if self.s3_object_snapshot_date or self.s3_object_snapshot_uuid:
+            return self._is_needs_update()
+        self._log(
+            f"Snapshot UUIDs or dates for VM on s3 '{self.vm.name}' are not present. Needs update on image on s3",
+            color='bold red',
+            level='ERROR'
+        )
+        return False
 
     def upload(self) -> None:
         """
         Upload VM archive to S3.
         """
-        if self.archive_path.is_file() and self.is_needs_update():
+        if self.archive_path.is_file() and self.is_needs_update_on_s3():
             msg = self.s3.upload_file(
                 str(self.archive_path),
                 self.s3_object_key,
@@ -245,7 +256,7 @@ class VmUpdater:
         """
         Download VM archive from S3.
         """
-        if self.is_needs_update():
+        if self.is_needs_update_on_host():
             self.s3.download_file(self.s3_object_key, str(self.archive_path))
             self.__downloaded = True
         else:
@@ -255,7 +266,7 @@ class VmUpdater:
         """
         Unpack VM archive.
         """
-        if self.archive_path.is_file() and self.is_needs_update():
+        if self.archive_path.is_file() and self.is_needs_update_on_host():
             self._log(f"Unpacking VM [cyan]{self.vm.name}[/cyan] from [cyan]{self.archive_path}[/cyan]", color='blue')
             File.delete(str(self.vm_dir), stdout=False, stderr=False)
             File.unpacking(str(self.archive_path), str(self.vm_dir), stdout=False)
@@ -269,6 +280,16 @@ class VmUpdater:
         Print info message.
         """
         print(f"[{color}]{level}|[cyan]{self.vm.name}[/cyan]| {msg}[/]")
+
+    def _is_needs_update(self) -> bool:
+        """
+        Check if VM needs update by comparing snapshot UUIDs and dates.
+        """
+        s3_snapshot_date = self._datetime(self.s3_object_snapshot_date)
+        current_snapshot_date = self._datetime(self.current_snapshot_date)
+        if not self.ignore_date and s3_snapshot_date and current_snapshot_date:
+            return s3_snapshot_date > current_snapshot_date
+        return self.s3_object_snapshot_uuid != self.current_snapshot_uuid
 
     def _get_metadata(self) -> dict:
         """
