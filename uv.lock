@@ -1388,13 +1388,13 @@ requires-dist = [
     { name = "s3wrapper", git = "https://github.com/l8556/S3Wrapper.git?branch=master" },
     { name = "ssh-wrapper", git = "https://github.com/l8556/SshWrapper.git?branch=master" },
     { name = "telegram", git = "https://github.com/l8556/TelegramApi.git?branch=master" },
-    { name = "vboxwrapper", git = "https://github.com/l8556/VBoxWrapper.git?branch=master" },
+    { name = "vboxwrapper", git = "https://github.com/l8556/VBoxWrapper.git?branch=Add-Info-class-for-virtual-machine-details-retrieval-%28%2315%29" },
 ]
 
 [[package]]
 name = "vboxwrapper"
 version = "0.1.0"
-source = { git = "https://github.com/l8556/VBoxWrapper.git?branch=master#54030b0c11e8667e658f9c85d494098d1bca1c71" }
+source = { git = "https://github.com/l8556/VBoxWrapper.git?branch=Add-Info-class-for-virtual-machine-details-retrieval-%28%2315%29#c7f2c43fc549e52826c2ead72443ad393cc955ef" }
 dependencies = [
     { name = "rich" },
 ]
