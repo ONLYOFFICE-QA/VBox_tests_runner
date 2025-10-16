@@ -146,7 +146,8 @@ class VmManager:
         :param vm_updaters_to_update: List of VM updaters that were attempted to update
         :param all_vm_updaters: List of all VM updaters including already updated ones
         """
-        # Collect failed uploads
+        # Collect results
+        successfully_updated = [vm for vm in vm_updaters_to_update if vm.uploaded]
         failed_uploads = [vm for vm in vm_updaters_to_update if not vm.uploaded]
 
         # Print results
@@ -158,6 +159,14 @@ class VmManager:
                 items=[vm.vm.name for vm in failed_uploads],
                 color="red",
                 message_suffix="not uploaded to S3"
+            )
+
+        # Print successfully updated VMs
+        if successfully_updated:
+            self._print_info_block(
+                title=f"Successfully updated VMs: {len(successfully_updated)}",
+                items=[vm.vm.name for vm in successfully_updated],
+                color="green"
             )
 
         # Print already updated VMs (those that were not in update list)
