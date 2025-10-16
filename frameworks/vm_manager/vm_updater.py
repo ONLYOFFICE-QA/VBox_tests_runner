@@ -22,6 +22,9 @@ class VmUpdater:
     snapshot_date_key = 'current_snapshot_date'
     zip_extension = '.zip'
     datetime_format = "%Y-%m-%dT%H:%M:%SZ"
+    vm_uuid_key = 'uuid'
+    vm_date_key = 'created'
+    required_snapshot_params = [vm_uuid_key, vm_date_key]
 
     def __init__(self, vm_name: str, s3: S3Vbox, ignore_date: bool = False):
         """
@@ -100,7 +103,12 @@ class VmUpdater:
         Get current snapshot info for VM.
         """
         if self.__current_snapshot_info is None:
-            self.__current_snapshot_info = self.vm.snapshot.get_current_snapshot_info()
+            info = self.vm.snapshot.get_current_snapshot_info()
+            # Validate that required fields are present and not empty
+            for param in self.required_snapshot_params:
+                if not info.get(param):
+                    raise ValueError(f"Snapshot info for VM '{self.vm.name}' is missing '{param}' field or it is empty")
+            self.__current_snapshot_info = info
         return self.__current_snapshot_info
 
     @property
@@ -108,14 +116,14 @@ class VmUpdater:
         """
         Get current snapshot UUID for VM.
         """
-        return self.current_snapshot_info.get('uuid')
+        return self.current_snapshot_info.get(self.vm_uuid_key)
 
     @property
     def current_snapshot_date(self) -> Optional[str]:
         """
         Get current snapshot date for VM.
         """
-        return self.current_snapshot_info.get('created')
+        return self.current_snapshot_info.get(self.vm_date_key)
 
     @property
     def archive_path(self) -> Path:
