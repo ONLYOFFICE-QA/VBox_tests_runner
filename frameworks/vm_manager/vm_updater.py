@@ -125,7 +125,8 @@ class VmUpdater:
             if comment:
                 match = re.search(rf"{self.current_snapshot_uuid_key}: (?P<uuid>[^\n]+)", comment)
                 if match:
-                    self.__archive_snapshot_uuid = match.group('uuid')
+                    group = match.group('uuid')
+                    self.__archive_snapshot_uuid = group.strip() if group else None
         return self.__archive_snapshot_uuid
 
     @property
