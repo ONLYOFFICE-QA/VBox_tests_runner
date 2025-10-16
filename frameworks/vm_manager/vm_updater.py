@@ -336,7 +336,17 @@ class VmUpdater:
     def _datetime(self, date_string: Optional[str]) -> Optional[datetime]:
         """
         Get datetime from string.
+        :param date_string: Date string to convert to datetime
+        :return: Datetime object if successful, None otherwise
+        :raises ValueError: If date string is not in the correct format
         """
         if not date_string:
             return None
-        return datetime.strptime(date_string, self.datetime_format)
+
+        try:
+            return datetime.strptime(date_string, self.datetime_format)
+        except ValueError:
+            raise ValueError(
+                f"Snapshot date for VM '{self.vm.name}' has invalid format. "
+                f"Expected format: {self.datetime_format}, got: {date_string}"
+            )
