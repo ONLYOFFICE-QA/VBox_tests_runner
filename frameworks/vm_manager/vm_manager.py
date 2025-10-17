@@ -223,7 +223,7 @@ class VmManager:
             return []
 
         with console.status(f'[cyan]{description}[/cyan]') as status:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=cores or self.s3.cores) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=int(cores) or int(self.s3.cores)) as executor:
                 futures = [executor.submit(getattr(obj, method), *(method_args or ()), **(method_kwargs or {})) for obj in objects]
                 status.update(self._process_result(futures))
 
