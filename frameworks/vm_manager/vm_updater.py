@@ -217,22 +217,15 @@ class VmUpdater:
 
     def is_needs_update_on_s3(self) -> bool:
         """
-        Check if VM needs update on S3 by comparing snapshot UUIDs.
+        Check if VM needs update on S3 by comparing snapshot UUIDs and dates.
         """
-        return self._is_needs_update()
+        return self._check_update_needed(on_s3=True)
 
     def is_needs_update_on_host(self) -> bool:
         """
-        Check if VM needs update on host by comparing snapshot UUIDs.
+        Check if VM needs update on host by comparing snapshot UUIDs and dates.
         """
-        if self.s3_object_snapshot_date or self.s3_object_snapshot_uuid:
-            return self._is_needs_update()
-        self._log(
-            f"Snapshot UUIDs or dates for VM on s3 '{self.vm.name}' are not present. Needs update on image on s3",
-            color='bold red',
-            level='ERROR'
-        )
-        return False
+        return self._check_update_needed(on_s3=False)
 
     def upload(self) -> None:
         """
@@ -281,15 +274,48 @@ class VmUpdater:
         """
         print(f"[{color}]{level}|[cyan]{self.vm.name}[/cyan]| {msg}[/]")
 
-    def _is_needs_update(self) -> bool:
+    def _check_update_needed(self, on_s3: bool) -> bool:
         """
-        Check if VM needs update by comparing snapshot UUIDs and dates.
+        Check if update is needed by comparing snapshot UUIDs and dates.
+        :param on_s3: If True check if update is needed on S3 missing metadata, return True;
+        if False, check if update is needed on host missing metadata, return False;
+        :return: True if update is needed, False otherwise
         """
-        s3_snapshot_date = self._datetime(self.s3_object_snapshot_date)
-        current_snapshot_date = self._datetime(self.current_snapshot_date)
-        if not self.ignore_date and s3_snapshot_date and current_snapshot_date:
-            return s3_snapshot_date > current_snapshot_date
+        if not (self.s3_object_snapshot_date or self.s3_object_snapshot_uuid):
+            self._log(
+                f"Snapshot UUIDs or dates for VM on s3 '{self.vm.name}' are not present. Needs update on image on s3",
+                color='bold red',
+                level='ERROR'
+            )
+            return on_s3
+
+        is_date_diff = self._compare_dates(s3_date_older=on_s3)
+        is_uuid_diff = self._uuids_is_diff()
+
+        if is_date_diff and not is_uuid_diff:
+            self._log_date_uuid_mismatch()
+            return on_s3
+
+        if self.ignore_date:
+            return is_uuid_diff
+        return is_date_diff and is_uuid_diff
+
+    def _uuids_is_diff(self) -> bool:
+        """
+        Check if VM needs update by comparing snapshot UUIDs.
+        """
         return self.s3_object_snapshot_uuid != self.current_snapshot_uuid
+
+    def _log_date_uuid_mismatch(self) -> None:
+        """
+        Log error when snapshot date differs but UUID is the same.
+        """
+        self._log(
+            f"Snapshot date is older than current date on host [cyan]{self.vm.name}[/cyan] but UUID is the same. "
+            f"Needs update on image on s3",
+            color='bold red',
+            level='ERROR'
+        )
 
     def _get_metadata(self) -> dict:
         """
@@ -332,6 +358,21 @@ class VmUpdater:
 
             File.delete(str(duplicated_dir), stdout=False)
             self._log("Fixed duplication: items moved and empty directory removed", color='green')
+
+    def _compare_dates(self, s3_date_older: bool) -> bool:
+        """
+        Compare snapshot dates between S3 and current VM.
+        :param s3_date: Date string from S3 object metadata
+        :param current_date: Date string from current VM snapshot
+        :param s3_date_older: If True, check if s3_date is older than current_date; if False, check if newer
+        :return: True if dates match the comparison criteria, False otherwise
+        """
+        s3_datetime = self._datetime(self.s3_object_snapshot_date)
+        current_datetime = self._datetime(self.current_snapshot_date)
+
+        if s3_datetime and current_datetime:
+            return s3_datetime < current_datetime if s3_date_older else s3_datetime > current_datetime
+        return False
 
     def _datetime(self, date_string: Optional[str]) -> Optional[datetime]:
         """
