@@ -26,7 +26,8 @@ Usage examples:
 """
 from os import getcwd, system
 from os.path import isfile, join
-from typing import Optional
+from typing import Optional, Union, List
+import ast
 
 from elevate import elevate
 from host_tools import Process, Service
@@ -443,3 +444,44 @@ def get_versions(
     last_version = checker.get_report(base_version=version_base).get_last_exists_version(category=name)
     check_package(c, version=last_version, name=name)
     return last_version
+
+
+@task
+def update_vm_on_host(c, names: Union[str, List[str]] = None, cores: Optional[int] = None):
+    """
+    Update VM on host.
+    :param c: Context (invoke requirement)
+    :param names: VM names
+    :param cores: Number of CPU cores to use
+    """
+    parsed_names = _parse_names(names)
+    VmManager().update_vm_on_host(vm_names=parsed_names or names, cores=cores)
+
+
+@task
+def update_vm_on_s3(c, names: Union[str, List[str]] = None, cores: Optional[int] = None, ignore_date: bool = False):
+    """
+    Update VM on S3.
+
+    :param c: Context (invoke requirement)
+    :param vm_names: VM names
+    :param cores: Number of CPU cores to use
+    :param ignore_date: Ignore date comparison
+    """
+    # # Parse names if it's a string representation of a list
+    # if isinstance(names, str) and names.startswith('[') and names.endswith(']'):
+    parsed_names = _parse_names(names)
+    VmManager().update_vm_on_s3(vm_names=parsed_names or names, cores=cores, ignore_date=ignore_date)
+
+
+def _parse_names(names: str) -> Optional[List[str]]:
+    """
+    Parse names if it's a string representation of a list.
+    :param names: Names string
+    :return: List of names
+    """
+    if isinstance(names, str) and names.startswith('[') and names.endswith(']'):
+        try:
+            return ast.literal_eval(names)
+        except (ValueError, SyntaxError):
+            return None
