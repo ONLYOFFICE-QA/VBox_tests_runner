@@ -236,7 +236,7 @@ class VmUpdater:
         """
         Check if VM needs update on host by comparing snapshot UUIDs and dates.
         """
-        if not isfile(self.vm_config_path):
+        if not self.vm_config_path or not isfile(self.vm_config_path):
             self._log(f"VM configuration file not found [cyan]{self.vm_config_path}[/cyan]", color='red')
             return True
         return self._check_update_needed(on_s3=False)
