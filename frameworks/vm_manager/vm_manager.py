@@ -3,7 +3,7 @@ from vboxwrapper import VirtualMachine
 import concurrent.futures
 from os.path import basename
 from pathlib import Path
-from host_tools import File
+from host_tools import File, Dir
 from typing import Any, Dict, List, Optional, Union, Callable
 
 from .vm_updater import VmUpdater
@@ -33,6 +33,7 @@ class VmManager:
         self.s3 = S3Vbox()
         self.download_dir = Path(self.s3.config.download_dir)
         self._vm_dirs_cache: Dict[str, Path] = {}
+        Dir.create(str(self.download_dir), stdout=False, stderr=False)
 
     def download_vm_images(self, cores: Optional[int] = None, download_dir: Optional[str] = None, all_vm: bool = False) -> bool:
         """
