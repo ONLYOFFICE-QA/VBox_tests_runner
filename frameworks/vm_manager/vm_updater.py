@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
+from os.path import isfile
 from pathlib import Path
 import re
 from typing import Optional
@@ -47,6 +48,7 @@ class VmUpdater:
         self.__archive_comment = None
         self.__uploaded = False
         self.__downloaded = False
+        self.__vm_config_path = None
 
     @property
     def downloaded(self) -> bool:
@@ -68,8 +70,17 @@ class VmUpdater:
         Get VM directory for VM.
         """
         if self.__vm_dir is None or not self.__vm_dir.is_dir():
-            self.__vm_dir = Path(self.vm.info.config_path).parent
+            self.__vm_dir = Path(self.vm_config_path).parent if self.vm_config_path else None
         return self.__vm_dir
+
+    @property
+    def vm_config_path(self) -> Optional[str]:
+        """
+        Get VM configuration path for VM.
+        """
+        if self.__vm_config_path is None:
+            self.__vm_config_path = self.vm.info.config_path
+        return self.__vm_config_path
 
     @property
     def s3_object_metadata(self) -> dict:
@@ -225,6 +236,9 @@ class VmUpdater:
         """
         Check if VM needs update on host by comparing snapshot UUIDs and dates.
         """
+        if not isfile(self.vm_config_path):
+            self._log(f"VM configuration file not found [cyan]{self.vm_config_path}[/cyan]", color='red')
+            return True
         return self._check_update_needed(on_s3=False)
 
     def upload(self) -> None:
