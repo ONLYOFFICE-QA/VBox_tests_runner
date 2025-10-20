@@ -353,7 +353,7 @@ def group_list(c):
 
 
 @task
-def reset_vbox(c):
+def reset_vbox(c, soft: bool = False):
     """
     Restart all VirtualBox processes and services.
 
@@ -369,15 +369,15 @@ def reset_vbox(c):
     ]
 
     Process.terminate(processes)
+    if not soft:
+        elevate(show_console=False)
 
-    elevate(show_console=False)
+        for process in processes:
+            system(f"taskkill /F /IM {process}")
 
-    for process in processes:
-        system(f"taskkill /F /IM {process}")
-
-    for service in ["VBoxSDS", "vboxdrv"]:
-        Service.restart(service)
-    Service.start("VBoxSDS")
+        for service in ["VBoxSDS", "vboxdrv"]:
+            Service.restart(service)
+        Service.start("VBoxSDS")
 
 
 @task
@@ -456,6 +456,7 @@ def update_vm_on_host(c, names: Union[str, List[str]] = None, cores: Optional[in
     """
     parsed_names = _parse_names(names)
     VmManager().update_vm_on_host(vm_names=parsed_names or names, cores=cores)
+    reset_vbox(c, soft=True)
 
 
 @task

@@ -152,7 +152,7 @@ class S3Vbox:
         :param download_path: Local path to save the downloaded file.
         :return: A success message.
         """
-        if self._exists_object(download_path, s3_object_key):
+        if self.is_exists_object(download_path, s3_object_key):
             print(f"[cyan]|INFO| Object {s3_object_key} already exists")
             return ""
 
@@ -172,6 +172,19 @@ class S3Vbox:
             if s3_key in self.s3_files:
                 self.s3.delete(s3_key, warning_msg=warning_msg)
 
+    def is_exists_object(self, download_path: str, obj_key: str) -> bool:
+        """
+        Checks if the downloaded object exists and optionally verifies its integrity.
+        :param download_path: The path where the object is downloaded.
+        :param obj_key: The key of the object in the S3 bucket.
+        :return: True if the object exists and passes integrity checks, False otherwise.
+        """
+        if not isfile(download_path):
+            return False
+        if getsize(download_path) != self.s3.get_size(obj_key):
+            return False
+        return True
+
     def _process_results(self, futures: list) -> Any | None:
         """
         Processes the results of futures and handles any exceptions.
@@ -187,16 +200,3 @@ class S3Vbox:
                 print(f'[bold red] Exception occurred: {e}')
                 return None
         return None
-
-    def _exists_object(self, download_path: str, obj_key: str) -> bool:
-        """
-        Checks if the downloaded object exists and optionally verifies its integrity.
-        :param download_path: The path where the object is downloaded.
-        :param obj_key: The key of the object in the S3 bucket.
-        :return: True if the object exists and passes integrity checks, False otherwise.
-        """
-        if not isfile(download_path):
-            return False
-        if getsize(download_path) != self.s3.get_size(obj_key):
-            return False
-        return True
