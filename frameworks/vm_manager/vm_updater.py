@@ -263,11 +263,11 @@ class VmUpdater:
         """
         Download VM archive from S3.
         """
-        if self.is_needs_update_on_host():
+        if not self.s3.is_exists_object(str(self.archive_path), self.s3_object_key):
             self.s3.download_file(self.s3_object_key, str(self.archive_path))
             self.__downloaded = True
         else:
-            self._log(f"Snapshot UUID already updated on host [cyan]{self.s3_object_key}[/cyan]", color='magenta')
+            self._log(f"Archive [cyan]{self.archive_path}[/cyan] already exists in host", color='magenta')
 
     def unpack(self) -> None:
         """
