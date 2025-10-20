@@ -274,7 +274,7 @@ class VmUpdater:
         Unpack VM archive.
         """
         if self.archive_path.is_file() and self.is_needs_update_on_host():
-            self._log(f"Unpacking VM [cyan]{self.vm.name}[/cyan] from [cyan]{self.archive_path}[/cyan]", color='blue')
+            self._log(f"Unpacking VM [cyan]{self.vm.name}[/cyan] from [cyan]{self.archive_path}[/cyan] to [cyan]{self.vm_dir}[/cyan]", color='blue')
             File.delete(str(self.vm_dir), stdout=False, stderr=False)
             File.unpacking(str(self.archive_path), str(self.vm_dir), stdout=False)
             self._fix_unpacking_duplication()
