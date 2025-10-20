@@ -455,8 +455,9 @@ def update_vm_on_host(c, names: Union[str, List[str]] = None, cores: Optional[in
     :param cores: Number of CPU cores to use
     """
     parsed_names = _parse_names(names)
-    VmManager().update_vm_on_host(vm_names=parsed_names or names, cores=cores)
-    reset_vbox(c, soft=True)
+    updated_vm = VmManager().update_vm_on_host(vm_names=parsed_names or names, cores=cores)
+    if updated_vm:
+        reset_vbox(c, soft=True)
 
 
 @task

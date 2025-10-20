@@ -84,7 +84,7 @@ class VmManager:
         self,
         vm_names: Optional[Union[str, List[str]]] = None,
         cores: Optional[int] = None
-        ) -> None:
+        ) -> list:
         """
         Update VM directories and metadata on host in parallel if needed.
 
@@ -103,6 +103,7 @@ class VmManager:
         self._execute_parallel_methods(vm_to_update, 'download', cores=cores, description="Downloading VM files...")
         self._execute_parallel_methods(vm_to_update, 'unpack', cores=cores, description="Unpacking VMs...")
         print(f"[green]Successfully updated {len(vm_to_update)} VM(s).[/green]")
+        return vm_to_update
 
     def _prepare_vm_for_compression(self, vm_updaters: List[VmUpdater]) -> None:
         """
