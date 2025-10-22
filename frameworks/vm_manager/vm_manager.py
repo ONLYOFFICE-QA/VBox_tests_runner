@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-from vboxwrapper import VirtualMachine
 import concurrent.futures
-from os.path import basename
 from pathlib import Path
-from host_tools import File, Dir
-from typing import Any, Dict, List, Optional, Union, Callable
+from host_tools import Dir
+from typing import Any, Dict, List, Optional, Union
 
 from .vm_updater import VmUpdater
 from .config import Config

@@ -4,7 +4,6 @@ from os import cpu_count
 from os.path import basename, join, isfile, getsize, dirname
 from typing import Any
 
-from rich.console import Console
 
 from host_tools import File
 from host_tools.utils import Dir
