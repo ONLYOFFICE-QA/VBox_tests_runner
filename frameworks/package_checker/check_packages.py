@@ -265,7 +265,7 @@ class PackageURLChecker:
                         host=self.config.host,
                         version=version.without_build,
                         build=version.build,
-                        **({"branch": self.get_branch(version)} if "{branch}" in tpl else {})
+                        **({"branch": version.get_branch()} if "{branch}" in tpl else {})
                     )
                     params_list.append(URLCheckParams(
                         version=str(version),
@@ -280,18 +280,6 @@ class PackageURLChecker:
 
         return params_list
 
-    def get_branch(self, version: VersionHandler) -> str:
-        """
-        Get the branch name for the given version.
-
-        :param version: VersionHandler instance.
-        :return: Branch name.
-        """
-        if version.minor == 0:
-            return "release"
-        elif '99.99.99' in str(version):
-            return "develop"
-        return "hotfix"
 
     async def _recheck_latest_versions(
             self,
