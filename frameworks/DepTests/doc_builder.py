@@ -27,17 +27,12 @@ class DocBuilder(DepTests):
         File.write_json(self.local_path.docbuilder_config, data=data, indent=2)
 
     def _get_branch(self):
-        if "99.99.99" in str(self.version):
-            return 'develop'
-
-        if int(self.version.minor) != 0:
-            return f'hotfix/v{self.version.without_build}'
-
-        return f"release/v{self.version.without_build}"
+        branch = self.version.get_branch()
+        if branch in ['hotfix', 'release']:
+            return f'{branch}/v{self.version.without_build}'
+        return branch
 
     def _get_build(self) -> str:
         if self.version.build:
-
             return f"{self.version.build}"
-
         return 'latest'

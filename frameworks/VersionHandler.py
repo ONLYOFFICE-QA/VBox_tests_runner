@@ -2,6 +2,10 @@
 import re
 
 class VersionHandler:
+    exception_versions: dict[str, str] = {
+        "9.2.0": "hotfix"
+    }
+
     """
     Class for handling version numbers like "00.00.00.00".
 
@@ -54,6 +58,22 @@ class VersionHandler:
         :return: Version string in the format 'x.x.x'.
         """
         return f"{self.major}.{self.minor}"
+
+    def get_branch(self) -> str:
+        """
+        Get the branch name for the given version.
+
+        :param version: VersionHandler instance.
+        :return: Branch name.
+        """
+        for version, branch in self.exception_versions.items():
+            if version in self.version:
+                return branch
+        if self.minor == 0:
+            return "release"
+        elif '99.99.99' in self.version:
+            return "develop"
+        return "hotfix"
 
     @staticmethod
     def _parse_version(version: str) -> tuple[int, ...]:
