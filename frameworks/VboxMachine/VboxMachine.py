@@ -140,6 +140,7 @@ class VboxMachine:
         Configures network adapter, CPU count, nested virtualization,
         memory allocation, audio settings, and speculative execution control.
         """
+        self.vm.usb.controller(False)
         self.set_network_adapter()
         self.vm.set_cpus(self._get_cpu_num())
         self.vm.nested_virtualization(self.vm_config.nested_virtualization)
