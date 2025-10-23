@@ -71,7 +71,7 @@ class VersionHandler:
                 return branch
         if self.minor == 0:
             return "release"
-        elif '99.99.99' in str(self.version):
+        elif '99.99.99' in self.version:
             return "develop"
         return "hotfix"
 
