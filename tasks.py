@@ -185,6 +185,7 @@ def desktop_test(
             ):
             data.status_bar = False
             if isinstance(names, list):
+                print(1)
                 data.vm_names = names
             multiprocess.run(DesktopTest, data, num_processes, 10, headless)
         else:
@@ -490,7 +491,7 @@ def _parse_names(names: str) -> Optional[List[str]]:
         try:
             return ast.literal_eval(names)
         except (ValueError, SyntaxError):
-            return None
+            raise ValueError(f"Invalid names: {names}")
     return names
 
 if __name__ == "__main__":

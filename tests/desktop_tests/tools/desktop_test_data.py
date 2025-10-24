@@ -47,6 +47,7 @@ class DesktopTestData(TestData):
         self.full_report_path = join(self.report_dir, f"{self.version}_{self.title}_desktop_tests_report.csv")
         self.local_paths = DesktopLocalPaths()
         self._check_package_options()
+        self.__vm_names = None
 
     @property
     def config(self) -> dict:
@@ -57,6 +58,17 @@ class DesktopTestData(TestData):
 
     @property
     def vm_names(self) -> List[str]:
+        if self.__vm_names is None:
+            self.__vm_names = self.get_vm_names()
+        return self.__vm_names
+
+    @vm_names.setter
+    def vm_names(self, value: List[str]):
+        if not isinstance(value, list):
+            raise ValueError("vm_names must be a list")
+        self.__vm_names = value
+
+    def get_vm_names(self) -> List[str]:
         if self.retest:
             return DesktopReport(self.full_report_path).get_error_vm_list()
         return self.config.get('hosts', [])
