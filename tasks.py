@@ -174,6 +174,7 @@ def desktop_test(
         flatpak=flatpak,
         open_retries=open_retries or 0,
         retest=retest,
+        vm_names=names if isinstance(names, list) else None,
     )
 
     report = DesktopReport(report_path=data.full_report_path)
@@ -184,9 +185,6 @@ def desktop_test(
             or (num_processes > 1 and isinstance(names, list) and len(names) > 1)
             ):
             data.status_bar = False
-            if isinstance(names, list):
-                print(1)
-                data.vm_names = names
             multiprocess.run(DesktopTest, data, num_processes, 10, headless)
         else:
             data.status_bar = True
@@ -493,6 +491,3 @@ def _parse_names(names: str) -> Optional[List[str]]:
         except (ValueError, SyntaxError):
             raise ValueError(f"Invalid names: {names}")
     return names
-
-if __name__ == "__main__":
-    print(_parse_names('["PopOs22", "Fedora38", "CentOs7"]'))
