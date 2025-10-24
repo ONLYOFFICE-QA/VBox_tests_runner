@@ -174,7 +174,6 @@ def desktop_test(
         flatpak=flatpak,
         open_retries=open_retries or 0,
         retest=retest,
-        vm_names=names if isinstance(names, list) else None,
     )
 
     report = DesktopReport(report_path=data.full_report_path)
@@ -184,6 +183,8 @@ def desktop_test(
             (num_processes > 1 and not names and len(data.vm_names) > 1)
             or (num_processes > 1 and isinstance(names, list) and len(names) > 1)
             ):
+            if isinstance(names, list):
+                data.vm_names = names
             data.status_bar = False
             multiprocess.run(DesktopTest, data, num_processes, 10, headless)
         else:
