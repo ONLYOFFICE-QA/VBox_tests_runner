@@ -159,7 +159,6 @@ def desktop_test(
     """
     num_processes = int(processes) if processes else 1
     names = _parse_names(name)
-    print(names)
 
     data = DesktopTestData(
         version=version or Prompt.ask("[red]Please enter version"),
