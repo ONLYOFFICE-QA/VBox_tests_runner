@@ -159,6 +159,7 @@ def desktop_test(
     """
     num_processes = int(processes) if processes else 1
     names = _parse_names(name)
+    print(names)
 
     data = DesktopTestData(
         version=version or Prompt.ask("[red]Please enter version"),
@@ -181,9 +182,11 @@ def desktop_test(
     if not only_portal:
         if (
             (num_processes > 1 and not names and len(data.vm_names) > 1)
-            or (isinstance(names, list) and len(names) > 1)
+            or (num_processes > 1 and isinstance(names, list) and len(names) > 1)
             ):
             data.status_bar = False
+            if isinstance(names, list):
+                data.vm_names = names
             multiprocess.run(DesktopTest, data, num_processes, 10, headless)
         else:
             data.status_bar = True
@@ -490,3 +493,6 @@ def _parse_names(names: str) -> Optional[List[str]]:
         except (ValueError, SyntaxError):
             return None
     return names
+
+if __name__ == "__main__":
+    print(_parse_names('["PopOs22", "Fedora38", "CentOs7"]'))
