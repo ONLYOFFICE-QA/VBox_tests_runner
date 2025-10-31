@@ -278,9 +278,19 @@ class VmUpdater:
             File.delete(str(self.vm_dir), stdout=False, stderr=False)
             File.unpacking(str(self.archive_path), str(self.vm_dir), stdout=False)
             self._fix_unpacking_duplication()
+            self._remove_useless_dvd_images()
             self._log(f"Unpacked VM [cyan]{self.vm.name}[/cyan] to [cyan]{self.vm_dir}[/cyan]", color='green')
         else:
             self._log(f"Archive not found or already updated on host [cyan]{self.archive_path}[/cyan]", color='magenta')
+
+    def _remove_useless_dvd_images(self) -> None:
+        """
+        Remove useless DVD images from VM. If there are no DVD images, do nothing.
+        """
+        images = self.vm.storage.get_all_images()
+        if images:
+            self._log(f"Removing useless DVD images from VM [cyan]{self.vm.name}[/cyan]", color='yellow')
+            self.vm.storage.remove_dvd_images()
 
     def _log(self, msg: str, color: str = 'green', level: str = 'INFO') -> None:
         """
