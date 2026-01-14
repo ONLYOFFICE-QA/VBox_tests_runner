@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
-from collections.abc import Callable
 from posixpath import join
-from host_tools import HostInfo
 
 class RemotePaths:
 
     def __init__(self, user_name: str, os_info: dict):
-        self.__path_module = None
         self.__home_dir = None
         self.os_type = os_info['type']
         self.os_name = os_info['name']
@@ -32,23 +29,10 @@ class RemotePaths:
                 self.__home_dir = self._join_path("/home", self.user_name)
         return self.__home_dir
 
-    @property
-    def path_module(self) -> Callable:
-        if self.__path_module is None:
-            if 'windows' in self.os_type and not HostInfo().is_mac:
-                self.__path_module = self._windows_path
-            else:
-                self.__path_module = join
-        return self.__path_module
-
     def _get_run_script_name(self) -> str:
         if 'windows' in self.os_type:
             return 'script.bat' if 'vista' in self.os_name else 'script.ps1'
         return 'script.sh'
 
     def _join_path(self, *parts) -> str:
-        return str(self.path_module(*parts))
-
-    @staticmethod
-    def _windows_path(*parts) -> str:
-        return "\\".join(parts)
+        return str(join(*parts))

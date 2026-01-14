@@ -10,6 +10,8 @@ from frameworks.test_data import Paths
 
 
 class VboxUtilsWindows:
+    _cmd = "cmd.exe"
+    _powershell = "powershell.exe"
 
     def __init__(
             self,
@@ -28,8 +30,7 @@ class VboxUtilsWindows:
 
     def create_test_dirs(self, test_dirs: list, try_num: int = 10, interval: int = 1):
         for test_dir in test_dirs:
-            print(f"[green]|INFO|{self.file.vm.name}| Creating test dir: [cyan]{test_dir}[/]")
-            self._create_dir(f"mkdir {test_dir}", try_num=try_num, interval=interval)
+            self._create_dir(test_dir, try_num=try_num, interval=interval)
 
     def run_script_on_vm(self, status_bar: bool):
         server_info = f"{self.file.vm.name}|{self.file.vm.network.get_ip()}"
@@ -64,9 +65,11 @@ class VboxUtilsWindows:
             time.sleep(interval)
             try_num -= 1
 
-    def _create_dir(self, command: str, try_num: int = 10, interval: int = 1):
+    def _create_dir(self, path: str, try_num: int = 10, interval: int = 1) -> None:
+        _path = path.replace('/', '\\') if self.shell == self._cmd else path # for cmd.exe we need to replace / with \ because with cmd.exe we can't create directories with /
+        print(f"[green]|INFO|{self.file.vm.name}| Creating directory: [cyan]{_path}[/]")
         while try_num > 0:
-            out = self._run_cmd(command, stdout=False, stderr=False)
+            out = self._run_cmd(f"mkdir {_path}", stdout=False, stderr=False)
 
             if out.returncode == 0:
                 break
@@ -79,10 +82,10 @@ class VboxUtilsWindows:
 
     def _get_shell(self) -> Optional[str]:
         if self.paths.remote.run_script_name.endswith(".bat"):
-            return "cmd.exe"
+            return self._cmd
 
         if self.paths.remote.run_script_name.endswith(".ps1"):
-            return "powershell.exe"
+            return self._powershell
 
         return None
 
