@@ -1,9 +1,26 @@
 {
     "os_family": {
-        "debian": ["debian", "ubuntu", "debian12_arm64"],
-        "rhel": ["fedora", "red hat"],
-        "suse": ["opensuse"],
-        "win": ["windows 10", "windows 11", "windows 7", "windows 8.1", "windows11_arm64"],
-        "win-xp": ["windows vista"]
+        "debian": [
+            "debian",
+            "ubuntu",
+            "debian12_arm64"
+        ],
+        "rhel": [
+            "fedora",
+            "red hat"
+        ],
+        "suse": [
+            "opensuse"
+        ],
+        "win": [
+            "windows 10",
+            "windows 11",
+            "windows 7",
+            "windows 8.1",
+            "windows11_arm64"
+        ],
+        "win-xp": [
+            "windows vista"
+        ]
     }
 }

@@ -1,8 +1,16 @@
 {
     "os_family": {
-        "linux-arm64": ["Debian12_arm64"],
-        "linux-64": ["Ubuntu22"],
-        "win-64": ["Windows11"],
-        "win-32": ["Windows10_x32"]
+        "linux-arm64": [
+            "Debian12_arm64"
+        ],
+        "linux-64": [
+            "Ubuntu22"
+        ],
+        "win-64": [
+            "Windows11"
+        ],
+        "win-32": [
+            "Windows10_x32"
+        ]
     }
 }
