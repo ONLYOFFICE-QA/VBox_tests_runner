@@ -177,15 +177,12 @@ class VboxMachine:
                 connect_type=self.vm_config.network.connect_type
             )
 
-    # TODO
     def _get_memory_num(self) -> int:
         """
         Get memory allocation for the VM based on host OS and configuration.
 
         :return: Memory allocation in MB
         """
-        if HostInfo().os == 'mac':
-            return 2048
         return self.vm_config.memory
 
     def _get_cpu_num(self) -> int:
