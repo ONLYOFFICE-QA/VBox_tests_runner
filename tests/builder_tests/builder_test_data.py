@@ -46,7 +46,7 @@ class BuilderTestData(TestData):
 
     @property
     def vm_names(self) -> List[str]:
-        return [name for name in self.config.get('hosts', []) if ('arm64' in name.lower()) == HostInfo().is_mac]
+        return self.config.get('hosts_arm64', []) if HostInfo().is_arm else self.config.get('hosts', [])
 
     def _read_config(self) -> Dict:
         if not isfile(self.config_path):

@@ -4,7 +4,11 @@
     "rhel": "{host}/desktop/linux/rhel/onlyoffice-desktopeditors-{version}-{build}.el7.x86_64.rpm",
     "suse": "{host}/desktop/linux/suse/onlyoffice-desktopeditors-{version}-{build}.suse12.x86_64.rpm",
     "win": "{host}/desktop/win/inno/ONLYOFFICE-DesktopEditors-{version}.{build}-x64.exe",
-    "win-xp": "{host}/desktop/win/inno/ONLYOFFICE-DesktopEditors-XP-{version}.{build}-x64.exe"
+    "win-xp": "{host}/desktop/win/inno/ONLYOFFICE-DesktopEditors-XP-{version}.{build}-x64.exe",
+    "win-arm64": "{host}/desktop/win/inno/ONLYOFFICE-DesktopEditors-{version}.{build}-arm64.exe",
+    "debian-arm64": "{host}/desktop/linux/debian/onlyoffice-desktopeditors_{version}-{build}_arm64.deb",
+    "rhel-arm64": "{host}/desktop/linux/rhel/onlyoffice-desktopeditors-{version}-{build}.el7.aarch64.rpm",
+    "suse-arm64": "{host}/desktop/linux/suse/onlyoffice-desktopeditors-{version}-{build}.suse12.aarch64.rpm"
   },
   "builder": {
     "win-64": "{host}/archive/{branch}/v{version}/{build}/builder-win-64.7z",

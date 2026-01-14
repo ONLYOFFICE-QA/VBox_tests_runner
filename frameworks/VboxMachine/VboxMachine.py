@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import re
-from host_tools import HostInfo
 from vboxwrapper import VirtualMachine
 
 from frameworks.decorators import vm_is_turn_on, class_cache
 from .vm_data import VmData
 from .configs import VmConfig
+from host_tools import HostInfo
 
 
 @class_cache
@@ -24,9 +24,9 @@ class VboxMachine:
         :param name: Name of the VirtualBox virtual machine
         :param config_path: Optional path to configuration file
         """
-        self.vm_config = VmConfig(config_path=config_path)
-        self.vm = VirtualMachine(name)
         self.name = name
+        self.vm_config = VmConfig(vm_name=name, config_path=config_path)
+        self.vm = VirtualMachine(name)
         self.data = None
         self.__os_type = None
         self.__adapter_name = None
@@ -145,7 +145,8 @@ class VboxMachine:
         self.vm.nested_virtualization(self.vm_config.nested_virtualization)
         self.vm.set_memory(self._get_memory_num())
         self.vm.audio(self.vm_config.audio)
-        self.vm.speculative_execution_control(self.vm_config.speculative_execution_control)
+        if not HostInfo().is_arm:
+            self.vm.speculative_execution_control(self.vm_config.speculative_execution_control)
 
     def stop(self):
         """
@@ -177,15 +178,12 @@ class VboxMachine:
                 connect_type=self.vm_config.network.connect_type
             )
 
-    # TODO
     def _get_memory_num(self) -> int:
         """
         Get memory allocation for the VM based on host OS and configuration.
 
         :return: Memory allocation in MB
         """
-        if HostInfo().os == 'mac':
-            return 2048
         return self.vm_config.memory
 
     def _get_cpu_num(self) -> int:
