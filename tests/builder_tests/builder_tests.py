@@ -188,7 +188,7 @@ class BuilderTests:
         :return: True if the package exists, False otherwise.
         """
         if not self.package_name:
-            print(f"[bold red]|ERROR|{self.vm.name}| Package name is not found in packages_config.json")
+            print(f"[bold red]|ERROR|{self.vm.name}| Package name {self.package_name} is not found in packages_config.json")
             return True
 
         report_result = self.package_report.get_result(
