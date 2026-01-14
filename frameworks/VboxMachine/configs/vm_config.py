@@ -174,9 +174,7 @@ class VmConfig:
         merged_data = default.model_dump()
         specific_data = specific.model_dump(exclude_none=True)
 
-        # Merge network configuration separately if provided
         if 'network' in specific_data and specific_data['network']:
-            # Update only specified network fields, keeping defaults for others
             for key, value in specific_data['network'].items():
                 merged_data['network'][key] = value
             del specific_data['network']
@@ -236,27 +234,21 @@ class VmConfig:
             else:
                 raise AttributeError(f"Invalid configuration key: {key}")
 
-        # Load full config structure
         config_file = self._load_config(self.config_path)
 
-        # Update appropriate section
         if self.vm_name:
             if self.vm_name in config_file.vm_specific:
-                # Update existing VM-specific configuration
                 vm_config_data = config_file.vm_specific[self.vm_name].model_dump(exclude_none=True)
                 for key, value in kwargs.items():
                     vm_config_data[key] = value
                 config_file.vm_specific[self.vm_name] = VmSpecificConfigModel(**vm_config_data)
             else:
-                # Create new VM-specific configuration if it doesn't exist
                 vm_config_data = {}
                 for key, value in kwargs.items():
                     vm_config_data[key] = value
                 config_file.vm_specific[self.vm_name] = VmSpecificConfigModel(**vm_config_data)
         else:
-            # Update default configuration
             config_file.default = self._config
 
-        # Save the updated configuration back to the file
         with open(self.config_path, 'w') as file:
             json.dump(config_file.model_dump(exclude_none=True), file, indent=2)
