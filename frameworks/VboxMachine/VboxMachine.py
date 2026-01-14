@@ -24,9 +24,9 @@ class VboxMachine:
         :param name: Name of the VirtualBox virtual machine
         :param config_path: Optional path to configuration file
         """
-        self.vm_config = VmConfig(config_path=config_path)
-        self.vm = VirtualMachine(name)
         self.name = name
+        self.vm_config = VmConfig(vm_name=name, config_path=config_path)
+        self.vm = VirtualMachine(name)
         self.data = None
         self.__os_type = None
         self.__adapter_name = None

@@ -1,11 +1,45 @@
 {
-  "cpus": 4,
-  "memory": 4096,
-  "audio": false,
-  "nested_virtualization": true,
-  "speculative_execution_control": true,
-  "network": {
-    "adapter_name": "",
-    "connect_type": "bridged"
+  "default": {
+    "cpus": 4,
+    "memory": 4096,
+    "audio": false,
+    "nested_virtualization": true,
+    "speculative_execution_control": true,
+    "network": {
+      "adapter_name": "",
+      "connect_type": "bridged"
+    }
+  },
+  "vm_specific": {
+    "Windows11": {
+      "network": {
+        "connect_type": "nat"
+      }
+    },
+    "Windows10": {
+      "network": {
+        "connect_type": "nat"
+      }
+    },
+    "WindowsVista": {
+      "network": {
+        "connect_type": "nat"
+      }
+    },
+    "Windows7": {
+      "network": {
+        "connect_type": "nat"
+      }
+    },
+    "Windows8.1": {
+      "network": {
+        "connect_type": "nat"
+      }
+    },
+    "Windows11_arm64": {
+      "network": {
+        "connect_type": "nat"
+      }
+    }
   }
 }

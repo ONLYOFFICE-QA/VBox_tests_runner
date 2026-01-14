@@ -28,6 +28,26 @@ class NetworkConfigModel(BaseModel):
         return v
 
 
+class PartialNetworkConfigModel(BaseModel):
+    """
+    A Pydantic model for partial network configuration with all optional fields.
+
+    Attributes:
+        adapter_name (str): The name of the network adapter.
+        connect_type (str): The type of network connection (e.g., "bridged").
+    """
+    adapter_name: constr(strip_whitespace=True, min_length=0) | None = None
+    connect_type: constr(strip_whitespace=True, min_length=1) | None = None
+
+    @field_validator('connect_type')
+    def validate_connect_type(cls, v):
+        if v is not None:
+            connection_types = ["bridged", "nat", "hostonly", "intnet"]
+            if v not in connection_types:
+                raise ValueError(f'connect_type must be one of {", ".join(connection_types)}')
+        return v
+
+
 class SystemConfigModel(BaseModel):
     """
     A Pydantic model for validating the system configuration parameters.
@@ -48,10 +68,43 @@ class SystemConfigModel(BaseModel):
     network: NetworkConfigModel
 
 
+class VmSpecificConfigModel(BaseModel):
+    """
+    A Pydantic model for validating VM-specific configuration parameters.
+    All fields are optional to allow partial overrides of default settings.
+
+    Attributes:
+        cpus (int): The number of CPUs allocated for the system. Must be an integer >= 1.
+        memory (int): The amount of memory in MB. Must be an integer >= 512.
+        audio (bool): Whether audio is enabled.
+        nested_virtualization (bool): Whether nested virtualization is enabled.
+        speculative_execution_control (bool): Whether speculative execution control is enabled.
+        network (PartialNetworkConfigModel): Partial network configuration.
+    """
+    cpus: conint(ge=1) | None = None
+    memory: conint(ge=512) | None = None
+    audio: bool | None = None
+    nested_virtualization: bool | None = None
+    speculative_execution_control: bool | None = None
+    network: PartialNetworkConfigModel | None = None
+
+
+class ConfigFileModel(BaseModel):
+    """
+    A Pydantic model for the complete configuration file structure.
+
+    Attributes:
+        default (SystemConfigModel): Default configuration for all VMs.
+        vm_specific (dict): VM-specific configurations keyed by VM name.
+    """
+    default: SystemConfigModel
+    vm_specific: dict[str, VmSpecificConfigModel] = {}
+
+
 @singleton
 class VmConfig:
     """
-    Configuration class for system settings.
+    Configuration class for system settings with support for VM-specific overrides.
 
     Attributes:
         cpus (int): The number of CPUs allocated for the system.
@@ -60,12 +113,20 @@ class VmConfig:
         nested_virtualization (bool): Whether nested virtualization is enabled.
         speculative_execution_control (bool): Whether speculative execution control is enabled.
         network (NetworkConfigModel): Network configuration.
+        vm_name (str): Name of the VM for specific configuration.
     """
     vm_config_path = str(Path(__file__).resolve().parents[3] / "vm_configs" / "vm_config.json")
 
-    def __init__(self, config_path: str = None):
+    def __init__(self, vm_name: str = None, config_path: str = None):
+        """
+        Initialize VmConfig with optional VM-specific settings.
+
+        :param vm_name: Name of the VM to load specific configuration for
+        :param config_path: Path to configuration file
+        """
         self.config_path = config_path or self.vm_config_path
-        self._config = self._load_config(self.config_path)
+        self.vm_name = vm_name
+        self._config = self._load_and_merge_config(self.config_path, vm_name)
         self.cpus = self._config.cpus
         self.memory = self._config.memory
         self.audio = self._config.audio
@@ -91,15 +152,53 @@ class VmConfig:
             )
 
     @staticmethod
-    def _load_config(file_path: str) -> SystemConfigModel:
+    def _load_config(file_path: str) -> ConfigFileModel:
         """
-        Loads the system configuration from a JSON file and returns a SystemConfigModel instance.
+        Loads the complete configuration from a JSON file.
 
         :param file_path: The path to the configuration JSON file.
-        :return: An instance of SystemConfigModel containing the loaded configuration.
+        :return: An instance of ConfigFileModel containing the loaded configuration.
         """
         with open(file_path, 'r') as f:
-            return SystemConfigModel(**json.load(f))
+            return ConfigFileModel(**json.load(f))
+
+    @staticmethod
+    def _merge_configs(default: SystemConfigModel, specific: VmSpecificConfigModel) -> SystemConfigModel:
+        """
+        Merges VM-specific configuration with default configuration.
+
+        :param default: Default configuration
+        :param specific: VM-specific configuration overrides
+        :return: Merged SystemConfigModel instance
+        """
+        merged_data = default.model_dump()
+        specific_data = specific.model_dump(exclude_none=True)
+
+        # Merge network configuration separately if provided
+        if 'network' in specific_data and specific_data['network']:
+            # Update only specified network fields, keeping defaults for others
+            for key, value in specific_data['network'].items():
+                merged_data['network'][key] = value
+            del specific_data['network']
+
+        merged_data.update(specific_data)
+        return SystemConfigModel(**merged_data)
+
+    def _load_and_merge_config(self, file_path: str, vm_name: str = None) -> SystemConfigModel:
+        """
+        Loads configuration and applies VM-specific overrides if vm_name is provided.
+
+        :param file_path: The path to the configuration JSON file
+        :param vm_name: Name of the VM to load specific configuration for
+        :return: An instance of SystemConfigModel with merged configuration
+        """
+        config_file = self._load_config(file_path)
+
+        if vm_name and vm_name in config_file.vm_specific:
+            print(f"[cyan]|INFO| Loading VM-specific configuration for '{vm_name}'")
+            return self._merge_configs(config_file.default, config_file.vm_specific[vm_name])
+
+        return config_file.default
 
     def display_config(self):
         """
@@ -127,6 +226,7 @@ class VmConfig:
     def update_config(self, **kwargs):
         """
         Updates the configuration with new values and saves it to the file.
+        If vm_name is specified, updates VM-specific configuration; otherwise updates default.
 
         :param kwargs: Key-value pairs to update in the configuration.
         """
@@ -136,6 +236,27 @@ class VmConfig:
             else:
                 raise AttributeError(f"Invalid configuration key: {key}")
 
+        # Load full config structure
+        config_file = self._load_config(self.config_path)
+
+        # Update appropriate section
+        if self.vm_name:
+            if self.vm_name in config_file.vm_specific:
+                # Update existing VM-specific configuration
+                vm_config_data = config_file.vm_specific[self.vm_name].model_dump(exclude_none=True)
+                for key, value in kwargs.items():
+                    vm_config_data[key] = value
+                config_file.vm_specific[self.vm_name] = VmSpecificConfigModel(**vm_config_data)
+            else:
+                # Create new VM-specific configuration if it doesn't exist
+                vm_config_data = {}
+                for key, value in kwargs.items():
+                    vm_config_data[key] = value
+                config_file.vm_specific[self.vm_name] = VmSpecificConfigModel(**vm_config_data)
+        else:
+            # Update default configuration
+            config_file.default = self._config
+
         # Save the updated configuration back to the file
         with open(self.config_path, 'w') as file:
-            json.dump(self._config.model_dump(), file, indent=4)
+            json.dump(config_file.model_dump(exclude_none=True), file, indent=2)
