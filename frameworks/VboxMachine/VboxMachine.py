@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import re
-from host_tools import HostInfo
 from vboxwrapper import VirtualMachine
 
 from frameworks.decorators import vm_is_turn_on, class_cache
