@@ -4,7 +4,7 @@ from typing import Dict, Optional, Union, List
 
 from dataclasses import dataclass, field
 from os.path import join, isfile
-from host_tools import File
+from host_tools import File, HostInfo
 
 from frameworks.VersionHandler import VersionHandler
 from frameworks.test_data.TestData import TestData
@@ -39,6 +39,7 @@ class DesktopTestData(TestData):
         if not isinstance(self.version, VersionHandler):
             self.version = VersionHandler(version=self.version)
 
+        self.is_arm64 = HostInfo().arch in ['arm64', 'aarch64']
         self.desktop_testing_url = self.config['desktop_script']
         self.branch = self.config['branch']
         self.title = self.config.get('title', 'Undefined_title')
@@ -59,7 +60,7 @@ class DesktopTestData(TestData):
     def vm_names(self) -> List[str]:
         if self.retest:
             return DesktopReport(self.full_report_path).get_error_vm_list()
-        return self.config.get('hosts', [])
+        return self.config.get('hosts_arm64', []) if self.is_arm64 else self.config.get('hosts', [])
 
     @property
     def package_name(self) -> str:

@@ -6,11 +6,13 @@
   "office_js_api_branch": "",
   "document_builder_samples": "",
   "password": "",
+  "hosts_arm64": [
+    "Debian12_arm64"
+  ],
   "hosts": [
     "Windows11",
     "Ubuntu22",
-    "Windows10_x32",
-    "Debian12_arm64"
+    "Windows10_x32"
   ],
   "report_portal": {
     "project_name": "documentbuilder"

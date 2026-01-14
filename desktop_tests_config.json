@@ -8,6 +8,10 @@
   "report_portal": {
     "project_name": "desktopeditors"
   },
+  "hosts_arm64": [
+    "Windows11_arm64",
+    "Debian12_arm64"
+  ],
   "hosts": [
     "Windows10",
     "Debian10",

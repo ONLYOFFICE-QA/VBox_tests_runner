@@ -22,6 +22,7 @@ class BuilderTestData(TestData):
         super().__post_init__()
         self.dep_test_branch = self.config.get('dep_test_branch')
         self.build_tools_branch = self.config.get('build_tools_branch')
+        self.is_arm64 = HostInfo().arch in ['arm64', 'aarch64']
         self.portal_project_name = self.config.get('report_portal').get('project_name')
         self.office_js_api_branch = self.config.get('office_js_api_branch')
         self.document_builder_samples_branch = self.config.get('document_builder_samples_branch')
@@ -46,7 +47,7 @@ class BuilderTestData(TestData):
 
     @property
     def vm_names(self) -> List[str]:
-        return [name for name in self.config.get('hosts', []) if ('arm64' in name.lower()) == HostInfo().is_mac]
+        return self.config.get('hosts_arm64', []) if self.is_arm64 else self.config.get('hosts', [])
 
     def _read_config(self) -> Dict:
         if not isfile(self.config_path):
