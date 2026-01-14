@@ -5,6 +5,7 @@ from vboxwrapper import VirtualMachine
 from frameworks.decorators import vm_is_turn_on, class_cache
 from .vm_data import VmData
 from .configs import VmConfig
+from host_tools import HostInfo
 
 
 @class_cache
@@ -144,7 +145,8 @@ class VboxMachine:
         self.vm.nested_virtualization(self.vm_config.nested_virtualization)
         self.vm.set_memory(self._get_memory_num())
         self.vm.audio(self.vm_config.audio)
-        self.vm.speculative_execution_control(self.vm_config.speculative_execution_control)
+        if not HostInfo().is_arm:
+            self.vm.speculative_execution_control(self.vm_config.speculative_execution_control)
 
     def stop(self):
         """
