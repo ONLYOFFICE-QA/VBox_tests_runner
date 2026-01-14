@@ -28,7 +28,7 @@ class Config:
         :return: List of filtered host names
         """
         hosts = { host for config in self.test_configs for host in self._get_hosts(config) }
-        return [host for host in hosts if ('arm64' in host.lower()) == HostInfo().is_mac]
+        return [host for host in hosts]
 
     @staticmethod
     def _get_hosts(config_path: str) -> list:
@@ -38,4 +38,4 @@ class Config:
         :param config_path: Path to JSON configuration file
         :return: List of host names from the configuration
         """
-        return File.read_json(config_path)['hosts']
+        return File.read_json(config_path)['hosts_arm64' if HostInfo().is_arm else 'hosts']
