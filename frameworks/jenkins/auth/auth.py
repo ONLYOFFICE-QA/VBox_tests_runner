@@ -11,7 +11,17 @@ class Auth:
         self.token = token or self._get_token()
 
     def _get_token(self) -> str:
-        return self.TOKEN_FILE.read_text().strip()
+        if not self.TOKEN_FILE.is_file():
+            raise FileNotFoundError(f"|ERROR| Token file not found: {self.TOKEN_FILE}")
+        token = self.TOKEN_FILE.read_text().strip()
+        if not token:
+            raise ValueError(f"|ERROR| Token file is empty: {self.TOKEN_FILE}")
+        return token
 
     def _get_id(self) -> str:
-        return self.ID_FILE.read_text().strip()
+        if not self.ID_FILE.is_file():
+            raise FileNotFoundError(f"|ERROR| ID file not found: {self.ID_FILE}")
+        id = self.ID_FILE.read_text().strip()
+        if not id:
+            raise ValueError(f"|ERROR| ID file is empty: {self.ID_FILE}")
+        return id
