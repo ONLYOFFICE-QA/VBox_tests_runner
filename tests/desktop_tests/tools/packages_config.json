@@ -13,10 +13,10 @@
             "opensuse"
         ],
         "win-arm64": [
-            "windows 11 on arm"
+            "windows 11 on arm arm64"
         ],
         "debian-arm64": [
-            "debian"
+            "debian arm64"
         ],
         "win": [
             "windows 10",
