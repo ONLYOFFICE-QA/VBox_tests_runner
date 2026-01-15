@@ -1,5 +1,4 @@
 """Jenkins API helpers."""
-from .auth import Auth
 from .request_sender import JenkinsRequestSender
 from frameworks.VersionHandler import VersionHandler
 

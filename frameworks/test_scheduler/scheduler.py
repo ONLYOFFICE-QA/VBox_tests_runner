@@ -18,7 +18,6 @@ from apscheduler.triggers.cron import CronTrigger
 
 from frameworks.package_checker import PackageURLChecker
 from frameworks.jenkins import Jenkins
-from frameworks.VersionHandler import VersionHandler
 from .config import SchedulerConfig
 
 
