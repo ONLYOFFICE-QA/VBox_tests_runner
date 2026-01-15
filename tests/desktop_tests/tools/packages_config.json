@@ -12,13 +12,17 @@
         "suse": [
             "opensuse"
         ],
+        "win-arm64": [
+            "windows 11 on arm"
+        ],
+        "debian-arm64": [
+            "debian"
+        ],
         "win": [
             "windows 10",
             "windows 11",
             "windows 7",
-            "windows 8.1",
-            "windows11_arm64",
-            "windows 11 on arm"
+            "windows 8.1"
         ],
         "win-xp": [
             "windows vista"
