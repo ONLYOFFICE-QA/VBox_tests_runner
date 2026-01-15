@@ -17,7 +17,8 @@
             "windows 11",
             "windows 7",
             "windows 8.1",
-            "windows11_arm64"
+            "windows11_arm64",
+            "windows 11 on arm"
         ],
         "win-xp": [
             "windows vista"
