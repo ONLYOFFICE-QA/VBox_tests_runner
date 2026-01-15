@@ -172,6 +172,10 @@ class TestScheduler:
         )
 
         try:
+            # Run first check immediately
+            print("[green]|INFO| Running initial check before scheduled runs[/]")
+            self.check_and_run_tests(base_version, max_builds, recheck_count, recheck_all)
+
             self._initialize_scheduler(
                 start_hour=start_hour,
                 end_hour=end_hour,
