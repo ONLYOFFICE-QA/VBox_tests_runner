@@ -104,8 +104,7 @@ class DesktopTestTools:
         self.report.write(
             version=self.data.version,
             vm_name=self.vm.name,
-            exit_code=0,
-            stdout=self.portal_data.test_status.not_exists_package
+            exit_code=self.portal_data.test_status.not_exists_package
         )
 
     def handle_vm_creation_failure(self):
@@ -113,8 +112,7 @@ class DesktopTestTools:
         self.report.write(
             version=self.data.version,
             vm_name=self.vm.name,
-            exit_code=0,
-            stdout=self.portal_data.test_status.failed_create_vm
+            exit_code=self.portal_data.test_status.failed_create_vm
         )
 
     def get_upload_files(self) -> list:
