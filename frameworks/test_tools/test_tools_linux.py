@@ -39,7 +39,7 @@ class TestToolsLinux(TestTools):
             connect.create_test_dirs(self._get_create_dir(create_test_dir))
             connect.upload_test_files(self._get_linux_upload_files(upload_files))
             connect.start_my_service(self.linux_demon.start_demon_commands())
-            connect.wait_execute_service(status_bar=self.data.status_bar)
+            connect.wait_execute_service(status_bar=self.data.status_bar, interval=60 if not self.data.status_bar else 1)
 
     def download_report(self, path_from: str, path_to: str) -> bool:
         with Ssh(self.server) as ssh, Sftp(self.server, ssh.connection) as sftp:

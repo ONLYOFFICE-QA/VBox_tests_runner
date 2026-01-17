@@ -123,7 +123,7 @@ def desktop_test(
     c,
     version: Optional[str] = None,
     update_from_version: Optional[str] = None,
-    name: Optional[str] = None,
+    name: Optional[str | List[str]] = None,
     processes: Optional[int] = None,
     telegram: bool = False,
     detailed_telegram: bool = False,
@@ -158,6 +158,7 @@ def desktop_test(
     :param only_portal: Only send to portal, do not run tests
     """
     num_processes = int(processes) if processes else 1
+    names = _parse_names(name)
 
     data = DesktopTestData(
         version=version or Prompt.ask("[red]Please enter version"),
@@ -178,12 +179,17 @@ def desktop_test(
     report = DesktopReport(report_path=data.full_report_path)
 
     if not only_portal:
-        if num_processes > 1 and not name and len(data.vm_names) > 1:
+        if (
+            (num_processes > 1 and not names and len(data.vm_names) > 1)
+            or (num_processes > 1 and isinstance(names, list) and len(names) > 1)
+            ):
+            if isinstance(names, list):
+                data.vm_names = names
             data.status_bar = False
             multiprocess.run(DesktopTest, data, num_processes, 10, headless)
         else:
             data.status_bar = True
-            for vm in Vbox().check_vm_names([name] if name else data.vm_names):
+            for vm in Vbox().check_vm_names(names if isinstance(names, list) else [names] if names else data.vm_names):
                 DesktopTest(vm, data).run(headless=headless)
 
         report.get_full(data.version)
@@ -454,8 +460,7 @@ def update_vm_on_host(c, names: Union[str, List[str]] = None, cores: Optional[in
     :param names: VM names
     :param cores: Number of CPU cores to use
     """
-    parsed_names = _parse_names(names)
-    updated_vm = VmManager().update_vm_on_host(vm_names=parsed_names or names, cores=cores)
+    updated_vm = VmManager().update_vm_on_host(vm_names=_parse_names(names), cores=cores)
     if updated_vm:
         reset_vbox(c, soft=True)
 
@@ -472,8 +477,7 @@ def update_vm_on_s3(c, names: Union[str, List[str]] = None, cores: Optional[int]
     """
     # # Parse names if it's a string representation of a list
     # if isinstance(names, str) and names.startswith('[') and names.endswith(']'):
-    parsed_names = _parse_names(names)
-    VmManager().update_vm_on_s3(vm_names=parsed_names or names, cores=cores, ignore_date=ignore_date)
+    VmManager().update_vm_on_s3(vm_names=_parse_names(names), cores=cores, ignore_date=ignore_date)
 
 
 def _parse_names(names: str) -> Optional[List[str]]:
@@ -486,4 +490,5 @@ def _parse_names(names: str) -> Optional[List[str]]:
         try:
             return ast.literal_eval(names)
         except (ValueError, SyntaxError):
-            return None
+            raise ValueError(f"Invalid names: {names}")
+    return names

@@ -48,19 +48,19 @@ class SSHConnection:
     def clean_log_journal(self):
         self.exec_cmd("sudo rm /var/log/journal/*/*.journal")
 
-    def wait_execute_service(self, timeout: int = None, status_bar: bool = False):
+    def wait_execute_service(self, timeout: int = None, status_bar: bool = False, interval: int = 1):
         service_name = self.my_service_name
         server_info = f"{self.ssh.server.custom_name}|{self.ssh.server.ip}"
         msg = f"[cyan]|INFO|{server_info}| Waiting for execution of {service_name}"
 
-        print(f"[bold cyan]{'-' * 90}\n|INFO|{server_info}| Waiting for script execution on VM\n{'-' * 90}")
+        print(f"[bold cyan]{'-' * 90}\n|INFO|{server_info}| Waiting for script execution on VM with interval {interval} seconds\n{'-' * 90}")
 
         with console.status(msg) if status_bar else contextlib.nullcontext() as status:
             print(msg) if not status_bar else None
             start_time = time.time()
             while self.service_is_active(service_name=service_name):
                 status.update(f"{msg}\n{self.get_my_service_log(stdout=False)}") if status_bar else None
-                time.sleep(0.5)
+                time.sleep(interval)
 
                 if isinstance(timeout, int) and (time.time() - start_time) >= timeout:
                     raise SshException(
