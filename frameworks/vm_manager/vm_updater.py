@@ -331,7 +331,7 @@ class VmUpdater:
         """
         images = self.vm.storage.get_dvd_images
         if images:
-            self._log(f"Removing useless DVD images [cyan]{', '.join(images)}[/cyan] from VM [cyan]{self.vm.name}[/cyan]", color='yellow')
+            self._log(f"Removing useless DVD images [cyan]{images}[/cyan] from VM [cyan]{self.vm.name}[/cyan]", color='yellow')
             self.vm.storage.remove_dvd_images()
 
     def _log(self, msg: str, color: str = 'green', level: str = 'INFO') -> None:
