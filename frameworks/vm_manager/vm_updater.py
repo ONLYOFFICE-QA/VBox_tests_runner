@@ -78,7 +78,12 @@ class VmUpdater:
         Update VM directory for VM.
         """
         self.update_vm_config_path()
-        self.__vm_dir = Path(self.vm_config_path).parent if self.vm_config_path else Path(self.vm.info.default_vm_dir) / self.vm.name
+        if self.vm_config_path:
+            self.__vm_dir = Path(self.vm_config_path).parent
+        elif self.vm.info.default_vm_dir:
+            self.__vm_dir = Path(self.vm.info.default_vm_dir) / self.vm.name
+        else:
+            raise ValueError(f"Cannot determine VM directory for VM '{self.vm.name}': both config_path and default_vm_dir are None")
 
     @property
     def vm_config_path(self) -> Optional[str]:
