@@ -1464,7 +1464,7 @@ requires-dist = [
 [[package]]
 name = "vboxwrapper"
 version = "0.1.0"
-source = { git = "https://github.com/l8556/VBoxWrapper.git?branch=feature%2FAdd-USB-controller-management-to-VirtualMachine#426bddb936c1a36d710d74b590f00b090ebc5ed5" }
+source = { git = "https://github.com/l8556/VBoxWrapper.git?branch=feature%2FAdd-USB-controller-management-to-VirtualMachine#283e21f765dca18b897782d7d6f04e9bb16acebe" }
 dependencies = [
     { name = "rich" },
 ]

@@ -70,8 +70,14 @@ class VmUpdater:
         Get VM directory for VM.
         """
         if self.__vm_dir is None or not self.__vm_dir.is_dir():
-            self.__vm_dir = Path(self.vm_config_path).parent if self.vm_config_path else Path(self.vm.info.default_vm_dir) / self.vm.name
+            self.update_vm_dir()
         return self.__vm_dir
+
+    def update_vm_dir(self) -> None:
+        """
+        Update VM directory for VM.
+        """
+        self.__vm_dir = Path(self.vm_config_path).parent if self.vm_config_path else Path(self.vm.info.default_vm_dir) / self.vm.name
 
     @property
     def vm_config_path(self) -> Optional[str]:
@@ -278,18 +284,42 @@ class VmUpdater:
             File.delete(str(self.vm_dir), stdout=False, stderr=False)
             File.unpacking(str(self.archive_path), str(self.vm_dir), stdout=False)
             self._fix_unpacking_duplication()
+            self._register_vm()
+            self._move_to_group_dir()
             self._remove_useless_dvd_images()
             self._log(f"Unpacked VM [cyan]{self.vm.name}[/cyan] to [cyan]{self.vm_dir}[/cyan]", color='green')
         else:
             self._log(f"Archive not found or already updated on host [cyan]{self.archive_path}[/cyan]", color='magenta')
 
+    def _register_vm(self) -> None:
+        """
+        Register VM in VirtualBox.
+        """
+        if not self.vm.is_registered():
+            vbox_file = self._find_vbox_file()
+            if vbox_file:
+                self.vm.register(str(vbox_file))
+            else:
+                self._log(f"VBox file not found on path: [cyan]{self.vm_dir}[/cyan]", color='red')
+
+    def _move_to_group_dir(self) -> None:
+        """
+        Move VM to group directory and move remaining files from old directory.
+        """
+        group_name = self.vm.get_group_name()
+        if group_name and not group_name in str(self.vm_dir):
+            group_dir = Path(self.vm.info.default_vm_dir) / group_name
+            group_dir.mkdir(parents=True, exist_ok=True)
+            self.vm.move_to(str(group_dir), move_remaining_files=True, delete_old_directory=True)
+            self.update_vm_dir()
+
     def _remove_useless_dvd_images(self) -> None:
         """
         Remove useless DVD images from VM. If there are no DVD images, do nothing.
         """
-        images = self.vm.storage.get_all_images()
+        images = self.vm.storage.get_dvd_images
         if images:
-            self._log(f"Removing useless DVD images from VM [cyan]{self.vm.name}[/cyan]", color='yellow')
+            self._log(f"Removing useless DVD images [cyan]{', '.join(images)}[/cyan] from VM [cyan]{self.vm.name}[/cyan]", color='yellow')
             self.vm.storage.remove_dvd_images()
 
     def _log(self, msg: str, color: str = 'green', level: str = 'INFO') -> None:
@@ -397,6 +427,14 @@ class VmUpdater:
         if s3_datetime and current_datetime:
             return s3_datetime < current_datetime if s3_date_older else s3_datetime > current_datetime
         return False
+
+    def _find_vbox_file(self) -> Optional[Path]:
+        """
+        Find .vbox configuration file in VM directory.
+        """
+        if self.vm_dir and self.vm_dir.is_dir():
+            return next(self.vm_dir.glob('*.vbox'), None)
+        return None
 
     def _datetime(self, date_string: Optional[str]) -> Optional[datetime]:
         """
