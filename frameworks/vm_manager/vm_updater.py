@@ -77,6 +77,7 @@ class VmUpdater:
         """
         Update VM directory for VM.
         """
+        self.update_vm_config_path()
         self.__vm_dir = Path(self.vm_config_path).parent if self.vm_config_path else Path(self.vm.info.default_vm_dir) / self.vm.name
 
     @property
@@ -85,8 +86,14 @@ class VmUpdater:
         Get VM configuration path for VM.
         """
         if self.__vm_config_path is None:
-            self.__vm_config_path = self.vm.info.config_path
+            self.update_vm_config_path()
         return self.__vm_config_path
+
+    def update_vm_config_path(self) -> None:
+        """
+        Update VM configuration path by refreshing from VM info.
+        """
+        self.__vm_config_path = self.vm.info.config_path
 
     @property
     def s3_object_metadata(self) -> dict:
