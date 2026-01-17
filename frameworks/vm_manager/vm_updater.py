@@ -70,7 +70,7 @@ class VmUpdater:
         Get VM directory for VM.
         """
         if self.__vm_dir is None or not self.__vm_dir.is_dir():
-            self.__vm_dir = Path(self.vm_config_path).parent if self.vm_config_path else None
+            self.__vm_dir = Path(self.vm_config_path).parent if self.vm_config_path else Path(self.vm.info.default_vm_dir) / self.vm.name
         return self.__vm_dir
 
     @property
@@ -237,7 +237,7 @@ class VmUpdater:
         Check if VM needs update on host by comparing snapshot UUIDs and dates.
         """
         if not self.vm_config_path or not isfile(self.vm_config_path):
-            self._log(f"VM configuration file not found [cyan]{self.vm_config_path}[/cyan]", color='red')
+            self._log(f"VM configuration file not found on path: [cyan]{self.vm_config_path}[/cyan]", color='red')
             return True
         return self._check_update_needed(on_s3=False)
 
