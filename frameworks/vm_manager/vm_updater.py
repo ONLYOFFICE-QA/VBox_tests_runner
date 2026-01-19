@@ -319,7 +319,7 @@ class VmUpdater:
         Move VM to group directory and move remaining files from old directory.
         """
         group_name = self.vm.get_group_name()
-        if group_name and not group_name in str(self.vm_dir):
+        if group_name and group_name not in str(self.vm_dir):
             group_dir = Path(self.vm.info.default_vm_dir) / group_name
             group_dir.mkdir(parents=True, exist_ok=True)
             self.vm.move_to(str(group_dir), move_remaining_files=True, delete_old_directory=True)
