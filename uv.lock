@@ -1458,13 +1458,13 @@ requires-dist = [
     { name = "s3wrapper", git = "https://github.com/l8556/S3Wrapper.git?branch=master" },
     { name = "ssh-wrapper", git = "https://github.com/l8556/SshWrapper.git?branch=master" },
     { name = "telegram", git = "https://github.com/l8556/TelegramApi.git?branch=master" },
-    { name = "vboxwrapper", git = "https://github.com/l8556/VBoxWrapper.git?branch=feature%2FAdd-USB-controller-management-to-VirtualMachine" },
+    { name = "vboxwrapper", git = "https://github.com/l8556/VBoxWrapper.git?branch=master" },
 ]
 
 [[package]]
 name = "vboxwrapper"
 version = "0.1.0"
-source = { git = "https://github.com/l8556/VBoxWrapper.git?branch=feature%2FAdd-USB-controller-management-to-VirtualMachine#8336db075e81248faff005af61a958fb2ddfd6fe" }
+source = { git = "https://github.com/l8556/VBoxWrapper.git?branch=master#c6353e6b1b4ce2c1235b920d4b0bddf45dae990b" }
 dependencies = [
     { name = "rich" },
 ]

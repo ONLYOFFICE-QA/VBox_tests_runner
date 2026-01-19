@@ -5,8 +5,8 @@ from typing import List
 
 from rich import print
 from pydantic import BaseModel, conint, constr, field_validator
-from host_tools import singleton
 from vboxwrapper import VirtualMachine
+from frameworks.decorators import class_cache
 
 
 class NetworkConfigModel(BaseModel):
@@ -101,7 +101,7 @@ class ConfigFileModel(BaseModel):
     vm_specific: dict[str, VmSpecificConfigModel] = {}
 
 
-@singleton
+@class_cache
 class VmConfig:
     """
     Configuration class for system settings with support for VM-specific overrides.

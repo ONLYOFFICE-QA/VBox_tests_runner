@@ -17,6 +17,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from frameworks.package_checker import PackageURLChecker
+from frameworks.jenkins import Jenkins
 from .config import SchedulerConfig
 
 
@@ -42,6 +43,7 @@ class TestScheduler:
         """
         self.config = SchedulerConfig(config_path)
         self.checker = PackageURLChecker()
+        self.jenkins = Jenkins()
         self.tested_versions_file = tested_versions_file or self.config.tested_versions_file
         self.scheduler = None
 
@@ -169,6 +171,10 @@ class TestScheduler:
         )
 
         try:
+            # Run first check immediately
+            print("[green]|INFO| Running initial check before scheduled runs[/]")
+            self.check_and_run_tests(base_version, max_builds, recheck_count, recheck_all)
+
             self._initialize_scheduler(
                 start_hour=start_hour,
                 end_hour=end_hour,
@@ -253,26 +259,83 @@ class TestScheduler:
 
     # Private methods
 
+    def _get_last_completed_version(self, base_version: str) -> str:
+        """
+        Get the last completed version from Jenkins for the base version.
+
+        :param base_version: Base version to check for updates
+        :return: Last completed version
+        """
+        version = f"{base_version}.0"
+        build_number = self.jenkins.get_last_completed_build_number(version)
+        if not build_number:
+            return None
+        return f"{base_version}.{build_number}"
+
+    def _check_all_packages_exist(self, version: str, category: str) -> bool:
+        """
+        Check if all packages exist for a given version and category.
+
+        :param version: Version to check
+        :param category: Package category to check (builder, desktop)
+        :return: True if all packages exist, False otherwise
+        """
+        try:
+            # Run URL checker for this specific version
+            results = self.checker.run(versions=version, categories=[category], stdout=False)
+
+            if not results or version not in results:
+                print(f"[yellow]|WARNING| No check results for version {version}[/]")
+                return False
+
+            version_results = results[version]
+            if category not in version_results:
+                print(f"[yellow]|WARNING| No {category} packages found for version {version}[/]")
+                return False
+
+            # Check if all packages in category have result: True
+            category_packages = version_results[category]
+            all_exist = all(
+                pkg_data.get('result', False)
+                for pkg_data in category_packages.values()
+            )
+
+            if not all_exist:
+                failed_packages = [
+                    name for name, data in category_packages.items()
+                    if not data.get('result', False)
+                ]
+                print(f"[yellow]|WARNING| Some {category} packages not available: {', '.join(failed_packages)}[/]")
+
+            return all_exist
+
+        except Exception as e:
+            print(f"[red]|ERROR| Failed to check packages for version {version}: {e}[/]")
+            return False
+
     def _get_new_versions_to_test(self, base_version: str) -> Dict[str, str]:
         """
         Identify new versions that need testing based on configured test execution order.
+
+        Uses Jenkins API to get the last completed build number and checks package availability.
 
         :param base_version: Base version to check for updates
         :return: Dictionary mapping test types to their new versions
         """
         tested_versions = self.load_tested_versions()
-        report = self.checker.get_report(base_version=base_version)
+        latest_version = self._get_last_completed_version(base_version)
+        if not latest_version:
+            print(f"[yellow]|WARNING| No completed builds found in Jenkins for {base_version}[/]")
+            return {}
 
-        latest_versions = {
-            "builder": report.get_last_exists_version(category="builder", any_exists=self.config.any_package_exists),
-            "desktop": report.get_last_exists_version(category="desktop", any_exists=self.config.any_package_exists),
-        }
+        print(f"[green]|INFO| Latest completed version from Jenkins: {latest_version}[/]")
 
         new_versions = {}
         for test_type in self.config.test_execution_order:
-            latest_version = latest_versions.get(test_type)
-            if not latest_version:
-                continue
+            if not self.config.any_package_exists:
+                if not self._check_all_packages_exist(latest_version, test_type):
+                    print(f"[yellow]|WARNING| Not all {test_type} packages exist for version {latest_version}, skipping[/]")
+                    continue
 
             if latest_version not in tested_versions[test_type]:
                 new_versions[test_type] = latest_version

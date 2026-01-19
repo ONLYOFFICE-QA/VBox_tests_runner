@@ -3,14 +3,15 @@
   "desktop_script": "https://github.com/ONLYOFFICE-QA/desktop_editor_testing.git",
   "branch": "",
   "token_file": "",
-  "chat_id_file": "",
+  "chat_id_file": "test",
   "password": "",
   "report_portal": {
     "project_name": "desktopeditors"
   },
   "hosts_arm64": [
     "Windows11_arm64",
-    "Debian12_arm64"
+    "Debian12_arm64",
+    "OpenSuseLeap15_arm64"
   ],
   "hosts": [
     "Windows10",

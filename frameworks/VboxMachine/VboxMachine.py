@@ -110,6 +110,9 @@ class VboxMachine:
             if os_type is None:
                 raise ValueError("OS type is not available")
             self.__os_name = re.sub(r' \([^)]*bit\)', '', os_type).lower()
+            prefix = 'arm64' if 'arm64' in self.vm.name.lower() else ''
+            if prefix:
+                self.__os_name += f' {prefix}'
         return self.__os_name
 
     def run(self, headless: bool = True, status_bar: bool = False, timeout: int = 600):

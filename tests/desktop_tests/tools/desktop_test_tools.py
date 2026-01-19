@@ -67,7 +67,7 @@ class DesktopTestTools:
         :return: True if package exists, False otherwise
         """
         if not self.package_name:
-            print(f"[bold red]|ERROR|{self.vm.name}| Package name {self.package_name} is not found in packages_config.json")
+            print(f"[bold red]|ERROR|{self.vm.name}| Package name {self.package_name} with OS name {self.vm.os_name} is not found in packages_config.json")
             return True
 
         report_result = self.package_report.get_result(
@@ -104,8 +104,7 @@ class DesktopTestTools:
         self.report.write(
             version=self.data.version,
             vm_name=self.vm.name,
-            exit_code=0,
-            stdout=self.portal_data.test_status.not_exists_package
+            exit_code=self.portal_data.test_status.not_exists_package
         )
 
     def handle_vm_creation_failure(self):
@@ -113,8 +112,7 @@ class DesktopTestTools:
         self.report.write(
             version=self.data.version,
             vm_name=self.vm.name,
-            exit_code=0,
-            stdout=self.portal_data.test_status.failed_create_vm
+            exit_code=self.portal_data.test_status.failed_create_vm
         )
 
     def get_upload_files(self) -> list:
