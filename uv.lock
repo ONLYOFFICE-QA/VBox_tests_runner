@@ -1458,13 +1458,13 @@ requires-dist = [
     { name = "s3wrapper", git = "https://github.com/l8556/S3Wrapper.git?branch=master" },
     { name = "ssh-wrapper", git = "https://github.com/l8556/SshWrapper.git?branch=master" },
     { name = "telegram", git = "https://github.com/l8556/TelegramApi.git?branch=master" },
-    { name = "vboxwrapper", git = "https://github.com/l8556/VBoxWrapper.git?branch=add_config_path" },
+    { name = "vboxwrapper", git = "https://github.com/l8556/VBoxWrapper.git?branch=master" },
 ]
 
 [[package]]
 name = "vboxwrapper"
 version = "0.1.0"
-source = { git = "https://github.com/l8556/VBoxWrapper.git?branch=add_config_path#15539c3aab08284906262f289ba9cc6ee5d34fc0" }
+source = { git = "https://github.com/l8556/VBoxWrapper.git?branch=master#d8dfbd436929ffb640f970a5bc075f908a724d8f" }
 dependencies = [
     { name = "rich" },
 ]
