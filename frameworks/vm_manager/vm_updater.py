@@ -282,7 +282,7 @@ class VmUpdater:
         Download VM archive from S3.
         """
         if not self.s3.is_exists_object(str(self.archive_path), self.s3_object_key):
-            File.delete(str(self.archive_path), stdout=False) if isfile(str(self.archive_path)) else None
+            File.delete(str(self.archive_path), stdout=False) if self.archive_path.is_file() else None
             self.s3.download_file(self.s3_object_key, str(self.archive_path))
             self.__downloaded = True
         else:
