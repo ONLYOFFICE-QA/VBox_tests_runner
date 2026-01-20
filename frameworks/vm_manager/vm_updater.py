@@ -306,13 +306,19 @@ class VmUpdater:
         """
         Register VM in VirtualBox.
         """
-        if not self.vm.is_registered():
-            vbox_file = self._find_vbox_file()
-            if vbox_file and vbox_file.is_file():
-                self._remove_useless_dvd_images(config_path=str(vbox_file))
-                self.vm.register(str(vbox_file))
-            else:
-                self._log(f"VBox file not found on path: [cyan]{self.vm_dir}[/cyan]", color='red')
+        if self.vm.is_registered():
+            self._log(f"VM [cyan]{self.vm.name}[/cyan] is already registered", color='green')
+            self._remove_useless_dvd_images()
+            return
+
+        vbox_file = self._find_vbox_file()
+        if not (vbox_file and vbox_file.is_file()):
+            self._log(f"VBox file not found on path: [cyan]{self.vm_dir}[/cyan]", color='red')
+            return
+
+        config_path = str(vbox_file)
+        self._remove_useless_dvd_images(config_path=config_path)
+        self.vm.register(config_path)
 
     def _move_to_group_dir(self) -> None:
         """
