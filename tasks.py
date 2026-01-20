@@ -5,24 +5,6 @@ VBox Tests Runner - Automated testing framework for VirtualBox environments.
 This module provides invoke tasks for running automated tests on VirtualBox VMs,
 including desktop tests, builder tests, and scheduled test execution.
 
-Usage examples:
-    # Run desktop tests manually:
-    invoke desktop-test --version="9.0.4" --telegram
-
-    # Run builder tests manually:
-    invoke builder-test --version="9.0.4" --connect-portal
-
-    # Start scheduled test runner (runs every 30 minutes between 2 AM and 3 PM):
-    invoke scheduled-tests
-
-    # Start scheduled test runner with custom schedule:
-    invoke scheduled-tests --start-hour=1 --end-hour=16 --interval-minutes=60
-
-    # Check package availability:
-    invoke check-package --version="9.0.4" --name="desktop"
-
-    # Get latest version:
-    invoke get-versions --version-base="9.0.4" --name="builder"
 """
 from os import getcwd, system
 from os.path import isfile, join
