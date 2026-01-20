@@ -298,7 +298,6 @@ class VmUpdater:
             self._fix_unpacking_duplication()
             self._register_vm()
             self._move_to_group_dir()
-            self._remove_useless_dvd_images()
             self._log(f"Unpacked VM [cyan]{self.vm.name}[/cyan] to [cyan]{self.vm_dir}[/cyan]", color='green')
         else:
             self._log(f"Archive not found or already updated on host [cyan]{self.archive_path}[/cyan]", color='magenta')
@@ -308,6 +307,7 @@ class VmUpdater:
         Register VM in VirtualBox.
         """
         if not self.vm.is_registered():
+            self._remove_useless_dvd_images()
             vbox_file = self._find_vbox_file()
             if vbox_file:
                 self.vm.register(str(vbox_file))
