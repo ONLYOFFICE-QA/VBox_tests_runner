@@ -30,7 +30,7 @@ dependencies = [
 [tool.uv.sources]
 host-tools = { git = "https://github.com/l8556/host_tools.git", branch = "master" }
 telegram = { git = "https://github.com/l8556/TelegramApi.git", branch = "master" }
-vboxwrapper = { git = "https://github.com/l8556/VBoxWrapper.git", branch = "master" }
+vboxwrapper = { git = "https://github.com/l8556/VBoxWrapper.git", branch = "add_config_path" }
 ssh-wrapper = { git = "https://github.com/l8556/SshWrapper.git", branch = "master" }
 report-portal = { git = "https://github.com/l8556/report_portal.git", branch = "master" }
 s3wrapper = { git = "https://github.com/l8556/S3Wrapper.git", branch = "master" }

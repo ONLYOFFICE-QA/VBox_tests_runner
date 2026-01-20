@@ -307,8 +307,8 @@ class VmUpdater:
         Register VM in VirtualBox.
         """
         if not self.vm.is_registered():
-            self._remove_useless_dvd_images()
             vbox_file = self._find_vbox_file()
+            self._remove_useless_dvd_images(config_path=str(vbox_file))
             if vbox_file:
                 self.vm.register(str(vbox_file))
             else:
@@ -325,14 +325,15 @@ class VmUpdater:
             self.vm.move_to(str(group_dir), move_remaining_files=True, delete_old_directory=True)
             self.update_vm_dir()
 
-    def _remove_useless_dvd_images(self) -> None:
+    def _remove_useless_dvd_images(self, config_path: str = None) -> None:
         """
         Remove useless DVD images from VM. If there are no DVD images, do nothing.
         """
-        images = self.vm.storage.get_dvd_images
+        _vm = VirtualMachine(self.vm.name, config_path=config_path) if config_path else self.vm
+        images = _vm.storage.get_dvd_images
         if images:
-            self._log(f"Removing useless DVD images [cyan]{images}[/cyan] from VM [cyan]{self.vm.name}[/cyan]", color='yellow')
-            self.vm.storage.remove_dvd_images()
+            self._log(f"Removing useless DVD images [cyan]{images}[/cyan] from VM [cyan]{_vm.name}[/cyan]", color='yellow')
+            _vm.storage.remove_dvd_images()
 
     def _log(self, msg: str, color: str = 'green', level: str = 'INFO') -> None:
         """
