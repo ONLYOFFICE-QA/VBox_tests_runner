@@ -298,7 +298,6 @@ class VmUpdater:
             self._fix_unpacking_duplication()
             self._register_vm()
             self._move_to_group_dir()
-            self._remove_useless_dvd_images()
             self._log(f"Unpacked VM [cyan]{self.vm.name}[/cyan] to [cyan]{self.vm_dir}[/cyan]", color='green')
         else:
             self._log(f"Archive not found or already updated on host [cyan]{self.archive_path}[/cyan]", color='magenta')
@@ -309,7 +308,8 @@ class VmUpdater:
         """
         if not self.vm.is_registered():
             vbox_file = self._find_vbox_file()
-            if vbox_file:
+            if vbox_file and vbox_file.is_file():
+                self._remove_useless_dvd_images(config_path=str(vbox_file))
                 self.vm.register(str(vbox_file))
             else:
                 self._log(f"VBox file not found on path: [cyan]{self.vm_dir}[/cyan]", color='red')
@@ -325,14 +325,15 @@ class VmUpdater:
             self.vm.move_to(str(group_dir), move_remaining_files=True, delete_old_directory=True)
             self.update_vm_dir()
 
-    def _remove_useless_dvd_images(self) -> None:
+    def _remove_useless_dvd_images(self, config_path: str = None) -> None:
         """
         Remove useless DVD images from VM. If there are no DVD images, do nothing.
         """
-        images = self.vm.storage.get_dvd_images
+        _vm = VirtualMachine(self.vm.name, config_path=config_path) if config_path else self.vm
+        images = _vm.storage.get_dvd_images
         if images:
-            self._log(f"Removing useless DVD images [cyan]{images}[/cyan] from VM [cyan]{self.vm.name}[/cyan]", color='yellow')
-            self.vm.storage.remove_dvd_images()
+            self._log(f"Removing useless DVD images [cyan]{images}[/cyan] from VM [cyan]{_vm.name}[/cyan]", color='yellow')
+            _vm.storage.remove_dvd_images()
 
     def _log(self, msg: str, color: str = 'green', level: str = 'INFO') -> None:
         """
