@@ -187,6 +187,9 @@ def desktop_test(
     )
 
     error_vms = report.get_error_vm_list()
+    missing_vm_names = report.get_missing_vm_names(data.vm_names)
+    if missing_vm_names:
+        print(f"[red]|ERROR| The following VMs are missing in the report: {missing_vm_names}")
     if len(error_vms) > 0:
         print(f"[red]|ERROR| Tests for the following VMs have errors: {error_vms}")
     else:
