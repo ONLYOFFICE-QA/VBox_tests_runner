@@ -316,9 +316,8 @@ class VmUpdater:
             self._log(f"VBox file not found on path: [cyan]{self.vm_dir}[/cyan]", color='red')
             return
 
-        config_path = str(vbox_file)
-        self._remove_useless_dvd_images(config_path=config_path)
-        self.vm.register(config_path)
+        self._remove_useless_dvd_images(config_path=str(vbox_file))
+        self.vm.register(str(vbox_file))
 
     def _move_to_group_dir(self) -> None:
         """
