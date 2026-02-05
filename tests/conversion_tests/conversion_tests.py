@@ -124,13 +124,9 @@ class ConversionTests:
         """
         local_paths = ConversionLocalPaths()
         sb.call(f"cd {local_paths.x2ttesting_dir} && git pull", shell=True)
-        # TODO
-        # sb.call(f"cd {local_paths.fonts_dir} && git pull", shell=True)
-        # sb.call(f"cd {local_paths.opencv_dir} && git pull", shell=True)
-        # TODO
+        sb.call(f"cd {local_paths.fonts_dir} && git pull", shell=True)
         executer = "powershell.exe " if self.host.is_windows else ""
-        sb.call(f"{executer}allrepoup", shell=True)
-        command = f"cd {local_paths.x2ttesting_dir} && {executer}{self.data.config.get('run_script_cmd')} --version {self.data.version}"
+        command = f"cd {local_paths.x2ttesting_dir} && {executer}{self.data.config.get('run_script_cmd').format(version=self.data.version)}"
         sb.call(command, shell=True)
 
     def _initialize_libs(self) -> None:

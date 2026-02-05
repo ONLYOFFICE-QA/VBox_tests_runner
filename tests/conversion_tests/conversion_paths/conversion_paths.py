@@ -13,7 +13,6 @@ class ConversionPaths(Paths):
         self.__os_info = os_info
         self.__remote_user_name = remote_user_name
 
-
     @property
     def local(self) -> ConversionLocalPaths:
         if self.__local is None:
