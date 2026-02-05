@@ -44,9 +44,6 @@ class RunScript:
     def get_change_dir_command(self, dir_path: str) -> str:
         return f"cd {dir_path}"
 
-    def get_update_command(self, lib_path: str) -> str:
-        return f"cd {lib_path} && git pull"
-
     def create(self) -> str:
         save_path = self.get_save_path()
         File.write(save_path, self.generate(), newline='')
