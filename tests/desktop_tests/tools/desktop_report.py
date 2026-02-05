@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import concurrent.futures
-from os.path import isfile
+import re
+from os.path import isfile, basename
 from os.path import dirname
 from typing import Optional
 
@@ -96,21 +97,33 @@ class DesktopReport:
             return True
         return False
 
-    @staticmethod
-    def _get_version(df):
+    def _get_version(self, df):
+        """
+        Get version from DataFrame or fallback to filename.
+
+        :param df: Report DataFrame
+        :return: Version string
+        """
         if df.empty:
             raise ValueError("Report is empty")
 
-        if not df.loc[0, 'Version']:
-            raise ValueError("Version is None")
+        # Filter only non-empty versions
+        valid_versions = df['Version'].dropna()
+        valid_versions = valid_versions[valid_versions.astype(str).str.strip() != '']
 
-        if df['Version'].nunique() > 1:
-            print("[red]|WARNING| Versions is not unique.")
-            return df['Version'].unique()[
-                df['Version'].nunique() - 1
-            ]
+        if not valid_versions.empty:
+            unique_versions = valid_versions.unique()
+            if len(unique_versions) > 1:
+                print("[red]|WARNING| Versions is not unique.")
+            return str(unique_versions[-1])
 
-        return df.loc[0, 'Version']
+        # Fallback: extract version from filename (e.g., "9.3.0.98_ONLYOFFICE_...")
+        filename = basename(self.path)
+        match = re.match(r'^(\d+\.\d+\.\d+\.\d+)', filename)
+        if match:
+            return match.group(1)
+
+        raise ValueError(f"Version not found in report or filename: {self.path}")
 
     def send_to_report_portal(self, project_name: str, packege_name: str):
         df = self.report.read(self.path).dropna(how='all')
