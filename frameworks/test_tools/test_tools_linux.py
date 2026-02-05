@@ -36,6 +36,7 @@ class TestToolsLinux(TestTools):
         self.paths = paths
         self._initialize_linux_demon()
 
+    @retry(max_attempts=3, interval=10)
     def run_test_on_vm(self, upload_files: list, create_test_dir: list):
         self._clean_known_hosts(self.vm.data.ip)
 
@@ -47,6 +48,7 @@ class TestToolsLinux(TestTools):
             connect.start_my_service(self.linux_demon.start_demon_commands())
             connect.wait_execute_service(status_bar=self.data.status_bar, interval=60 if not self.data.status_bar else 1)
 
+    @retry(max_attempts=3, interval=10)
     def download_report(self, path_from: str, path_to: str) -> bool:
         with Ssh(self.server) as ssh, Sftp(self.server, ssh.connection) as sftp:
             return SSHConnection(ssh=ssh, sftp=sftp).download_report(path_from, path_to)
