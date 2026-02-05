@@ -38,7 +38,7 @@ class RunScript:
         return '#!/bin/bash'
 
     def get_run_script_cmd(self, dir_path: str) -> str:
-        return f"cd {dir_path} && uv run {self.data.config.get('run_script_cmd')}"
+        return f"cd {dir_path} && uv run {self.data.config.get('run_script_cmd').format(version=self.data.version)}"
 
     def get_change_dir_command(self, dir_path: str) -> str:
         return f"cd {dir_path}"
