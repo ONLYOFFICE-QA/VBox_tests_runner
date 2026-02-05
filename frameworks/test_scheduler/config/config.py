@@ -126,7 +126,7 @@ class TestSchedulerConfigModel(BaseModel):
 
         :param v: List of test execution order
         """
-        valid_tests = {"builder", "desktop"}
+        valid_tests = {"builder", "desktop", "core"}
         for test in v:
             if test not in valid_tests:
                 raise ValueError(
