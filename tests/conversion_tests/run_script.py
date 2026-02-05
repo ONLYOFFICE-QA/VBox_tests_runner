@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-from os.path import basename, splitext
+from os.path import splitext
 from tempfile import gettempdir
-from typing import Optional
 
 from host_tools import File
 
@@ -39,7 +38,13 @@ class RunScript:
         return '#!/bin/bash'
 
     def get_run_script_cmd(self, dir_path: str) -> str:
-        return f"cd {dir_path} && uv run {self.data.config.get('run_script_cmd').format(version=self.data.version)}"
+        """
+        Generate the run script command with all configured parameters.
+
+        :param dir_path: Directory path where to run the command
+        :return: Full command string
+        """
+        return f"cd {dir_path} && uv run {self.data.generate_run_command()}"
 
     def get_change_dir_command(self, dir_path: str) -> str:
         return f"cd {dir_path}"

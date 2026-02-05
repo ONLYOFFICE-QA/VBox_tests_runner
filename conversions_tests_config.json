@@ -1,7 +1,6 @@
 {
   "token_file": "",
   "chat_id_file": "",
-  "run_script_cmd": "uv run inv conversion-test --telegram --check-error -c 25 -q --version {version}",
   "password": "",
   "hosts": [
     "Windows11",

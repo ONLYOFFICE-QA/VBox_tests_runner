@@ -75,7 +75,7 @@ class ConversionTests:
 
     def is_host_tests(self) -> bool:
         return (
-            (self.host.is_windows and self.vm.name == "Windows11")
+            (self.host.is_windows and self.vm.name == "Windows")
             or (self.host.is_mac and self.vm.name == "MacOS")
         )
 
@@ -123,10 +123,16 @@ class ConversionTests:
         Runs a single test on the host.
         """
         local_paths = ConversionLocalPaths()
-        sb.call(f"cd {local_paths.x2ttesting_dir} && git pull", shell=True)
-        sb.call(f"cd {local_paths.fonts_dir} && git pull", shell=True)
+        update_commands = [
+            f"cd {local_paths.x2ttesting_dir} && git checkout master && git pull",
+            f"cd {local_paths.fonts_dir} && git checkout master && git pull",
+        ]
+        for command in update_commands:
+            print(f"[bold green]|INFO|{self.vm.name}| Updating repositories: {command}")
+            sb.call(command, shell=True)
+
         executer = "powershell.exe " if self.host.is_windows else ""
-        command = f"cd {local_paths.x2ttesting_dir} && {executer}{self.data.config.get('run_script_cmd').format(version=self.data.version)}"
+        command = f"cd {local_paths.x2ttesting_dir} && {executer}{self.data.generate_run_command()}"
         sb.call(command, shell=True)
 
     def _initialize_libs(self) -> None:

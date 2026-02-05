@@ -1,17 +1,42 @@
 # -*- coding: utf-8 -*-
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from os.path import isfile, join
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from host_tools import File, HostInfo
 
 from frameworks.test_data import TestData
 from tests.conversion_tests.conversion_paths import ConversionLocalPaths
 
+
 @dataclass
 class ConversionTestData(TestData):
+    """
+    Data class for conversion tests configuration and command generation.
+
+    :param version: Version string to test
+    :param config_path: Path to configuration file
+    :param cores: Number of CPU cores to use
+    :param direction: Conversion direction (e.g., 'to', 'from')
+    :param telegram: Send results to Telegram
+    :param t_format: Target format for conversion
+    :param env_off: Disable environment setup
+    :param quick_check: Run quick check mode
+    :param x2t_limits: X2T process limits
+    :param check_error: Check for errors mode
+    :param out_x2ttester_param: Additional x2ttester output parameters
+    """
     version: str
     config_path: str
+    cores: Optional[int] = None
+    direction: Optional[str] = None
+    telegram: bool = False
+    t_format: Optional[str] = None
+    env_off: bool = False
+    quick_check: bool = False
+    x2t_limits: Optional[int] = None
+    check_error: bool = False
+    out_x2ttester_param: bool = False
     __status_bar: bool | None = None
     __config = None
     __restore_snapshot: bool = True
@@ -81,3 +106,41 @@ class ConversionTestData(TestData):
         if not isfile(self.config_path):
             raise FileNotFoundError(f"[red]|ERROR| Configuration file not found: {self.config_path}")
         return File.read_json(self.config_path)
+
+    def generate_run_command(self) -> str:
+        """
+        Generate the run command based on configuration parameters.
+
+        :return: Command string for running conversion tests
+        """
+        base_cmd = 'uv run inv conversion-test'
+        args = [base_cmd, f"--version {self.version}"]
+
+        if self.cores is not None:
+            args.append(f"--cores {self.cores}")
+
+        if self.direction:
+            args.append(f"--direction {self.direction}")
+
+        if self.telegram:
+            args.append("--telegram")
+
+        if self.t_format:
+            args.append(f"--t-format {self.t_format}")
+
+        if self.env_off:
+            args.append("--env-off")
+
+        if self.quick_check:
+            args.append("--quick-check")
+
+        if self.x2t_limits is not None:
+            args.append(f"--x2t-limits {self.x2t_limits}")
+
+        if self.check_error:
+            args.append("--check-error")
+
+        if self.out_x2ttester_param:
+            args.append("--out-x2ttester-param")
+
+        return " ".join(args)
