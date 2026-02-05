@@ -10,8 +10,7 @@ from frameworks import PackageURLChecker, VersionHandler
 from frameworks.VboxMachine import VboxMachine
 from frameworks.decorators import vm_data_created
 from frameworks.package_checker.report import CSVReport
-from frameworks.test_tools import TestToolsLinux, TestToolsWindows, TestTools
-from frameworks.test_data import PortalData
+from frameworks.test_tools import TestToolsLinux, TestTools
 from tests.conversion_tests.conversion_paths.conversion_local_paths import ConversionLocalPaths
 
 from .conversion_paths import ConversionPaths
@@ -21,6 +20,7 @@ from .run_script import RunScript
 import subprocess as sb
 
 class Report:
+    """Stub class for report functionality."""
     pass
 
 
@@ -29,7 +29,6 @@ class ConversionTests:
     def __init__(self, vm_name: str, test_data: ConversionTestData):
         self.data = test_data
         self.host = HostInfo()
-        self.portal_data = PortalData()
         self.vm = VboxMachine(vm_name)
         self.test_tools = self._get_test_tools()
         self.package_checker = PackageURLChecker()
@@ -201,24 +200,12 @@ class ConversionTests:
         Handles the case when the package does not exist.
         """
         print(f"[bold red]|ERROR|{self.vm.name}| Package {self.package_name} is not exists")
-        self.report.write(
-            version=self.data.version,
-            vm_name=self.vm.name,
-            exit_code=0,
-            stdout=self.portal_data.test_status.not_exists_package
-        )
 
     def handle_vm_creation_failure(self) -> None:
         """
         Handles the failure of virtual machine creation.
         """
         print(f"[bold red]|ERROR|{self.vm.name}| Failed to create a virtual machine")
-        self.report.write(
-            version=self.data.version,
-            vm_name=self.vm.name,
-            exit_code=0,
-            stdout=self.portal_data.test_status.failed_create_vm
-        )
 
     def _get_package_name(self) -> Optional[str]:
         """
