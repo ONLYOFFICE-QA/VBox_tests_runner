@@ -6,7 +6,7 @@ This module provides invoke tasks for running automated tests on VirtualBox VMs,
 including desktop tests, builder tests, and scheduled test execution.
 
 """
-from os import getcwd, system
+from os import getcwd, system, cpu_count
 from os.path import isfile, join
 from typing import Optional, Union, List
 import ast
@@ -63,7 +63,7 @@ def conversion_test(
     test_data = ConversionTestData(
         version=version,
         config_path=join(getcwd(), "conversions_tests_config.json"),
-        cores=cores,
+        cores=cores or cpu_count(),
         direction=direction,
         telegram=telegram,
         t_format=t_format,
