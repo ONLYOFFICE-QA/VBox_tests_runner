@@ -21,7 +21,7 @@ class RunScript:
     def generate(self) -> str:
         commands = [
             self.get_shebang(),
-            self.get_update_command(self._path.remote.x2ttesting_dir),
+            self.get_update_command(self._path.remote.x2ttesting_dir, branch="master"),
             self.get_update_command(self._path.remote.fonts_dir, branch="master"),
             self.get_run_script_cmd(self._path.remote.x2ttesting_dir),
         ]
