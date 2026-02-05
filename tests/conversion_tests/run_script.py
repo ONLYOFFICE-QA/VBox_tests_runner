@@ -21,16 +21,17 @@ class RunScript:
     def generate(self) -> str:
         commands = [
             self.get_shebang(),
-            self.get_allrepoup_command(self._path.remote.x2ttesting_dir),
-            self.get_change_dir_command(self._path.remote.x2ttesting_dir),
+            self.get_update_command(self._path.remote.x2ttesting_dir),
+            self.get_update_command(self._path.remote.fonts_dir, branch="master"),
             self.get_run_script_cmd(self._path.remote.x2ttesting_dir),
         ]
 
         script_content = [line.strip() for line in filter(None, commands)]
         return ' && '.join(script_content) if self.is_bat else '\n'.join(script_content)
 
-    def get_allrepoup_command(self, dir_path: str) -> str:
-        return f"cd {dir_path} && uv run invoke all-repo-update"
+    def get_update_command(self, dir_path: str, branch: str = None) -> str:
+        branch = f" && git checkout {branch}" if branch else ""
+        return f"{self.get_change_dir_command(dir_path)}{branch} && git pull"
 
     def get_shebang(self) -> str:
         if self.is_windows:
