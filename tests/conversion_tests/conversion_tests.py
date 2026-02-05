@@ -37,7 +37,7 @@ class ConversionTests:
         self.__package_report: Optional[CSVReport] = None
         self.__packages_config: Optional[dict] = None
 
-    def run(self, headless: bool = True, max_attempts: int = 5, interval: int = 5):
+    def run(self, headless: bool = False, max_attempts: int = 5, interval: int = 5):
         """
         Runs the conversion tests on the virtual machine.
         :param headless: Whether to run the tests in headless mode.

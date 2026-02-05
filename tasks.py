@@ -45,6 +45,7 @@ def conversion_test(
     env_off: bool = False,
     quick_check: bool = False,
     x2t_limits: Optional[int] = None,
+    headless: bool = False,
     ):
     """
     Run conversion tests.
@@ -76,7 +77,7 @@ def conversion_test(
     test_data.status_bar = True
 
     for vm_name in test_data.vm_names if not name else [name]:
-        ConversionTests(vm_name=vm_name, test_data=test_data).run()
+        ConversionTests(vm_name=vm_name, test_data=test_data).run(headless=headless)
 
 
 @task
