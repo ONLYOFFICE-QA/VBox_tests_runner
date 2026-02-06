@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+import getpass
+from tempfile import gettempdir
 import time
 from os.path import join, isfile, dirname, realpath
 from typing import Optional
 
 from vboxwrapper import VirtualMachinException
-from host_tools import File
+from host_tools import File, HostInfo, Shell
 from rich import print
 
 from frameworks import PackageURLChecker, VersionHandler
@@ -51,7 +53,10 @@ class BuilderTests:
         while attempt < max_attempts:
             try:
                 attempt += 1
-                self._run_test(headless=headless)
+                if self.is_host_tests():
+                    self._run_tests_on_host()
+                else:
+                    self._run_tests_on_vm(headless=headless)
                 break
 
             except KeyboardInterrupt:
@@ -68,6 +73,9 @@ class BuilderTests:
 
             finally:
                 self.test_tools.stop_vm()
+
+    def is_host_tests(self) -> bool:
+        return self.host.is_mac and self.vm.name in self.data.config.get('tests_on_host', [])
 
     @property
     def packages_config(self) -> dict:
@@ -99,7 +107,20 @@ class BuilderTests:
             self.__package_report = self.package_checker.get_report(VersionHandler(self.data.version).without_build)
         return self.__package_report
 
-    def _run_test(self, headless: bool) -> None:
+    def _run_tests_on_host(self) -> None:
+        """
+        Runs tests on the host machine.
+        """
+        host = HostInfo()
+        os_info = {'type': host.os, 'name': host.name()}
+        paths = BuilderPaths(os_info=os_info, remote_user_name=getpass.getuser(), script_dir=File.unique_name(gettempdir()))
+        run_script = RunScript(test_data=self.data, paths=paths).create()
+        Shell.call(run_script)
+        File.copy(paths.remote.builder_report_dir, self.report.dir)
+        File.delete([run_script, paths.remote.script_dir], stdout=False)
+
+
+    def _run_tests_on_vm(self, headless: bool) -> None:
         """
         Runs a single test on the virtual machine.
         :param headless: Whether to run the test in headless mode.
