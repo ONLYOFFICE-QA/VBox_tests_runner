@@ -38,4 +38,6 @@ class Config:
         :param config_path: Path to JSON configuration file
         :return: List of host names from the configuration
         """
-        return File.read_json(config_path)['hosts_arm64' if HostInfo().is_arm else 'hosts']
+        config = File.read_json(config_path)
+        hosts = config.get('hosts_arm64', []) if HostInfo().is_arm else config.get('hosts', [])
+        return [host for host in hosts if host not in config.get('tests_on_host', [])]
