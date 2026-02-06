@@ -4,7 +4,7 @@
     "interval_minutes": 30,
     "builder_run_cmd": "uv run inv builder-test -h -p 3 --version {version} --connect-portal --telegram",
     "desktop_run_cmd": "uv run inv desktop-test -d -h -p 5 --version {version} --telegram --open-retries 1 --connect-portal",
-    "core_run_cmd": "uv run inv conversion-test --headless --telegram -q --version {version}",
+    "core_run_cmd": "uv run inv conversion-test --telegram -q --version {version}",
     "base_version": "9.3.0",
     "max_builds": 50,
     "recheck_count": 2,
@@ -14,7 +14,7 @@
     "any_package_exists": true,
     "test_execution_order": [
         "core",
-        "builder",
-        "desktop"
+        "desktop",
+        "builder"
     ]
 }
