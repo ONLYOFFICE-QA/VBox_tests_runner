@@ -6,7 +6,7 @@ from os.path import join, isfile, dirname, realpath
 from typing import Optional
 
 from vboxwrapper import VirtualMachinException
-from host_tools import File, HostInfo, Shell
+from host_tools import File, HostInfo, Shell, Dir
 from rich import print
 
 from frameworks import PackageURLChecker, VersionHandler
@@ -31,6 +31,7 @@ class BuilderTests:
         """
         self.data = test_data
         self.portal_data = PortalData()
+        self.host = HostInfo()
         self.vm = VboxMachine(vm_name)
         self.test_tools = self._get_test_tools()
         self.package_checker = PackageURLChecker()
@@ -72,9 +73,14 @@ class BuilderTests:
                     raise
 
             finally:
-                self.test_tools.stop_vm()
+                if not self.is_host_tests():
+                    self.test_tools.stop_vm()
 
     def is_host_tests(self) -> bool:
+        """
+        Checks if the tests are running on the host machine.
+        :return: True if the tests are running on the host machine, False otherwise.
+        """
         return self.host.is_mac and self.vm.name in self.data.config.get('tests_on_host', [])
 
     @property
@@ -111,11 +117,12 @@ class BuilderTests:
         """
         Runs tests on the host machine.
         """
-        host = HostInfo()
-        os_info = {'type': host.os, 'name': host.name()}
-        paths = BuilderPaths(os_info=os_info, remote_user_name=getpass.getuser(), script_dir=File.unique_name(gettempdir()))
+        os_info = {'type': self.host.os, 'name': self.host.name()}
+        paths = BuilderPaths(os_info=os_info, remote_user_name=getpass.getuser(), remote_script_dir=File.unique_name(gettempdir()))
+        Dir.create(dirname(paths.remote.dep_test_archive), stdout=False)
+        File.copy(paths.local.dep_test_archive, paths.remote.dep_test_archive, stdout=False)
         run_script = RunScript(test_data=self.data, paths=paths).create()
-        Shell.call(run_script)
+        Shell.call(f"bash {run_script}")
         File.copy(paths.remote.builder_report_dir, self.report.dir)
         File.delete([run_script, paths.remote.script_dir], stdout=False)
 

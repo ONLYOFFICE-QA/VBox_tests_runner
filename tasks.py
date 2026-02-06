@@ -235,7 +235,7 @@ def builder_test(
         builder.compress_dep_tests(delete=False)
         Dir.delete(builder.local_path.dep_test_path)
 
-        vms = Vbox().check_vm_names([name] if name else data.vm_names)
+        vms = [name] if name else data.vm_names
         if num_processes > 1 and not name and len(vms) > 1:
             data.status_bar = False
             multiprocess.run(BuilderTests, data, num_processes, 10, headless)
