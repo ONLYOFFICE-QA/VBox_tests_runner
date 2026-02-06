@@ -118,13 +118,16 @@ class BuilderTests:
         Runs tests on the host machine.
         """
         os_info = {'type': self.host.os, 'name': self.host.name()}
-        paths = BuilderPaths(os_info=os_info, remote_user_name=getpass.getuser(), remote_script_dir=File.unique_name(gettempdir()))
+        script_dir = File.unique_name(gettempdir())
+        paths = BuilderPaths(os_info=os_info, remote_user_name=getpass.getuser(), remote_script_dir=script_dir)
         Dir.create(dirname(paths.remote.dep_test_archive), stdout=False)
         File.copy(paths.local.dep_test_archive, paths.remote.dep_test_archive, stdout=False)
         run_script = RunScript(test_data=self.data, paths=paths).create()
-        Shell.call(f"bash {run_script}")
-        File.copy(paths.remote.builder_report_dir, self.report.dir)
-        File.delete([run_script, paths.remote.script_dir], stdout=False)
+        try:
+            Shell.call(f"bash {run_script}")
+            File.copy(paths.remote.builder_report_dir, self.report.dir)
+        finally:
+            File.delete([run_script, script_dir], stdout=False)
 
 
     def _run_tests_on_vm(self, headless: bool) -> None:
