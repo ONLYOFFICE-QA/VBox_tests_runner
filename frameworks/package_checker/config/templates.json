@@ -14,7 +14,8 @@
     "win-64": "{host}/archive/{branch}/v{version}/{build}/builder-win-64.7z",
     "win-32": "{host}/archive/{branch}/v{version}/{build}/builder-win-32.7z",
     "linux-64": "{host}/archive/{branch}/v{version}/{build}/builder-linux-64.7z",
-    "linux-arm64": "{host}/archive/{branch}/v{version}/{build}/builder-linux-arm64.7z"
+    "linux-arm64": "{host}/archive/{branch}/v{version}/{build}/builder-linux-arm64.7z",
+    "mac-arm64": "{host}/archive/{branch}/v{version}/{build}/builder-mac-arm64.7z"
   },
   "core": {
     "win-64": "{host}/archive/{branch}/v{version}/{build}/core-win-64.7z",
