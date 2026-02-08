@@ -5,41 +5,74 @@
     "audio": false,
     "nested_virtualization": true,
     "speculative_execution_control": true,
-    "network": {
-      "adapter_name": "",
-      "connect_type": "bridged"
-    }
+    "network": [
+      {
+        "adapter_number": 1,
+        "adapter_name": "",
+        "connect_type": "bridged"
+      }
+    ]
   },
   "vm_specific": {
+    "Debian10": {
+      "network": [
+        {
+          "adapter_number": 1,
+          "connect_type": "nat"
+        },
+        {
+          "adapter_number": 2,
+          "connect_type": "hostonly"
+        }
+      ]
+    },
     "Windows11": {
-      "network": {
-        "connect_type": "nat"
-      }
+      "network": [
+        {
+          "adapter_number": 1,
+          "connect_type": "nat"
+        }
+      ]
     },
     "Windows10": {
-      "network": {
-        "connect_type": "nat"
-      }
+      "network": [
+        {
+          "adapter_number": 1,
+          "connect_type": "nat"
+        }
+      ]
     },
     "WindowsVista": {
-      "network": {
-        "connect_type": "nat"
-      }
+      "network": [
+        {
+          "adapter_number": 1,
+          "connect_type": "nat"
+        }
+      ]
     },
     "Windows7": {
-      "network": {
-        "connect_type": "nat"
-      }
+      "network": [
+        {
+          "adapter_number": 1,
+          "connect_type": "nat"
+        }
+      ]
     },
     "Windows8.1": {
-      "network": {
-        "connect_type": "nat"
-      }
+      "network": [
+        {
+          "adapter_number": 1,
+          "connect_type": "nat"
+        }
+      ]
     },
     "Windows11_arm64": {
-      "network": {
-        "connect_type": "nat"
-      }
+      "network": [
+        {
+          "adapter_number": 1,
+          "connect_type": "nat"
+        }
+      ]
     }
   }
 }
