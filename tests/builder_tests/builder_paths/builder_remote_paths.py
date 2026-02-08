@@ -7,8 +7,10 @@ from frameworks.test_data.paths import RemotePaths
 
 class BuilderRemotePaths(RemotePaths):
 
-    def __init__(self, user_name: str, os_info: dict):
+    def __init__(self, user_name: str, os_info: dict, script_dir: Optional[str] = None):
         super().__init__(user_name=user_name, os_info=os_info)
+        if script_dir:
+            self.script_dir = script_dir
         self.dep_test_path = self._join_path(self.script_dir, 'Dep.Test')
         self.docbuilder_path: str = self._join_path(self.dep_test_path, 'docbuilder')
         self.docbuilder_docs_path: str = self._join_path(self.dep_test_path, 'docbuilder-docs')

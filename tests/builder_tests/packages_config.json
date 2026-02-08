@@ -11,6 +11,9 @@
         ],
         "win-32": [
             "Windows10_x32"
+        ],
+        "mac-arm64": [
+            "MacOs_arm64"
         ]
     }
 }
