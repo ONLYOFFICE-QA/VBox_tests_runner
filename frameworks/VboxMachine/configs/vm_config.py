@@ -14,10 +14,12 @@ class NetworkConfigModel(BaseModel):
     A Pydantic model for validating the network configuration parameters.
 
     Attributes:
+        adapter_number (int): The number of the network adapter (1-8).
         adapter_name (str): The name of the network adapter.
         connect_type (str): The type of network connection (e.g., "bridged").
     """
-    adapter_name: constr(strip_whitespace=True, min_length=0)
+    adapter_number: conint(ge=1, le=8) = 1
+    adapter_name: constr(strip_whitespace=True, min_length=0) = ""
     connect_type: constr(strip_whitespace=True, min_length=1)
 
     @field_validator('connect_type')
@@ -33,9 +35,11 @@ class PartialNetworkConfigModel(BaseModel):
     A Pydantic model for partial network configuration with all optional fields.
 
     Attributes:
+        adapter_number (int): The number of the network adapter (1-8).
         adapter_name (str): The name of the network adapter.
         connect_type (str): The type of network connection (e.g., "bridged").
     """
+    adapter_number: conint(ge=1, le=8) = 1
     adapter_name: constr(strip_whitespace=True, min_length=0) | None = None
     connect_type: constr(strip_whitespace=True, min_length=1) | None = None
 
@@ -58,14 +62,14 @@ class SystemConfigModel(BaseModel):
         audio (bool): Whether audio is enabled.
         nested_virtualization (bool): Whether nested virtualization is enabled.
         speculative_execution_control (bool): Whether speculative execution control is enabled.
-        network (NetworkConfigModel): Network configuration.
+        network (list[NetworkConfigModel]): List of network adapter configurations.
     """
     cpus: conint(ge=1)
     memory: conint(ge=512)
     audio: bool
     nested_virtualization: bool
     speculative_execution_control: bool
-    network: NetworkConfigModel
+    network: List[NetworkConfigModel]
 
 
 class VmSpecificConfigModel(BaseModel):
@@ -79,14 +83,14 @@ class VmSpecificConfigModel(BaseModel):
         audio (bool): Whether audio is enabled.
         nested_virtualization (bool): Whether nested virtualization is enabled.
         speculative_execution_control (bool): Whether speculative execution control is enabled.
-        network (PartialNetworkConfigModel): Partial network configuration.
+        network (list[PartialNetworkConfigModel]): List of partial network adapter configurations.
     """
     cpus: conint(ge=1) | None = None
     memory: conint(ge=512) | None = None
     audio: bool | None = None
     nested_virtualization: bool | None = None
     speculative_execution_control: bool | None = None
-    network: PartialNetworkConfigModel | None = None
+    network: List[PartialNetworkConfigModel] | None = None
 
 
 class ConfigFileModel(BaseModel):
@@ -138,18 +142,19 @@ class VmConfig:
 
     def _check_specified_adapter(self):
         """
-        Validates the specified network adapter against available host adapters.
+        Validates the specified network adapters against available host adapters.
 
         Raises:
             ValueError: If the adapter specified in the network configuration is not
             found among the valid host adapters. This may occur if the adapter is
             disconnected, not supported, or does not meet criteria (e.g., wireless and not 'Up' status).
         """
-        if self.network.adapter_name and self.network.adapter_name not in self.host_adapters:
-            raise ValueError(
-                f"[red]|ERROR| Adapter '{self.network.adapter_name}' not found on host or not supported. "
-                f"The adapter may have the status 'Up' and not be wireless."
-            )
+        for adapter in self.network:
+            if adapter.adapter_name and adapter.adapter_name not in self.host_adapters:
+                raise ValueError(
+                    f"[red]|ERROR| Adapter '{adapter.adapter_name}' not found on host or not supported. "
+                    f"The adapter may have the status 'Up' and not be wireless."
+                )
 
     @staticmethod
     def _load_config(file_path: str) -> ConfigFileModel:
@@ -166,6 +171,8 @@ class VmConfig:
     def _merge_configs(default: SystemConfigModel, specific: VmSpecificConfigModel) -> SystemConfigModel:
         """
         Merges VM-specific configuration with default configuration.
+        If VM-specific network is provided, it fully replaces the default network list.
+        Missing fields in each adapter config are filled from the default adapter with the same number.
 
         :param default: Default configuration
         :param specific: VM-specific configuration overrides
@@ -175,8 +182,16 @@ class VmConfig:
         specific_data = specific.model_dump(exclude_none=True)
 
         if 'network' in specific_data and specific_data['network']:
-            for key, value in specific_data['network'].items():
-                merged_data['network'][key] = value
+            default_by_number = {
+                adapter['adapter_number']: adapter for adapter in merged_data['network']
+            }
+            merged_adapters = []
+            for adapter in specific_data['network']:
+                number = adapter.get('adapter_number', 1)
+                base = default_by_number.get(number, {}).copy()
+                base.update(adapter)
+                merged_adapters.append(base)
+            merged_data['network'] = merged_adapters
             del specific_data['network']
 
         merged_data.update(specific_data)
@@ -202,15 +217,19 @@ class VmConfig:
         """
         Displays the loaded system configuration.
         """
+        network_info = "\n".join(
+            f"  Adapter {a.adapter_number}: type={a.connect_type}"
+            f"{f', name={a.adapter_name}' if a.adapter_name else ''}"
+            for a in self.network
+        )
         print(
             f"[green]|INFO| System Configuration:\n"
             f"  CPUs: {self.cpus}\n"
             f"  Memory: {self.memory}MB\n"
             f"  Audio Enabled: {self.audio}\n"
             f"  Nested Virtualization: {self.nested_virtualization}\n"
-            f"  Speculative Execution Control: {self.speculative_execution_control}"
-            f"  Network Adapter: {self.network.adapter_name}\n"
-            f"  Network Connection Type: {self.network.connect_type}"
+            f"  Speculative Execution Control: {self.speculative_execution_control}\n"
+            f"{network_info}"
         )
 
     @staticmethod

@@ -162,26 +162,33 @@ class VboxMachine:
 
     def set_network_adapter(self) -> None:
         """
-        Configure VM network adapter based on configuration settings.
+        Configure VM network adapters based on configuration settings.
 
-        Sets network adapter based on specified configuration or selects
-        the first available host adapter if current one is not suitable.
+        Iterates over the list of network adapter configurations and sets
+        each adapter accordingly. For bridged adapters, selects the appropriate
+        host adapter if not explicitly specified.
         """
-        specified = self.vm_config.network.adapter_name
         host_adapters = self.vm_config.host_adapters
-        target_adapter = None
 
-        if specified and specified != self.adapter_name:
-            target_adapter = specified
-        elif not specified:
-            if host_adapters and self.adapter_name not in host_adapters:
-                target_adapter = host_adapters[0]
+        for adapter_config in self.vm_config.network:
+            adapter_name = adapter_config.adapter_name
+            connect_type = adapter_config.connect_type
+            adapter_number = adapter_config.adapter_number
 
-        if target_adapter:
+            if connect_type == "bridged":
+                if adapter_name and adapter_name != self.adapter_name:
+                    pass
+                elif not adapter_name:
+                    if host_adapters and self.adapter_name not in host_adapters:
+                        adapter_name = host_adapters[0]
+                    else:
+                        adapter_name = self.adapter_name
+
             self.vm.network.set_adapter(
                 turn=True,
-                adapter_name=target_adapter,
-                connect_type=self.vm_config.network.connect_type
+                adapter_number=adapter_number,
+                adapter_name=adapter_name if connect_type == "bridged" else None,
+                connect_type=connect_type
             )
 
     def _get_memory_num(self) -> int:
