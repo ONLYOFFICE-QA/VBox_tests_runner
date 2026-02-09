@@ -3,12 +3,14 @@ from os.path import exists
 from posixpath import join
 from tempfile import gettempdir
 
+
 class LinuxScriptDemon:
     """
     A class to manage and generate systemd service scripts for running custom bash scripts as services on a Linux system.
     """
 
     services_dir = join('/etc', 'systemd', 'system')
+    log_path = '/tmp/script_output.log'
 
     def __init__(self, exec_script_path: str, user: str, name: str = 'my_script.service'):
         """
@@ -33,13 +35,16 @@ class LinuxScriptDemon:
 
     [Service]
     Type=simple
-    ExecStart=/bin/bash {self.exec_script_path}
+    ExecStart=/bin/bash --norc --noprofile {self.exec_script_path}
     User={self.user}
+    Nice=-5
+    IOSchedulingClass=best-effort
+    IOSchedulingPriority=0
+    StandardOutput=file:{self.log_path}
+    StandardError=file:{self.log_path}
     Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/{self.user}/.local/bin"
     Environment="HOME=/home/{self.user}"
     Environment="SHELL=/bin/bash"
-    Environment="ZDOTDIR=/tmp"
-    Environment="BASH_ENV="
 
     [Install]
     WantedBy=multi-user.target\
