@@ -2,8 +2,8 @@
   "token_file": "",
   "chat_id_file": "builder_chat",
   "dep_test_branch": "",
-  "build_tools_branch": "",
-  "office_js_api_branch": "",
+  "build_tools_branch": "release/v9.3.0",
+  "office_js_api_branch": "release/v9.3.0",
   "document_builder_samples": "",
   "password": "",
   "hosts_arm64": [
