@@ -208,7 +208,11 @@ class DesktopReport:
 
         caption_parts.append(f"Number of tested Os: `{self.get_total_count('Exit_code')}`")
         caption = ''.join(caption_parts)
-        Telegram(token=data.tg_token, chat_id=data.tg_chat_id).send_document(self.path, caption=caption)
+        tg = Telegram(token=data.tg_token, chat_id=data.tg_chat_id)
+        tg.send_document(self.path, caption=caption)
+
+        if data.tg_report_chat_id:
+            Telegram(token=data.tg_token, chat_id=data.tg_report_chat_id).send_document(self.path, caption=caption)
 
     def _get_os_list_by_status(self, df: pd.DataFrame, status: str):
         """
