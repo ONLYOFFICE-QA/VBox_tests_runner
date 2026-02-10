@@ -4,6 +4,7 @@
   "branch": "",
   "token_file": "",
   "chat_id_file": "test",
+  "report_chat_id_file": "",
   "password": "",
   "report_portal": {
     "project_name": "desktopeditors"

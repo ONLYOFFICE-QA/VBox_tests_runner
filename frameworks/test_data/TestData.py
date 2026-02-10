@@ -44,6 +44,28 @@ class TestData(ABC):
     def chat_id_file(self) -> str:
         return self._get_file_path('chat_id_file', 'chat')
 
+    @property
+    def tg_report_chat_id(self) -> str | None:
+        """Returns additional report chat ID if configured, otherwise None."""
+        if not self.config.get('report_chat_id_file', '').strip():
+            return None
+        return self._read_file(self.report_chat_id_file).strip()
+
+    @property
+    def report_chat_id_file(self) -> str | None:
+        """Returns path to additional report chat ID file if configured."""
+        filename = self.config.get('report_chat_id_file', '').strip()
+        if not filename:
+            return None
+        file_path = join(self.local_paths.tg_dir, filename)
+        if not isfile(file_path):
+            print(
+                f"[red]|WARNING| Report chat id file "
+                f"from config file not exists: {file_path}"
+            )
+            return None
+        return file_path
+
     @staticmethod
     def _read_file(file_path: str) -> str:
         if not isfile(file_path):
