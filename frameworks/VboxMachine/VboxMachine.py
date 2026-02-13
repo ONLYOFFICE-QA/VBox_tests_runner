@@ -145,9 +145,10 @@ class VboxMachine:
         memory allocation, audio settings, and speculative execution control.
         """
         if not self.host.is_arm:
-            self.vm.usb.ehci_controller(False) # USB 2.0 (EHCI) controller is enabled for non-ARM64 VMs because UsbNet is used for NAT networking
-            self.vm.usb.xhci_controller(False) # USB 3.0 (xHCI) controller is enabled for ARM64 VMs because UsbNet is used for NAT networking
-            self.vm.usb.controller(False) # USB controller is enabled for ARM64 VMs because UsbNet is used for NAT networking
+            # USB 2.0 (EHCI) and USB 3.0 (xHCI) controllers are disabled for non-ARM64 VMs because UsbNet is used for NAT networking
+            self.vm.usb.ehci_controller(False)
+            self.vm.usb.xhci_controller(False)
+            self.vm.usb.controller(False)
         self.set_network_adapter()
         self.vm.set_cpus(self._get_cpu_num())
         self.vm.nested_virtualization(self.vm_config.nested_virtualization)
