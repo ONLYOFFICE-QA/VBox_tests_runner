@@ -24,6 +24,7 @@ class VboxMachine:
         :param name: Name of the VirtualBox virtual machine
         :param config_path: Optional path to configuration file
         """
+        self.host = HostInfo()
         self.name = name
         self.vm_config = VmConfig(vm_name=name, config_path=config_path)
         self.vm = VirtualMachine(name)
@@ -143,15 +144,16 @@ class VboxMachine:
         Configures network adapter, CPU count, nested virtualization,
         memory allocation, audio settings, and speculative execution control.
         """
-        self.vm.usb.ehci_controller(False)
-        self.vm.usb.xhci_controller(HostInfo().is_arm) # USB 3.0 (xHCI) controller is enabled for ARM64 VMs because UsbNet is used for NAT networking
-        self.vm.usb.controller(HostInfo().is_arm) # USB controller is enabled for ARM64 VMs because UsbNet is used for NAT networking
+        if not self.host.is_arm:
+            self.vm.usb.ehci_controller(self.host.is_arm) # USB 2.0 (EHCI) controller is enabled for non-ARM64 VMs because UsbNet is used for NAT networking
+            self.vm.usb.xhci_controller(self.host.is_arm) # USB 3.0 (xHCI) controller is enabled for ARM64 VMs because UsbNet is used for NAT networking
+            self.vm.usb.controller(self.host.is_arm) # USB controller is enabled for ARM64 VMs because UsbNet is used for NAT networking
         self.set_network_adapter()
         self.vm.set_cpus(self._get_cpu_num())
         self.vm.nested_virtualization(self.vm_config.nested_virtualization)
         self.vm.set_memory(self._get_memory_num())
         self.vm.audio(self.vm_config.audio)
-        if not HostInfo().is_arm:
+        if not self.host.is_arm:
             self.vm.speculative_execution_control(self.vm_config.speculative_execution_control)
 
     def stop(self):
