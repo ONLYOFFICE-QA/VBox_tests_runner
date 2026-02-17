@@ -149,11 +149,16 @@ class VboxMachine:
             self.vm.usb.ehci_controller(False)
             self.vm.usb.xhci_controller(False)
             self.vm.usb.controller(False)
+
         self.set_network_adapter()
         self.vm.set_cpus(self._get_cpu_num())
-        self.vm.nested_virtualization(self.vm_config.nested_virtualization)
+
+        if not self.host.is_mac:
+            self.vm.nested_virtualization(self.vm_config.nested_virtualization)
+
         self.vm.set_memory(self._get_memory_num())
         self.vm.audio(self.vm_config.audio)
+
         if not self.host.is_arm:
             self.vm.speculative_execution_control(self.vm_config.speculative_execution_control)
 
