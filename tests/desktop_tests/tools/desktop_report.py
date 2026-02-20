@@ -10,7 +10,7 @@ from host_tools.utils import Dir
 from rich import print
 from rich.console import Console
 
-from host_tools import File
+from host_tools import File, HostInfo
 from frameworks.report import Report
 from telegram import Telegram
 
@@ -26,6 +26,7 @@ class DesktopReport:
         self.report = Report()
         self.console = Console()
         self.portal_data = PortalData()
+        self.host = HostInfo()
         Dir.create(self.dir, stdout=False)
 
     def write(self, version: str, vm_name: str, exit_code: str) -> None:
@@ -219,7 +220,8 @@ class DesktopReport:
         if missing_vm_names:
             caption_parts.append(f"Missing VMs in report: `{', '.join(missing_vm_names)}`\n\n")
 
-        caption_parts.append(f"Number of tested Os: `{self.get_total_count('Exit_code')}`")
+        caption_parts.append(f"Number of tested Os: `{self.get_total_count('Exit_code')}`\n")
+        caption_parts.append(f"Host: `{self.host.name(pretty=True)} {self.host.arch}`")
         caption = ''.join(caption_parts)
         tg = Telegram(token=data.tg_token, chat_id=data.tg_chat_id)
         tg.send_document(self.path, caption=caption)
