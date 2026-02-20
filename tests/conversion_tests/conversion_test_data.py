@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-from dataclasses import dataclass, field
-from os.path import isfile, join
+from dataclasses import dataclass
+from os.path import isfile
 from typing import Dict, List, Optional
 
 from host_tools import File, HostInfo
 
 from frameworks.test_data import TestData
-from tests.conversion_tests.conversion_paths import ConversionLocalPaths
 
 
 @dataclass
