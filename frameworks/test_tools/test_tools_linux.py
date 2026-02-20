@@ -12,7 +12,7 @@ from frameworks.test_data import TestData
 
 class TestToolsLinux(TestTools):
 
-    def __init__(self,  vm: VboxMachine, test_data: TestData):
+    def __init__(self, vm: VboxMachine, test_data: TestData):
         super().__init__(vm=vm, test_data=test_data)
         self.server = None
         self.remote_report_path = None
@@ -22,7 +22,13 @@ class TestToolsLinux(TestTools):
 
     @retry(max_attempts=2, exception_type=VirtualMachinException)
     def run_vm(self, headless: bool = True) -> None:
-        self.vm.run(headless=headless, status_bar=self.data.status_bar)
+        self.vm.run(
+            headless=headless,
+            status_bar=self.data.status_bar,
+            restore_snapshot=self.data.restore_snapshot,
+            snapshot_name=self.data.snapshot_name,
+            configurate=self.data.configurate
+        )
         self.server = self._get_server()
 
     def initialize_libs(self, report, paths) -> None:
@@ -30,6 +36,7 @@ class TestToolsLinux(TestTools):
         self.paths = paths
         self._initialize_linux_demon()
 
+    @retry(max_attempts=3, interval=10)
     def run_test_on_vm(self, upload_files: list, create_test_dir: list):
         self._clean_known_hosts(self.vm.data.ip)
 
@@ -41,6 +48,7 @@ class TestToolsLinux(TestTools):
             connect.start_my_service(self.linux_demon.start_demon_commands())
             connect.wait_execute_service(status_bar=self.data.status_bar, interval=60 if not self.data.status_bar else 1)
 
+    @retry(max_attempts=3, interval=10)
     def download_report(self, path_from: str, path_to: str) -> bool:
         with Ssh(self.server) as ssh, Sftp(self.server, ssh.connection) as sftp:
             return SSHConnection(ssh=ssh, sftp=sftp).download_report(path_from, path_to)

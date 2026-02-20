@@ -55,7 +55,7 @@ class TestScheduler:
         """
         if isfile(self.tested_versions_file):
             return File.read_json(self.tested_versions_file)
-        return {"builder": [], "desktop": []}
+        return {"builder": [], "desktop": [], "core": []}
 
     def save_tested_versions(self, tested_versions: Dict[str, List[str]]) -> None:
         """
@@ -222,7 +222,7 @@ class TestScheduler:
         :return: True if successful, False otherwise
         """
         try:
-            empty_versions = {"builder": [], "desktop": []}
+            empty_versions = {"builder": [], "desktop": [], "core": []}
             self.save_tested_versions(empty_versions)
             print("[green]|INFO| Tested versions cache cleared successfully[/]")
             return True
@@ -337,7 +337,7 @@ class TestScheduler:
                     print(f"[yellow]|WARNING| Not all {test_type} packages exist for version {latest_version}, skipping[/]")
                     continue
 
-            if latest_version not in tested_versions[test_type]:
+            if latest_version not in tested_versions.get(test_type, []):
                 new_versions[test_type] = latest_version
                 print(f"[green]|INFO| New {test_type} version found: {latest_version}[/]")
             else:
@@ -395,6 +395,8 @@ class TestScheduler:
         :param version: Version that was successfully tested
         """
         tested_versions = self.load_tested_versions()
+        if test_type not in tested_versions:
+            tested_versions[test_type] = []
         tested_versions[test_type].append(version)
 
         # Keep only recent versions to prevent unlimited cache growth

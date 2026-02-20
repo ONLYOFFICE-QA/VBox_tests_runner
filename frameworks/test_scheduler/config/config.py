@@ -53,8 +53,9 @@ class CommandConfigModel(BaseModel):
 
     builder_run_cmd: constr(strip_whitespace=True, min_length=1)
     desktop_run_cmd: constr(strip_whitespace=True, min_length=1)
+    core_run_cmd: constr(strip_whitespace=True, min_length=1)
 
-    @field_validator("builder_run_cmd", "desktop_run_cmd")
+    @field_validator("builder_run_cmd", "desktop_run_cmd", "core_run_cmd")
     def validate_commands_have_version_placeholder(cls, v):
         """
         Validate that command templates contain {version} placeholder.
@@ -125,7 +126,7 @@ class TestSchedulerConfigModel(BaseModel):
 
         :param v: List of test execution order
         """
-        valid_tests = {"builder", "desktop"}
+        valid_tests = {"builder", "desktop", "core"}
         for test in v:
             if test not in valid_tests:
                 raise ValueError(
@@ -196,6 +197,7 @@ class SchedulerConfig:
             "commands": {
                 "builder_run_cmd": config_data.get("builder_run_cmd"),
                 "desktop_run_cmd": config_data.get("desktop_run_cmd"),
+                "core_run_cmd": config_data.get("core_run_cmd"),
             },
             "versions": {
                 "base_version": config_data.get("base_version"),
@@ -227,6 +229,7 @@ class SchedulerConfig:
             f"  [blue]Commands:[/]\n"
             f"    Builder Command: {self.commands.builder_run_cmd}\n"
             f"    Desktop Command: {self.commands.desktop_run_cmd}\n"
+            f"    Conversion Command: {self.commands.core_run_cmd}\n"
             f"  [blue]Versions:[/]\n"
             f"    Base Version: {self.versions.base_version}\n"
             f"    Max Builds: {self.versions.max_builds}\n"
@@ -273,6 +276,7 @@ class SchedulerConfig:
             "test_execution_order": updated_config.test_execution_order,
             "builder_run_cmd": updated_config.commands.builder_run_cmd,
             "desktop_run_cmd": updated_config.commands.desktop_run_cmd,
+            "core_run_cmd": updated_config.commands.core_run_cmd,
             "base_version": updated_config.versions.base_version,
             "max_builds": updated_config.versions.max_builds,
             "recheck_count": updated_config.versions.recheck_count,

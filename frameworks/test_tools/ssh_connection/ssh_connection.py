@@ -7,14 +7,17 @@ from ssh_wrapper import Ssh, Sftp, SshException
 
 from frameworks.console import MyConsole
 from posixpath import join
+from .linux_script_demon import LinuxScriptDemon
 
 console = MyConsole().console
 print = console.print
+
 
 class SSHConnection:
     my_service_name = 'myscript.service'
     services_dir = join('/etc', 'systemd', 'system')
     my_service_path = join(services_dir, my_service_name)
+    log_path = LinuxScriptDemon.log_path
 
     def __init__(self, ssh: Ssh, sftp: Sftp):
         self.ssh = ssh
@@ -41,12 +44,13 @@ class SSHConnection:
             self.exec_cmd(cmd)
 
     def start_my_service(self, start_service_cmd: list):
-        self.clean_log_journal()
+        self.clean_log()
         for cmd in start_service_cmd:
             self.exec_cmd(cmd)
 
-    def clean_log_journal(self):
-        self.exec_cmd("sudo rm /var/log/journal/*/*.journal")
+    def clean_log(self):
+        """Clean the script output log file before starting a new service run."""
+        self.exec_cmd(f"sudo rm -f {self.log_path}")
 
     def wait_execute_service(self, timeout: int = None, status_bar: bool = False, interval: int = 1):
         service_name = self.my_service_name
@@ -75,7 +79,13 @@ class SSHConnection:
         return self.exec_cmd(f'systemctl is-active {service_name}', stderr=True).stdout.lower() == 'active'
 
     def get_my_service_log(self, line_num: str | int = 20, stdout: bool = True, stderr: bool = True) -> str:
-        command = f'sudo journalctl -n {line_num} -u {self.my_service_name}'
+        """Read the last N lines from the script output log file.
+        :param line_num: Number of lines to read from the end of the log.
+        :param stdout: Whether to print stdout.
+        :param stderr: Whether to print stderr.
+        :return: The last N lines of the log.
+        """
+        command = f'tail -n {line_num} {self.log_path} 2>/dev/null'
         return self.exec_cmd(command, stdout=stdout, stderr=stderr).stdout
 
     def download_report(self, path_from: str, save_path: str):

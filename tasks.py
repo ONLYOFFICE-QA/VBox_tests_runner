@@ -6,7 +6,7 @@ This module provides invoke tasks for running automated tests on VirtualBox VMs,
 including desktop tests, builder tests, and scheduled test execution.
 
 """
-from os import getcwd, system
+from os import getcwd, system, cpu_count
 from os.path import isfile, join
 from typing import Optional, Union, List
 import ast
@@ -29,7 +29,55 @@ from tests import (
     DesktopReport,
     DesktopTest,
     DesktopTestData,
+    ConversionTestData,
+    ConversionTests
 )
+
+@task
+def conversion_test(
+    c,
+    version: str,
+    cores: Optional[int] = None,
+    direction: Optional[str] = None,
+    name: Optional[str] = None,
+    telegram: bool = False,
+    t_format: bool = False,
+    env_off: bool = False,
+    quick_check: bool = False,
+    x2t_limits: Optional[int] = None,
+    headless: bool = False,
+    ):
+    """
+    Run conversion tests.
+
+    :param c: Context (invoke requirement)
+    :param version: Version string to test
+    :param cores: Number of CPU cores to use
+    :param direction: Conversion direction
+    :param name: VM name (optional)
+    :param telegram: Send results to Telegram
+    :param t_format: Target format for conversion
+    :param env_off: Disable environment setup
+    :param quick_check: Run quick check mode
+    :param x2t_limits: X2T process limits
+    """
+    test_data = ConversionTestData(
+        version=version,
+        config_path=join(getcwd(), "conversions_tests_config.json"),
+        cores=cores or cpu_count(),
+        direction=direction,
+        telegram=telegram,
+        t_format=t_format,
+        env_off=env_off,
+        quick_check=quick_check,
+        x2t_limits=x2t_limits,
+        check_error=True,
+        out_x2ttester_param=True,
+    )
+    test_data.status_bar = True
+
+    for vm_name in test_data.vm_names if not name else [name]:
+        ConversionTests(vm_name=vm_name, test_data=test_data).run(headless=headless)
 
 
 @task

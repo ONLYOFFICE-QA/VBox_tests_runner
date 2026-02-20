@@ -1,0 +1,10 @@
+{
+  "token_file": "",
+  "chat_id_file": "",
+  "password": "",
+  "hosts": [
+    "Windows",
+    "KUbuntu",
+    "MacOS"
+  ]
+}

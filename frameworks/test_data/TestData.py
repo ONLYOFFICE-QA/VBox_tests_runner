@@ -29,12 +29,28 @@ class TestData(ABC):
     def vm_names(self) -> list: ...
 
     @property
+    def update_interval(self) -> int:
+        return 0.5
+
+    @property
     def tg_token(self) -> str:
         return self._read_file(self.token_file).strip()
 
     @property
     def token_file(self) -> str:
         return self._get_file_path('token_file', 'token')
+
+    @property
+    def restore_snapshot(self) -> bool:
+        return self.config.get('restore_snapshot', True)
+
+    @property
+    def snapshot_name(self) -> str:
+        return self.config.get('snapshot_name', None)
+
+    @property
+    def configurate(self) -> bool:
+        return self.config.get('configurate', True)
 
     @property
     def tg_chat_id(self) -> str:
