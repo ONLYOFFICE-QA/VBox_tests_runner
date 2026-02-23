@@ -10,9 +10,6 @@ resolution-markers = [
     "python_full_version < '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 
-[manifest]
-overrides = [{ name = "cryptography", specifier = ">=44.0.2" }]
-
 [[package]]
 name = "aenum"
 version = "3.1.16"
@@ -1365,11 +1362,11 @@ requires-dist = [
     { name = "inflate64", specifier = ">=1.0.3" },
     { name = "invoke", specifier = ">=2" },
     { name = "pandas", specifier = ">=2.3.0" },
-    { name = "paramiko", specifier = ">=3" },
-    { name = "py7zr", specifier = ">=1" },
+    { name = "paramiko", specifier = ">=4" },
+    { name = "py7zr", specifier = ">=1.1.0" },
     { name = "pydantic", specifier = ">=2.11.7" },
     { name = "pyppmd", specifier = ">=1.2.0" },
-    { name = "pytest", specifier = ">=8.4.1" },
+    { name = "pytest", specifier = ">=9" },
     { name = "report-portal", git = "https://github.com/l8556/report_portal.git?branch=master" },
     { name = "rich", specifier = ">=14" },
     { name = "ruff", specifier = ">=0.12.0" },
