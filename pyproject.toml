@@ -8,14 +8,14 @@ requires-python = ">=3.13"
 dependencies = [
     "invoke>=2",
     "rich>=14",
-    "paramiko>=3",
+    "paramiko>=4",
     "pandas>=2.3.0",
     "elevate>=0.1.3",
     "ruff>=0.12.0",
     "pydantic>=2.11.7",
     "pyppmd>=1.2.0",
     "inflate64>=1.0.3",
-    "py7zr>=1",
+    "py7zr>=1.1.0",
     "aiohttp>=3.12.14",
     "host-tools",
     "telegram",
@@ -23,7 +23,7 @@ dependencies = [
     "ssh-wrapper",
     "report-portal",
     "s3wrapper",
-    "pytest>=8.4.1",
+    "pytest>=9",
     "apscheduler>=3.11.0",
 ]
 
