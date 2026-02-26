@@ -10,7 +10,7 @@ from frameworks import PackageURLChecker, VersionHandler
 from frameworks.VboxMachine import VboxMachine
 from frameworks.decorators import vm_data_created
 from frameworks.package_checker.report import CSVReport
-from frameworks.test_tools import TestToolsLinux, TestTools
+from frameworks.test_tools import TestToolsWindows, TestTools
 from tests.conversion_tests.conversion_paths.conversion_local_paths import ConversionLocalPaths
 
 from .conversion_paths import ConversionPaths
@@ -160,7 +160,7 @@ class ConversionTests:
         """
         self.data.restore_snapshot = False
         self.data.configurate = False
-        return TestToolsLinux(vm=self.vm, test_data=self.data)
+        return TestToolsWindows(vm=self.vm, test_data=self.data)
 
     @vm_data_created
     def get_upload_files(self) -> list[tuple[str, str]]:
