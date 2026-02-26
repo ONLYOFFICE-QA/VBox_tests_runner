@@ -122,6 +122,7 @@ class VboxMachine:
         status_bar: bool = False,
         timeout: int = 600,
         restore_snapshot: bool = True,
+        stop_vm: bool = True,
         snapshot_name: str = None,
         configurate: bool = True
     ):
@@ -135,7 +136,7 @@ class VboxMachine:
         :param status_bar: Whether to show progress status bar
         :param timeout: Timeout in seconds for network and user readiness
         """
-        if self.vm.power_status():
+        if stop_vm and self.vm.power_status():
             self.vm.stop()
 
         if restore_snapshot:

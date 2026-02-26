@@ -96,6 +96,15 @@ class VboxUtilsWindows:
         if self.paths.remote.run_script_name.endswith(".ps1"):
             return f"-ExecutionPolicy Bypass -File '{self.paths.remote.script_path}'"
 
+        if self.paths.remote.run_script_name.endswith(".sh"):
+            return f"chmod +x {self.paths.remote.script_path} && {self.paths.remote.script_path}"
+
+        if self.paths.remote.run_script_name.endswith(".py"):
+            python_executable = "python3"
+            if 'windows' in self.file.vm.os_type.lower():
+                python_executable = "python.exe"
+            return f"{python_executable} {self.paths.remote.script_path}"
+
         raise ValueError("Unsupported script type.")
 
     def _run_cmd(
