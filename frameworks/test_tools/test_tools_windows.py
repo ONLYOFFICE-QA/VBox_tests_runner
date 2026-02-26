@@ -19,7 +19,7 @@ class TestToolsWindows(TestTools):
     @retry(max_attempts=2, exception_type=VirtualMachinException)
     def run_vm(self, headless: bool = False) -> None:
         self.vm.run(
-            headless=headless,
+            headless=False if 'windows' in self.vm.os_type.lower() else headless,
             status_bar=self.data.status_bar,
             restore_snapshot=self.data.restore_snapshot,
             snapshot_name=self.data.snapshot_name,
