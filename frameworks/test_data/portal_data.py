@@ -11,10 +11,11 @@ class PortalStatus:
 class TestStatus:
     not_exists_package: str = "PACKAGE_NOT_EXISTS"
     failed_create_vm: str = "FAILED_CREATE_VM"
+    timeout: str = "TIMEOUT"
     skipped_tuple: tuple = field(init=False)
 
     def __post_init__(self):
-        self.skipped_tuple = (self.not_exists_package, self.failed_create_vm)
+        self.skipped_tuple = (self.not_exists_package, self.failed_create_vm, self.timeout)
 
 @dataclass
 class PortalData:

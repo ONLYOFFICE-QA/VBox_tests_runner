@@ -199,6 +199,7 @@ class DesktopReport:
         main_result_line = self._get_overall_result(df)
         package_not_exists_os = self._get_os_list_by_status(df, self.portal_data.test_status.not_exists_package)
         failed_create_vm_os = self._get_os_list_by_status(df, self.portal_data.test_status.failed_create_vm)
+        timed_out_os = self._get_os_list_by_status(df, self.portal_data.test_status.timeout)
 
         missing_vm_names = (
             self.get_missing_vm_names(data.vm_names, df=df)
@@ -216,6 +217,9 @@ class DesktopReport:
 
         if failed_create_vm_os:
             caption_parts.append(f"Failed to create VM for OS: `{', '.join(failed_create_vm_os)}`\n\n")
+
+        if timed_out_os:
+            caption_parts.append(f"Timed out for OS: `{', '.join(timed_out_os)}`\n\n")
 
         if missing_vm_names:
             caption_parts.append(f"Missing VMs in report: `{', '.join(missing_vm_names)}`\n\n")
@@ -245,7 +249,8 @@ class DesktopReport:
         """
         results = df[
             (df['Exit_code'] != self.portal_data.test_status.not_exists_package) &
-            (df['Exit_code'] != self.portal_data.test_status.failed_create_vm)
+            (df['Exit_code'] != self.portal_data.test_status.failed_create_vm) &
+            (df['Exit_code'] != self.portal_data.test_status.timeout)
         ]
         return 'All tests passed' if not results.empty and results['Exit_code'].eq('Passed').all() else 'Some tests have errors'
 

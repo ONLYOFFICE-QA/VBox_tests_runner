@@ -115,6 +115,14 @@ class DesktopTestTools:
             exit_code=self.portal_data.test_status.failed_create_vm
         )
 
+    def handle_timeout(self):
+        print(f"[bold red]|ERROR|{self.vm.name}| Test timed out")
+        self.report.write(
+            version=self.data.version,
+            vm_name=self.vm.name,
+            exit_code=self.portal_data.test_status.timeout
+        )
+
     def get_upload_files(self) -> list:
         files = [
             (self.data.token_file, self.paths.remote.tg_token_file),
