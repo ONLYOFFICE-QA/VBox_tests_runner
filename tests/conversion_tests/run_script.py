@@ -35,7 +35,7 @@ class RunScript:
     def get_shebang(self) -> str:
         if self.is_windows:
             return ''
-        return '#!/bin/bash'
+        return '#!/bin/bash -l'
 
     def get_run_script_cmd(self, dir_path: str) -> str:
         """
@@ -44,7 +44,7 @@ class RunScript:
         :param dir_path: Directory path where to run the command
         :return: Full command string
         """
-        return f"cd {dir_path} && uv run {self.data.generate_run_command()}"
+        return f"cd {dir_path} && {self.data.generate_run_command()}"
 
     def get_change_dir_command(self, dir_path: str) -> str:
         return f"cd {dir_path}"
