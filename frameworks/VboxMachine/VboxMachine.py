@@ -1,11 +1,19 @@
 # -*- coding: utf-8 -*-
 import re
-from vboxwrapper import VirtualMachine
+import time
+from os.path import join, dirname, isfile
+
+from rich import print
+from vboxwrapper import VirtualMachine, FileUtils
 
 from frameworks.decorators import vm_is_turn_on, class_cache
 from .vm_data import VmData
 from .configs import VmConfig
-from host_tools import HostInfo
+from host_tools import HostInfo, File
+
+
+# VirtualBox adapter number → PCI slot → Linux predictable interface name (enp0s{slot})
+_VBOX_PCI_SLOTS = {1: 3, 2: 8, 3: 9, 4: 10, 5: 16, 6: 17, 7: 18, 8: 19}
 
 
 @class_cache
@@ -43,7 +51,7 @@ class VboxMachine:
 
         :raises ValueError: If IP address or logged user is not available
         """
-        ip = self.vm.network.get_ip()
+        ip = self._get_management_ip()
         if ip is None:
             raise ValueError("IP address is not available")
 
@@ -147,6 +155,8 @@ class VboxMachine:
         self.vm.run(headless=headless)
         self.vm.network.wait_up(status_bar=status_bar, timeout=timeout)
         self.vm.wait_logged_user(status_bar=status_bar, timeout=timeout)
+        self._configure_management_interface()
+        self._wait_management_network(timeout=timeout, status_bar=status_bar)
         self.create_data()
 
     def configurate(self):
@@ -207,9 +217,106 @@ class VboxMachine:
             self.vm.network.set_adapter(
                 turn=True,
                 adapter_number=adapter_number,
-                adapter_name=adapter_name if connect_type == "bridged" else None,
+                adapter_name=adapter_name,
                 connect_type=connect_type
             )
+
+    def _get_vm_password(self) -> str:
+        """Read VM password from the 'password' file next to the .vbox config."""
+        vm_dir = self.vm.get_parameter('CfgFile')
+        password_file = join(dirname(vm_dir), 'password')
+        if isfile(password_file):
+            return File.read(password_file).strip()
+        raise FileNotFoundError(f"Password file not found: {password_file}")
+
+    def _configure_management_interface(self) -> None:
+        """Configure management network interface via DHCP on Linux guests.
+
+        Runs dhclient on the Host-Only/bridged interface if it doesn't
+        already have an IP address. Skipped for non-Linux VMs.
+        """
+        if self.os_type != 'linux':
+            return
+
+        adapter = self._get_management_adapter()
+        if not adapter:
+            return
+
+        if self._get_ip_by_net_index(adapter.adapter_number - 1):
+            return
+
+        pci_slot = _VBOX_PCI_SLOTS.get(adapter.adapter_number)
+        interface = f"enp0s{pci_slot}" if pci_slot else f"eth{adapter.adapter_number - 1}"
+
+        user = self.vm.get_logged_user()
+        password = self._get_vm_password()
+        file_utils = FileUtils(vm_id=self.vm, username=user, password=password)
+
+        print(f"[cyan]|INFO|{self.name}| Configuring {interface} with DHCP")
+        sudo = f"echo '{password}' | sudo -S"
+        file_utils.run_cmd(
+            f"{sudo} dhclient {interface} 2>/dev/null",
+            shell="/bin/bash -c",
+            stdout=False,
+            stderr=False
+        )
+
+    def _get_management_adapter(self):
+        """Find the first non-NAT adapter used for management connections (SSH)."""
+        for adapter in self.vm_config.network:
+            if adapter.connect_type in ("hostonly", "bridged"):
+                return adapter
+        return None
+
+    def _get_ip_by_net_index(self, net_index: int) -> str | None:
+        """Get IP address from a specific guest network interface.
+
+        :param net_index: Guest network interface index (0-based)
+        """
+        prop = f"/VirtualBox/GuestInfo/Net/{net_index}/V4/IP"
+        output = self.vm._cmd.get_output(
+            f'{self.vm._cmd.guestproperty} {self.name} "{prop}"'
+        )
+        if output and output != 'No value set!':
+            return output.split(':')[1].strip()
+        return None
+
+    def _get_management_ip(self) -> str | None:
+        """Get IP from the management adapter (hostonly/bridged), fallback to Net/0."""
+        adapter = self._get_management_adapter()
+        if adapter:
+            return self._get_ip_by_net_index(adapter.adapter_number - 1)
+        return self.vm.network.get_ip()
+
+    def _wait_management_network(self, timeout: int = 600, status_bar: bool = False) -> None:
+        """Wait for the management network adapter IP to become available.
+
+        :param timeout: Timeout in seconds
+        :param status_bar: Whether to show progress status bar
+        """
+        adapter = self._get_management_adapter()
+        if not adapter:
+            return
+
+        net_index = adapter.adapter_number - 1
+        msg = (
+            f"[cyan]|INFO|{self.name}| Waiting for management network "
+            f"(adapter {adapter.adapter_number}, {adapter.connect_type})"
+        )
+        print(msg)
+
+        start = time.time()
+        while time.time() - start < timeout:
+            ip = self._get_ip_by_net_index(net_index)
+            if ip:
+                print(f"[green]|INFO|{self.name}| Management network ready, ip: [cyan]{ip}[/]")
+                return
+            time.sleep(1)
+
+        raise TimeoutError(
+            f"Management network IP not available within {timeout}s "
+            f"for adapter {adapter.adapter_number} ({adapter.connect_type})"
+        )
 
     def _get_memory_num(self) -> int:
         """

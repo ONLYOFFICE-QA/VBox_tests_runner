@@ -1399,7 +1399,7 @@ requires-dist = [
 [[package]]
 name = "vboxwrapper"
 version = "0.1.0"
-source = { git = "https://github.com/l8556/VBoxWrapper.git?branch=master#91814d473ef4ebbcf4245f1df46fe79fe6d72b12" }
+source = { git = "https://github.com/l8556/VBoxWrapper.git?branch=master#109b27963a69021e5e121878a2f4eb80c30d05ed" }
 dependencies = [
     { name = "rich" },
 ]

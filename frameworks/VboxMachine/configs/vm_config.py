@@ -143,6 +143,7 @@ class VmConfig:
     def _check_specified_adapter(self):
         """
         Validates the specified network adapters against available host adapters.
+        Only bridged adapters require a valid host interface name.
 
         Raises:
             ValueError: If the adapter specified in the network configuration is not
@@ -150,7 +151,7 @@ class VmConfig:
             disconnected, not supported, or does not meet criteria (e.g., wireless and not 'Up' status).
         """
         for adapter in self.network:
-            if adapter.adapter_name and adapter.adapter_name not in self.host_adapters:
+            if adapter.connect_type == "bridged" and adapter.adapter_name and adapter.adapter_name not in self.host_adapters:
                 raise ValueError(
                     f"[red]|ERROR| Adapter '{adapter.adapter_name}' not found on host or not supported. "
                     f"The adapter may have the status 'Up' and not be wireless."
