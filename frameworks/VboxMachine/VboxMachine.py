@@ -242,7 +242,7 @@ class VboxMachine:
         if not adapter:
             return
 
-        if self._get_ip_by_net_index(adapter.adapter_number - 1):
+        if self._get_management_ip():
             return
 
         pci_slot = _VBOX_PCI_SLOTS.get(adapter.adapter_number)
@@ -282,14 +282,23 @@ class VboxMachine:
         return None
 
     def _get_management_ip(self) -> str | None:
-        """Get IP from the management adapter (hostonly/bridged), fallback to Net/0."""
+        """Get non-NAT IP by scanning all guest interfaces, fallback to Net/0.
+
+        Guest interface order (Net/0, Net/1, ...) is determined by the guest OS
+        and does not necessarily match VirtualBox adapter numbers.
+        """
         adapter = self._get_management_adapter()
-        if adapter:
-            return self._get_ip_by_net_index(adapter.adapter_number - 1)
-        return self.vm.network.get_ip()
+        if not adapter:
+            return self.vm.network.get_ip()
+
+        for i in range(8):
+            ip = self._get_ip_by_net_index(i)
+            if ip and not ip.startswith("10.0.2."):
+                return ip
+        return None
 
     def _wait_management_network(self, timeout: int = 600, status_bar: bool = False) -> None:
-        """Wait for the management network adapter IP to become available.
+        """Wait for management network IP (non-NAT) to become available.
 
         :param timeout: Timeout in seconds
         :param status_bar: Whether to show progress status bar
@@ -298,7 +307,6 @@ class VboxMachine:
         if not adapter:
             return
 
-        net_index = adapter.adapter_number - 1
         msg = (
             f"[cyan]|INFO|{self.name}| Waiting for management network "
             f"(adapter {adapter.adapter_number}, {adapter.connect_type})"
@@ -307,7 +315,7 @@ class VboxMachine:
 
         start = time.time()
         while time.time() - start < timeout:
-            ip = self._get_ip_by_net_index(net_index)
+            ip = self._get_management_ip()
             if ip:
                 print(f"[green]|INFO|{self.name}| Management network ready, ip: [cyan]{ip}[/]")
                 return
