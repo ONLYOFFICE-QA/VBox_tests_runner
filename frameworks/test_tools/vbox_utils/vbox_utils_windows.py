@@ -32,12 +32,21 @@ class VboxUtilsWindows:
         for test_dir in test_dirs:
             self._create_dir(test_dir, try_num=try_num, interval=interval)
 
-    def run_script_on_vm(self, status_bar: bool):
+    def run_script_on_vm(self, status_bar: bool, try_num: int = 10, interval: int = 3):
         server_info = f"{self.file.vm.name}|{self.file.vm.network.get_ip()}"
         line = f"{'-' * 90}"
         print(f"[bold cyan]{line}\n|INFO|{server_info}| Waiting for execution script on VM\n{line}")
 
-        out = self._run_cmd(self._get_run_script_cmd(), status_bar=status_bar, stdout=status_bar)
+        while try_num > 0:
+            out = self._run_cmd(self._get_run_script_cmd(), status_bar=status_bar, stdout=status_bar)
+
+            if out.returncode == 0 or not self._is_retryable_error(out.stderr):
+                break
+
+            print(f"[bold yellow]|WARNING|{self.file.vm.name}| Guest session not ready, retrying in {interval}s...")
+            time.sleep(interval)
+            try_num -= 1
+
         print(
             f"[cyan]{line}\n|INFO|{self.file.vm.name}|Script execution log:\n{line}\n"
             f"{out.stdout}\n Exit Code: {out.returncode}\n{line}"
@@ -51,7 +60,7 @@ class VboxUtilsWindows:
 
         return True
 
-    def _upload(self, local_path: str, remote_path: str, try_num: int = 10, interval: int = 1) -> None:
+    def _upload(self, local_path: str, remote_path: str, try_num: int = 10, interval: int = 3) -> None:
         print(f"[green]|INFO|{self.file.vm.name}| Upload file [cyan]{local_path}[/] to [cyan]{remote_path}[/]")
         while try_num > 0:
             out = self.file.copy_to(local_path=local_path, remote_path=remote_path)
@@ -59,9 +68,10 @@ class VboxUtilsWindows:
             if out.returncode == 0:
                 break
 
-            if 'File copy failed' not in out.stderr:
+            if not self._is_retryable_error(out.stderr):
                 break
 
+            print(f"[bold yellow]|WARNING|{self.file.vm.name}| Upload failed, retrying in {interval}s...")
             time.sleep(interval)
             try_num -= 1
 
@@ -79,6 +89,13 @@ class VboxUtilsWindows:
 
             time.sleep(interval)
             try_num -= 1
+
+    @staticmethod
+    def _is_retryable_error(stderr: str) -> bool:
+        if not stderr:
+            return False
+        retryable_patterns = ['File copy failed', 'Guest Additions are not installed or not ready']
+        return any(pattern in stderr for pattern in retryable_patterns)
 
     def _get_shell(self) -> Optional[str]:
         if self.paths.remote.run_script_name.endswith(".bat"):
