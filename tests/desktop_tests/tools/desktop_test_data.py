@@ -19,6 +19,7 @@ class DesktopTestData(TestData):
     config_path: str
     status_bar: bool = True
     telegram: bool = False
+    send_screenshots: bool = False
     custom_config_mode: Union[bool, str] = False
     update_from: Optional[str] = None
     snap: bool = False

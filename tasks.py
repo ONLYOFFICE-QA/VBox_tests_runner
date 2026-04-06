@@ -193,7 +193,8 @@ def desktop_test(
     data = DesktopTestData(
         version=version or Prompt.ask("[red]Please enter version"),
         update_from=update_from_version,
-        telegram=detailed_telegram,
+        telegram=False, # Need run vm on vpn
+        send_screenshots=detailed_telegram,
         config_path=join(
             getcwd(),
             "custom_config.json" if custom_config else "desktop_tests_config.json",

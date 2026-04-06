@@ -229,6 +229,41 @@ class DesktopReport:
         if data.tg_report_chat_id:
             Telegram(token=data.tg_token, chat_id=data.tg_report_chat_id).send_document(self.path, caption=caption)
 
+    def send_screenshots_to_tg(self, data) -> None:
+        """
+        Send test screenshot results to Telegram after a test completes on a specific OS.
+        Reads vm_name and result from the report CSV in the same directory as the screenshots.
+
+        :param data: DesktopTestData instance.
+        """
+        if not isfile(self.path):
+            return print(f"[red]|ERROR| Report not found for sending screenshots: {self.path}")
+
+        screenshots = File.get_paths(self.dir, extension='.png')
+        if not screenshots:
+            print(f"[yellow]|WARNING| No screenshots to send in {self.dir}")
+            return
+
+        _df = self.report.read(self.path)
+        vm_name = _df['Vm_name'].iloc[0] if not _df.empty else basename(self.dir)
+        results = self._get_overall_result(_df)
+
+        update_info = f"{data.update_from}-" if data.update_from else ""
+        pkg_name = re.sub(r"[\s/_]", "", data.package_name)
+
+        caption = (
+            f"Os: `{vm_name}`\n"
+            f"Version: `{update_info}{data.version}`\n"
+            f"Package: `{pkg_name}`\n"
+            f"Result: `{results}`"
+        )
+
+        Telegram(token=data.tg_token, chat_id=data.tg_chat_id).send_media_group(
+            document_paths=screenshots,
+            media_type='photo',
+            caption=caption
+        )
+
     def _get_os_list_by_status(self, df: pd.DataFrame, status: str):
         """
         Returns a list of OS names where Exit_code matches the given status.
