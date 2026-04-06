@@ -60,6 +60,8 @@ class DesktopTestTools:
         if not self.report.exists() and self.report.column_is_empty("Os"):
             raise VirtualMachinException
         self.report.insert_vm_name(self.vm.name)
+        if self.data.send_screenshots:
+            self.report.send_screenshots_to_tg(data=self.data)
 
     def check_package_exists(self) -> bool:
         """
