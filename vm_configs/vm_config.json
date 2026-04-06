@@ -8,24 +8,16 @@
     "network": [
       {
         "adapter_number": 1,
-        "adapter_name": "",
-        "connect_type": "bridged"
+        "connect_type": "nat"
+      },
+      {
+        "adapter_number": 2,
+        "adapter_name": "VirtualBox Host-Only Ethernet Adapter",
+        "connect_type": "hostonly"
       }
     ]
   },
   "vm_specific": {
-    "Debian10": {
-      "network": [
-        {
-          "adapter_number": 1,
-          "connect_type": "nat"
-        },
-        {
-          "adapter_number": 2,
-          "connect_type": "hostonly"
-        }
-      ]
-    },
     "Windows11": {
       "network": [
         {
