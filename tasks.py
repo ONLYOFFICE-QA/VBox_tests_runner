@@ -280,9 +280,15 @@ def builder_test(
         builder.get(
             dep_test_branch=data.dep_test_branch,
             builder_samples_branch=data.document_builder_samples_branch,
+            build_tools_branch=data.build_tools_branch,
+            office_js_api_branch=data.office_js_api_branch,
         )
         builder.compress_dep_tests(delete=False)
+        builder.compress_build_tools(delete=False)
+        builder.compress_office_js_api(delete=False)
         Dir.delete(builder.local_path.dep_test_path)
+        Dir.delete(builder.local_path.build_tools_path)
+        Dir.delete(builder.local_path.office_js_api_path)
 
         vms = [name] if name else data.vm_names
         if num_processes > 1 and not name and len(vms) > 1:

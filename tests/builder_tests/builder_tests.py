@@ -122,6 +122,8 @@ class BuilderTests:
         paths = BuilderPaths(os_info=os_info, remote_user_name=getpass.getuser(), remote_script_dir=script_dir)
         Dir.create(dirname(paths.remote.dep_test_archive), stdout=False)
         File.copy(paths.local.dep_test_archive, paths.remote.dep_test_archive, stdout=False)
+        File.copy(paths.local.build_tools_archive, paths.remote.build_tools_archive, stdout=False)
+        File.copy(paths.local.office_js_api_archive, paths.remote.office_js_api_archive, stdout=False)
         run_script = RunScript(test_data=self.data, paths=paths).create()
         try:
             Shell.call(f"bash {run_script}")
@@ -197,6 +199,8 @@ class BuilderTests:
             (self.data.chat_id_file, self.paths.remote.tg_chat_id_file),
             (RunScript(test_data=self.data, paths=self.paths).create(), self.paths.remote.script_path),
             (self.paths.local.dep_test_archive, self.paths.remote.dep_test_archive),
+            (self.paths.local.build_tools_archive, self.paths.remote.build_tools_archive),
+            (self.paths.local.office_js_api_archive, self.paths.remote.office_js_api_archive),
         ]
 
         return [file for file in files if all(file)]
