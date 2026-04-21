@@ -225,6 +225,8 @@ def desktop_test(
 
         report.get_full(data.version)
 
+
+    reset_vbox(c, soft=True)
     if only_portal and not isfile(data.full_report_path):
         raise FileNotFoundError(f"Report file {data.full_report_path} not found")
 
@@ -299,6 +301,7 @@ def builder_test(
             for vm in vms:
                 BuilderTests(vm, data).run(headless=headless)
 
+    reset_vbox(c, soft=True)
     data.report.get_full()
 
     if only_portal and not isfile(report_path):

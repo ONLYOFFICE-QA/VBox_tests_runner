@@ -86,6 +86,7 @@ class DocBuilder(DepTests):
         :param archive_path: Destination archive path
         :param delete: Delete source directory after compression
         """
+        print(f"[blue]|INFO| Compressing {src_dir} to {archive_path}")
         if isfile(archive_path):
             File.delete(archive_path, stdout=False)
 
