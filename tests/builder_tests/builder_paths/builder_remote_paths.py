@@ -16,6 +16,12 @@ class BuilderRemotePaths(RemotePaths):
         self.docbuilder_docs_path: str = self._join_path(self.dep_test_path, 'docbuilder-docs')
         self.dep_test_archive: str = self._join_path(self.script_dir, f"{basename(self.dep_test_path)}.zip")
 
+        self.build_tools_path: str = self._join_path(self.script_dir, 'build_tools')
+        self.build_tools_archive: str = self._join_path(self.script_dir, 'build_tools.zip')
+
+        self.office_js_api_path: str = self._join_path(self.script_dir, 'office-js-api')
+        self.office_js_api_archive: str = self._join_path(self.script_dir, 'office-js-api.zip')
+
         self.update_script: str = self._join_path(self.docbuilder_path, 'update.py')
         self.lic_file = self._join_path(self.docbuilder_path, '.license', 'license.xml')
         self.builder_report_dir = self._join_path(self.docbuilder_path, 'reports')
