@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-from os.path import isfile
+from os.path import isfile, join
+from host_tools import HostInfo
+import subprocess
 
 from host_tools.utils import File, Git
 from frameworks.VersionHandler import VersionHandler
@@ -52,6 +54,43 @@ class DocBuilder(DepTests):
         :param branch: Git branch to clone
         """
         Git.clone(self.build_tools_repo, branch=branch, path=self.local_path.build_tools_path)
+        if HostInfo().is_mac and HostInfo().is_arm:
+            if self.get_chip_brand() == "Apple M4 Pro":
+                self._patch_update_script_extract()
+
+    def _patch_update_script_extract(self) -> None:
+        update_script = join(self.local_path.docbuilder_path, 'update.py')
+        if not isfile(update_script):
+            print(f"[red]|WARNING| update.py not found: {update_script}")
+            return
+
+        content = File.read(update_script)
+        old_call = 'base.extract("./builder.archive", "./")'
+        # -snld20 is needed to avoid the error on macOS arm64 M4
+        new_call = 'base.cmd_exe("7zz", ["x", "builder.archive", "-snld20", "-o./"])'
+        if old_call not in content:
+            print(f"[yellow]|WARNING| Extract call not found in: {update_script}")
+            return
+
+        File.write(update_script, content.replace(old_call, new_call))
+
+    def get_chip_brand(self) -> str:
+        """Return CPU brand string from sysctl.
+
+        :param: none
+        :return: brand string like "Apple M1", "Apple M4 Pro" or empty string on failure
+        """
+        # `machdep.cpu.brand_string` is the canonical source on macOS
+        try:
+            result = subprocess.run(
+                ["sysctl", "-n", "machdep.cpu.brand_string"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            return result.stdout.strip()
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return ""
 
     def clone_office_js_api(self, branch: str = None) -> None:
         """
