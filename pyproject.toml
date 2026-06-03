@@ -16,7 +16,7 @@ dependencies = [
     "pyppmd>=1.2.0",
     "inflate64>=1.0.3",
     "py7zr>=1.1.0",
-    "aiohttp>=3.12.14",
+    "aiohttp>=3.14.0",
     "host-tools",
     "telegram",
     "vboxwrapper",
