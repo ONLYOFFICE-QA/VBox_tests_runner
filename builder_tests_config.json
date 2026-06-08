@@ -3,7 +3,7 @@
   "chat_id_file": "builder_chat",
   "dep_test_branch": "",
   "build_tools_branch": "",
-  "office_js_api_branch": "hotfix/v9.4.1",
+  "office_js_api_branch": "release/v9.5.0",
   "document_builder_samples": "",
   "password": "",
   "hosts_arm64": [
