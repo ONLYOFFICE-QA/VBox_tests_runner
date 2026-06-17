@@ -23,7 +23,7 @@ dependencies = [
     "ssh-wrapper",
     "report-portal",
     "s3wrapper",
-    "pytest>=9",
+    "pytest>=9.1.0",
     "apscheduler>=3.11.0",
 ]
 
