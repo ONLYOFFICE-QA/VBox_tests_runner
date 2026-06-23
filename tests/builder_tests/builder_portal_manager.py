@@ -121,7 +121,7 @@ class BuilderPortalManager():
         """
         try:
             return future.result()
-        except (PermissionError, FileExistsError, NotADirectoryError, IsADirectoryError) as e:
+        except Exception as e:
             return f"[red]|ERROR| Exception when getting result {e}"
 
 

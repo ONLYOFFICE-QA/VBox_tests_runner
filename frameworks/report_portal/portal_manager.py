@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 import time
+import threading
+from os.path import join, dirname
 from typing import Optional
 
+from host_tools.utils import Dir
+from rich import print
+
 from report_portal import ReportPortal
+from frameworks.test_data import LocalPaths
 
 class PortalManager:
     """
@@ -12,6 +18,9 @@ class PortalManager:
     creating test suites, and sending test results with proper caching.
     """
     _suite_cache = {}
+    _START_RETRIES = 10
+    _START_RETRY_DELAY = 2
+    _skipped_report_lock = threading.Lock()
 
     def __init__(self,
             project_name: str,
@@ -114,12 +123,12 @@ class PortalManager:
         suite_id = self.rp.launch.rp_client.get_id(item_type='suite', uuid=suite_uuid, cache=True)
         exist_step = self.get_exist_item(self.steps_items, test_name, suite_id)
 
-        step_uuid = step.start(
-            name=test_name,
-            parent_item_id=suite_uuid,
-            retry=True if exist_step else False,
-            uuid=exist_step["uuid"] if exist_step else None
-        )
+        step_uuid = self._start_step_with_retry(step, test_name, suite_uuid, exist_step)
+
+        if not step_uuid:
+            print(f"[bold magenta]|ERROR| Skipping '{test_name}': test item was not started in Report Portal")
+            self._save_skipped_test(test_name)
+            return
 
         step.send_log(
             message=f"Test {test_name} started at {time.strftime('%Y-%m-%d %H:%M:%S')}",
@@ -136,6 +145,55 @@ class PortalManager:
             )
 
         step.finish(return_code=return_code, status=status)
+
+    def _start_step_with_retry(
+            self,
+            step,
+            test_name: str,
+            suite_uuid: Optional[str],
+            exist_step: Optional[dict]
+    ) -> Optional[str]:
+        """
+        Start a step item retrying on transient Report Portal/network failures.
+
+        :param step: Step helper instance to start
+        :param test_name: Name of the test step
+        :param suite_uuid: UUID of the parent suite
+        :param exist_step: Existing step item to retry, if any
+        :return: Started step UUID or None if all attempts failed
+        """
+        for attempt in range(1, self._START_RETRIES + 1):
+            try:
+                return step.start(
+                    name=test_name,
+                    parent_item_id=suite_uuid,
+                    retry=True if exist_step else False,
+                    uuid=exist_step["uuid"] if exist_step else None
+                )
+            except Exception as e:
+                print(
+                    f"[bold yellow]|WARNING| Failed to start '{test_name}' "
+                    f"(attempt {attempt}/{self._START_RETRIES}): {e}"
+                )
+                if attempt < self._START_RETRIES:
+                    time.sleep(self._START_RETRY_DELAY)
+
+        return None
+
+    def _save_skipped_test(self, test_name: str) -> None:
+        """
+        Append a skipped test entry to a report file in the reports directory.
+
+        :param test_name: Name of the test that was not started in Report Portal
+        """
+        file_path = join(LocalPaths.reports_dir, 'report_portal_skipped', f'{self.launch_name}_skipped.tsv')
+        timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+
+        # Lock because this is called concurrently from a thread pool
+        with self._skipped_report_lock:
+            Dir.create(dirname(file_path), stdout=False)
+            with open(file_path, 'a', encoding='utf-8') as file:
+                file.write(f"{timestamp}\t{test_name}\n")
 
     def create_suite(self, suite_name: str, parent_suite_uuid: Optional[str] = None):
         """
