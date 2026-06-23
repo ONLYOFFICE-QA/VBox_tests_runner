@@ -121,7 +121,7 @@ class PortalManager:
         step_uuid = self._start_step_with_retry(step, test_name, suite_uuid, exist_step)
 
         if not step_uuid:
-            print(f"[red]|ERROR| Skipping '{test_name}': test item was not started in Report Portal")
+            print(f"[bold magenta]|ERROR| Skipping '{test_name}': test item was not started in Report Portal")
             return
 
         step.send_log(
@@ -166,7 +166,7 @@ class PortalManager:
                 )
             except Exception as e:
                 print(
-                    f"[yellow]|WARNING| Failed to start '{test_name}' "
+                    f"[bold yellow]|WARNING| Failed to start '{test_name}' "
                     f"(attempt {attempt}/{self._START_RETRIES}): {e}"
                 )
                 if attempt < self._START_RETRIES:
