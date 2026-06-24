@@ -25,7 +25,7 @@ jobs:
                    --upgrade-package s3wrapper
       - uses: peter-evans/create-pull-request@v7
         with:
-          commit-message: "chore: bump git dependencies"
-          title: "chore: update git-tracked dependencies"
+          commit-message: "Bump: chore: bump git dependencies"
+          title: "Bump: chore: update git-tracked dependencies"
           branch: deps/git-update
           delete-branch: true
