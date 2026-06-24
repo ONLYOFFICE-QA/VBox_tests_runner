@@ -1,0 +1,31 @@
+name: Update git dependencies
+
+on:
+  schedule:
+    - cron: "0 5 * * *"  # daily at 05:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Upgrade git-tracked deps
+        run: |
+          uv lock --upgrade-package host-tools \
+                   --upgrade-package telegram \
+                   --upgrade-package vboxwrapper \
+                   --upgrade-package ssh-wrapper \
+                   --upgrade-package report-portal \
+                   --upgrade-package s3wrapper
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore: bump git dependencies"
+          title: "chore: update git-tracked dependencies"
+          branch: deps/git-update
+          delete-branch: true
