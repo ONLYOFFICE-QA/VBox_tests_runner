@@ -24,7 +24,7 @@ dependencies = [
     "report-portal",
     "s3wrapper",
     "pytest>=9.1.1",
-    "apscheduler>=3.11.0",
+    "apscheduler>=3.11.3",
 ]
 
 [tool.uv.sources]
