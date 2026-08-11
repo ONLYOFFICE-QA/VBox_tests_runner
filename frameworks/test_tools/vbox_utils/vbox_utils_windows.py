@@ -54,11 +54,7 @@ class VboxUtilsWindows:
 
     def download_report(self, path_from: str, path_to: str) -> bool:
         out = self.file.copy_from(path_from, path_to)
-
-        if out.stderr and 'no such file or directory' in out.stderr.lower():
-            return False
-
-        return True
+        return out.returncode == 0
 
     def _upload(self, local_path: str, remote_path: str, try_num: int = 10, interval: int = 3) -> None:
         print(f"[green]|INFO|{self.file.vm.name}| Upload file [cyan]{local_path}[/] to [cyan]{remote_path}[/]")
@@ -111,7 +107,11 @@ class VboxUtilsWindows:
             return self.paths.remote.script_path
 
         if self.paths.remote.run_script_name.endswith(".ps1"):
-            return f"-ExecutionPolicy Bypass -File '{self.paths.remote.script_path}'"
+            script_path = self.paths.remote.script_path.replace("'", "''")
+            return (
+                "Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force; "
+                f"& '{script_path}'"
+            )
 
         if self.paths.remote.run_script_name.endswith(".sh"):
             return f"chmod +x {self.paths.remote.script_path} && {self.paths.remote.script_path}"
