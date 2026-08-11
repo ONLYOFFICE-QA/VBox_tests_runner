@@ -7,7 +7,10 @@ from .test_tools import TestTools, VboxMachine
 from frameworks.test_data import TestData
 
 
-class TestToolsWindows(TestTools):
+class VBoxGuestTestTools(TestTools):
+    """
+    Run tests on a guest via VirtualBox guestcontrol (FileUtils / VboxUtils).
+    """
 
     def __init__(self, vm: VboxMachine, test_data: TestData):
         super().__init__(vm=vm, test_data=test_data)

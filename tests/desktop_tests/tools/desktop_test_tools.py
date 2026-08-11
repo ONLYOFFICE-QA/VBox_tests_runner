@@ -10,7 +10,7 @@ from host_tools.utils import Dir
 from frameworks.VboxMachine import VboxMachine
 from frameworks.decorators import vm_data_created
 from frameworks.package_checker.report import CSVReport
-from frameworks.test_tools import TestTools, TestToolsWindows, TestToolsLinux
+from frameworks.test_tools import TestTools, VBoxGuestTestTools, SshTestTools
 from frameworks.package_checker.check_packages import PackageURLChecker
 from frameworks.test_data import PortalData
 
@@ -166,8 +166,8 @@ class DesktopTestTools:
 
     def _get_test_tools(self) -> TestTools:
         if 'windows' in self.vm.os_type:
-            return TestToolsWindows(vm=self.vm, test_data=self.data)
-        return TestToolsLinux(vm=self.vm, test_data=self.data)
+            return VBoxGuestTestTools(vm=self.vm, test_data=self.data)
+        return SshTestTools(vm=self.vm, test_data=self.data)
 
     def _load_packages_config(self) -> dict:
         """
