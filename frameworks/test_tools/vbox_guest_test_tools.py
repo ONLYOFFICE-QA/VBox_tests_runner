@@ -7,7 +7,10 @@ from .test_tools import TestTools, VboxMachine
 from frameworks.test_data import TestData
 
 
-class TestToolsWindows(TestTools):
+class VBoxGuestTestTools(TestTools):
+    """
+    Run tests on a guest via VirtualBox guestcontrol (FileUtils / VboxUtils).
+    """
 
     def __init__(self, vm: VboxMachine, test_data: TestData):
         super().__init__(vm=vm, test_data=test_data)
@@ -18,7 +21,13 @@ class TestToolsWindows(TestTools):
 
     @retry(max_attempts=2, exception_type=VirtualMachinException)
     def run_vm(self, headless: bool = False) -> None:
-        self.vm.run(headless=False, status_bar=self.data.status_bar)
+        self.vm.run(
+            headless=False if 'windows' in self.vm.os_type.lower() else headless,
+            status_bar=self.data.status_bar,
+            restore_snapshot=self.data.restore_snapshot,
+            snapshot_name=self.data.snapshot_name,
+            configurate=self.data.configurate
+        )
 
     def initialize_libs(self, report, paths) -> None:
         self.report = report
