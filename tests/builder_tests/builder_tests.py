@@ -13,7 +13,7 @@ from frameworks import PackageURLChecker, VersionHandler
 from frameworks.VboxMachine import VboxMachine
 from frameworks.decorators import vm_data_created
 from frameworks.package_checker.report import CSVReport
-from frameworks.test_tools import TestToolsLinux, TestToolsWindows, TestTools
+from frameworks.test_tools import SshTestTools, VBoxGuestTestTools, TestTools
 from frameworks.test_data import PortalData
 
 from .builder_paths import BuilderPaths, BuilderLocalPaths
@@ -184,8 +184,8 @@ class BuilderTests:
         :return: A TestTools object for the current OS.
         """
         if 'windows' in self.vm.os_type:
-            return TestToolsWindows(vm=self.vm, test_data=self.data)
-        return TestToolsLinux(vm=self.vm, test_data=self.data)
+            return VBoxGuestTestTools(vm=self.vm, test_data=self.data)
+        return SshTestTools(vm=self.vm, test_data=self.data)
 
 
     @vm_data_created
