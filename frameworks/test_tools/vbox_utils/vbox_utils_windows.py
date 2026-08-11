@@ -72,17 +72,22 @@ class VboxUtilsWindows:
             try_num -= 1
 
     def _create_dir(self, path: str, try_num: int = 10, interval: int = 1) -> None:
-        _path = path.replace('/', '\\') if self.shell == self._cmd else path # for cmd.exe we need to replace / with \ because with cmd.exe we can't create directories with /
+        _path = path.replace('/', '\\') if self.shell == self._cmd else path
         print(f"[green]|INFO|{self.file.vm.name}| Creating directory: [cyan]{_path}[/]")
         while try_num > 0:
-            out = self._run_cmd(f"mkdir {_path}", stdout=False, stderr=False)
+            out = self.file.create_dir(_path)
 
             if out.returncode == 0:
                 break
 
-            if 'already exists' in out.stderr:
+            stderr = (out.stderr or '').lower()
+            if 'already exists' in stderr or 'exist' in stderr:
                 break
 
+            if not self._is_retryable_error(out.stderr):
+                break
+
+            print(f"[bold yellow]|WARNING|{self.file.vm.name}| Create dir failed, retrying in {interval}s...")
             time.sleep(interval)
             try_num -= 1
 
@@ -90,8 +95,16 @@ class VboxUtilsWindows:
     def _is_retryable_error(stderr: str) -> bool:
         if not stderr:
             return False
-        retryable_patterns = ['File copy failed', 'Guest Additions are not installed or not ready']
-        return any(pattern in stderr for pattern in retryable_patterns)
+        retryable_patterns = [
+            'File copy failed',
+            'Guest Additions are not installed or not ready',
+            'VERR_DUPLICATE',
+            'not able to logon',
+            'VERR_ACCESS_DENIED',
+            'VERR_TIMEOUT',
+            'VERR_PERMISSION_DENIED',
+        ]
+        return any(pattern.lower() in stderr.lower() for pattern in retryable_patterns)
 
     def _get_shell(self) -> Optional[str]:
         if self.paths.remote.run_script_name.endswith(".bat"):
