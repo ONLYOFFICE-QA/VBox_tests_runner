@@ -6,6 +6,7 @@ from typing import Optional
 from vboxwrapper import FileUtils, VirtualMachine
 from rich import print
 
+from frameworks.diagnostics import diagnostics
 from frameworks.test_data import Paths
 
 
@@ -33,12 +34,16 @@ class VboxUtilsWindows:
             self._create_dir(test_dir, try_num=try_num, interval=interval)
 
     def run_script_on_vm(self, status_bar: bool, try_num: int = 10, interval: int = 3):
+        diag = diagnostics()
         server_info = f"{self.file.vm.name}|{self.file.vm.network.get_ip()}"
         line = f"{'-' * 90}"
         print(f"[bold cyan]{line}\n|INFO|{server_info}| Waiting for execution script on VM\n{line}")
 
+        attempt = 0
         while try_num > 0:
-            out = self._run_cmd(self._get_run_script_cmd(), status_bar=status_bar, stdout=status_bar)
+            attempt += 1
+            with diag.phase(f"guest_script_attempt_{attempt}"):
+                out = self._run_cmd(self._get_run_script_cmd(), status_bar=status_bar, stdout=status_bar)
 
             if out.returncode == 0 or not self._is_retryable_error(out.stderr):
                 break
@@ -47,10 +52,14 @@ class VboxUtilsWindows:
             time.sleep(interval)
             try_num -= 1
 
-        print(
-            f"[cyan]{line}\n|INFO|{self.file.vm.name}|Script execution log:\n{line}\n"
-            f"{out.stdout}\n Exit Code: {out.returncode}\n{line}"
-        )
+        diag.log_tail(f"guest script log of {self.file.vm.name}", out.stdout)
+        # Rendering the whole guest log with rich is the last thing done before the machine is
+        # stopped, so its duration is measured separately from the run of the script.
+        with diag.phase("print_guest_script_log"):
+            print(
+                f"[cyan]{line}\n|INFO|{self.file.vm.name}|Script execution log:\n{line}\n"
+                f"{out.stdout}\n Exit Code: {out.returncode}\n{line}"
+            )
 
     def download_report(self, path_from: str, path_to: str) -> bool:
         out = self.file.copy_from(path_from, path_to)

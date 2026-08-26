@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from vboxwrapper import VirtualMachinException
 from frameworks.decorators import retry, vm_data_created
+from frameworks.diagnostics import diagnostics
 
 from .vbox_utils import VboxUtilsVista, VboxUtilsWindows
 from .test_tools import TestTools, VboxMachine
@@ -36,9 +37,16 @@ class VBoxGuestTestTools(TestTools):
 
     @vm_data_created
     def run_test_on_vm(self,  upload_files: list, create_test_dir: list):
-        self.vbox_utils.create_test_dirs(create_test_dir)
-        self.vbox_utils.upload_test_files(upload_files)
-        self.vbox_utils.run_script_on_vm(status_bar=self.data.status_bar)
+        diag = diagnostics()
+
+        with diag.phase("create_test_dirs"):
+            self.vbox_utils.create_test_dirs(create_test_dir)
+
+        with diag.phase("upload_test_files"):
+            self.vbox_utils.upload_test_files(upload_files)
+
+        with diag.phase("run_script_on_vm"):
+            self.vbox_utils.run_script_on_vm(status_bar=self.data.status_bar)
 
     def download_report(self, path_from: str, path_to: str):
         return self.vbox_utils.download_report(path_from, path_to)

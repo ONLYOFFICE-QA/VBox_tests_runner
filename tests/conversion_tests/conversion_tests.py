@@ -9,6 +9,7 @@ from rich import print
 from frameworks import PackageURLChecker, VersionHandler
 from frameworks.VboxMachine import VboxMachine
 from frameworks.decorators import vm_data_created
+from frameworks.diagnostics import diagnostics, install_vbox_probe
 from frameworks.package_checker.report import CSVReport
 from frameworks.test_tools import VBoxGuestTestTools, TestTools
 from tests.conversion_tests.conversion_paths.conversion_local_paths import ConversionLocalPaths
@@ -43,17 +44,38 @@ class ConversionTests:
         :param max_attempts: Maximum number of attempts to run the tests.
         :param interval: Interval between attempts in seconds.
         """
-        if not self.check_package_exists():
-            return
+        diag = diagnostics()
+        diag.start(f"conversion_{self.vm.name}")
+        install_vbox_probe(diag)
+        print(f"[green]|INFO|{self.vm.name}| Diagnostics log: [cyan]{diag.log_path}[/]")
+
+        try:
+            self._run(headless=headless, max_attempts=max_attempts, interval=interval)
+        finally:
+            diag.stop()
+
+    def _run(self, headless: bool, max_attempts: int, interval: int) -> None:
+        """
+        Runs the conversion tests, retrying the whole test when it fails.
+        :param headless: Whether to run the tests in headless mode.
+        :param max_attempts: Maximum number of attempts to run the tests.
+        :param interval: Interval between attempts in seconds.
+        """
+        diag = diagnostics()
+
+        with diag.phase("check_package_exists"):
+            if not self.check_package_exists():
+                return
 
         attempt = 0
         while attempt < max_attempts:
             try:
                 attempt += 1
-                if self.is_host_tests():
-                    self._run_test_on_host()
-                else:
-                    self._run_test_on_vm(headless=headless)
+                with diag.phase(f"attempt_{attempt}_of_{max_attempts}"):
+                    if self.is_host_tests():
+                        self._run_test_on_host()
+                    else:
+                        self._run_test_on_vm(headless=headless)
                 break
 
             except KeyboardInterrupt:
@@ -71,7 +93,8 @@ class ConversionTests:
             finally:
                 if not self.is_host_tests():
                     try:
-                        self.test_tools.stop_vm()
+                        with diag.phase("stop_vm"):
+                            self.test_tools.stop_vm()
                     except Exception as stop_error:
                         print(
                             f"[bold yellow]|WARNING|{self.vm.name}| "
@@ -119,9 +142,16 @@ class ConversionTests:
         Runs a single test on the virtual machine.
         :param headless: Whether to run the test in headless mode.
         """
-        self.test_tools.run_vm(headless=headless)
-        self._initialize_libs()
-        self.test_tools.run_test_on_vm(upload_files=self.get_upload_files(), create_test_dir=[])
+        diag = diagnostics()
+
+        with diag.phase("run_vm"):
+            self.test_tools.run_vm(headless=headless)
+
+        with diag.phase("initialize_libs"):
+            self._initialize_libs()
+
+        with diag.phase("run_test_on_vm"):
+            self.test_tools.run_test_on_vm(upload_files=self.get_upload_files(), create_test_dir=[])
 
     def _run_test_on_host(self) -> None:
         """
