@@ -70,7 +70,13 @@ class ConversionTests:
 
             finally:
                 if not self.is_host_tests():
-                    self.test_tools.stop_vm()
+                    try:
+                        self.test_tools.stop_vm()
+                    except Exception as stop_error:
+                        print(
+                            f"[bold yellow]|WARNING|{self.vm.name}| "
+                            f"stop_vm after attempt failed: {stop_error}"
+                        )
 
     def is_host_tests(self) -> bool:
         return (
