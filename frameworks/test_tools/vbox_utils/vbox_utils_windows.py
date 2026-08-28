@@ -1,18 +1,25 @@
 # -*- coding: utf-8 -*-
 import time
+from os import makedirs
+from os.path import join
 from subprocess import CompletedProcess
 from typing import Optional
 
 from vboxwrapper import FileUtils, VirtualMachine
 from rich import print
+from rich.console import Console
 
 from frameworks.diagnostics import diagnostics
 from frameworks.test_data import Paths
+from frameworks.test_data.paths import LocalPaths
 
 
 class VboxUtilsWindows:
     _cmd = "cmd.exe"
     _powershell = "powershell.exe"
+    # A full conversion run returns tens of megabytes of log. Only the last lines are shown, the
+    # whole log is written to a file instead.
+    _log_console_lines = 300
 
     def __init__(
             self,
@@ -53,13 +60,53 @@ class VboxUtilsWindows:
             try_num -= 1
 
         diag.log_tail(f"guest script log of {self.file.vm.name}", out.stdout)
-        # Rendering the whole guest log with rich is the last thing done before the machine is
-        # stopped, so its duration is measured separately from the run of the script.
         with diag.phase("print_guest_script_log"):
-            print(
-                f"[cyan]{line}\n|INFO|{self.file.vm.name}|Script execution log:\n{line}\n"
-                f"{out.stdout}\n Exit Code: {out.returncode}\n{line}"
+            self._show_script_log(out)
+
+    def _show_script_log(self, out: CompletedProcess) -> None:
+        """
+        Save the log of the script and show its last lines.
+
+        Only the last lines reach the console: rendering the whole log of a full conversion run
+        with rich takes hours and gigabytes of memory, which looks like a hang although the test
+        itself has already finished.
+        :param out: Result of the script run on the guest.
+        """
+        line = f"{'-' * 90}"
+        log_path = self._save_script_log(out.stdout)
+        lines = (out.stdout or '').splitlines()
+        shown = lines[-self._log_console_lines:]
+        counter = f" (last {len(shown)} of {len(lines)} lines)" if len(shown) < len(lines) else ""
+
+        print(f"[cyan]{line}\n|INFO|{self.file.vm.name}|Script execution log{counter}:\n{line}")
+        # Markup and highlighting are off because the log is plain text of the guest, and soft wrap
+        # skips the line wrapping of rich, which is what makes a long log take hours to render.
+        Console(soft_wrap=True).print('\n'.join(shown), markup=False, highlight=False)
+
+        footer = f"[cyan]{line}\n Exit Code: {out.returncode}"
+        if log_path:
+            footer += f"\n Full log: {log_path}"
+        print(f"{footer}\n{line}")
+
+    def _save_script_log(self, stdout: str) -> str | None:
+        """
+        Write the whole log of the script to a file next to the reports.
+        :param stdout: Output collected from the guest.
+        :return: Path of the log file, None when it could not be written.
+        """
+        try:
+            directory = join(LocalPaths.reports_dir, 'guest_logs')
+            makedirs(directory, exist_ok=True)
+            log_path = join(
+                directory,
+                f"{self.file.vm.name}_{time.strftime('%Y%m%d_%H%M%S')}.log"
             )
+            with open(log_path, 'w', encoding='utf-8', errors='replace') as log_file:
+                log_file.write(stdout or '')
+            return log_path
+        except OSError as error:
+            print(f"[bold yellow]|WARNING|{self.file.vm.name}| Unable to save the script log: {error}")
+            return None
 
     def download_report(self, path_from: str, path_to: str) -> bool:
         out = self.file.copy_from(path_from, path_to)
