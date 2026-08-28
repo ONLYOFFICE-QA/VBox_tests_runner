@@ -10,6 +10,7 @@ whether the guest, the VirtualBox API or the host side handling of the collected
 import threading
 import time
 
+from rich import print
 from vboxwrapper import FileUtils, VboxApi, VirtualMachine
 
 _MAX_COMMAND_CHARS = 200
@@ -39,9 +40,8 @@ class GuestOutputStats:
             self._stdout_chars = 0
             self._stderr_chars = 0
             self._read_seconds = 0.0
-            self._tail_calls = 0
-            self._tail_seconds = 0.0
-            self._buffer_chars = 0
+            self._status_bar_calls = 0
+            self._status_bar_seconds = 0.0
             self._last_data = None
             self._status = None
             self._status_read = 0.0
@@ -63,19 +63,17 @@ class GuestOutputStats:
             if chars:
                 self._last_data = time.monotonic()
 
-    def record_tail(self, chars: int, seconds: float) -> None:
+    def record_status_bar(self, seconds: float) -> None:
         """
-        Add a call that cut the last lines out of the output collected so far.
+        Add the time the reader spent on keeping the lines shown by the status bar.
 
-        The number of characters is the size of the buffer the reader keeps in memory, and the time
-        is what the host spends on the buffer instead of on the guest.
-        :param chars: Size of the collected output.
+        The counter tells how much of the run went into the handling of the collected log on the
+        host instead of into the test on the guest.
         :param seconds: Time the call took.
         """
         with self._lock:
-            self._tail_calls += 1
-            self._tail_seconds += seconds
-            self._buffer_chars = chars
+            self._status_bar_calls += 1
+            self._status_bar_seconds += seconds
 
     def needs_status(self) -> bool:
         """
@@ -108,8 +106,8 @@ class GuestOutputStats:
                 f'stdout={self._megabytes(self._stdout_chars)} '
                 f'stderr={self._megabytes(self._stderr_chars)} '
                 f'read_wait={self._read_seconds:.0f}s '
-                f'buffer={self._megabytes(self._buffer_chars)} '
-                f'tail_calls={self._tail_calls} tail_time={self._tail_seconds:.0f}s '
+                f'status_bar_calls={self._status_bar_calls} '
+                f'status_bar_time={self._status_bar_seconds:.0f}s '
                 f'idle={idle} process_status={self._status} '
                 f'elapsed={time.monotonic() - self._started:.0f}s'
             )
@@ -138,9 +136,17 @@ def install(diag) -> None:
         return
     _installed = True
 
-    _wrap_file_utils(diag)
-    _wrap_api(diag)
-    _wrap_virtual_machine(diag)
+    try:
+        _wrap_file_utils(diag)
+        _wrap_api(diag)
+        _wrap_virtual_machine(diag)
+    except Exception as error:  # pylint: disable=broad-except -- diagnostics must not stop a test
+        # vboxwrapper is installed from a branch, so a helper this module wraps can disappear.
+        # Losing the counters is acceptable, losing a test that runs for hours is not.
+        diag.error(f'vboxwrapper instrumentation not installed: {error!r}')
+        print(f"[bold yellow]|WARNING| Diagnostics of the guest output are not available: {error}")
+        return
+
     diag.register_state_provider(stats.summary)
     diag.log('vboxwrapper instrumentation installed')
 
@@ -153,7 +159,7 @@ def _wrap_file_utils(diag) -> None:
     original_run_cmd = FileUtils.run_cmd
     original_read_output = FileUtils._read_output
     original_read_stream = FileUtils._read_stream
-    original_tail = FileUtils._tail
+    original_collect_lines = getattr(FileUtils, '_collect_lines', None)
     original_exit_code = FileUtils._get_exit_code
     original_create_session = FileUtils._create_guest_session
     original_close_session = FileUtils._close_guest_session
@@ -192,10 +198,10 @@ def _wrap_file_utils(diag) -> None:
             stats.record_status(_status(process))
         return data
 
-    def _tail(text: str, max_lines: int) -> str:
+    def _collect_lines(recent_lines, unfinished_line: str, chunk: str) -> str:
         started = time.monotonic()
-        result = original_tail(text, max_lines)
-        stats.record_tail(len(text or ''), time.monotonic() - started)
+        result = original_collect_lines(recent_lines, unfinished_line, chunk)
+        stats.record_status_bar(time.monotonic() - started)
         return result
 
     def _get_exit_code(self, process) -> int:
@@ -224,8 +230,9 @@ def _wrap_file_utils(diag) -> None:
     FileUtils.run_cmd = run_cmd
     FileUtils._read_output = _read_output
     FileUtils._read_stream = _read_stream
-    FileUtils._tail = staticmethod(_tail)
     FileUtils._get_exit_code = _get_exit_code
+    if original_collect_lines is not None:
+        FileUtils._collect_lines = staticmethod(_collect_lines)
     FileUtils._create_guest_session = _create_guest_session
     FileUtils._close_guest_session = _close_guest_session
 
