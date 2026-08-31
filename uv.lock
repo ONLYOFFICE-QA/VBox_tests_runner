@@ -1411,7 +1411,7 @@ requires-dist = [
 [[package]]
 name = "vboxapi"
 version = "1.0"
-source = { git = "https://github.com/l8556/VBoxWrapper.git?subdirectory=vendor%2Fvboxapi&branch=feature%2Finstall-vboxapi-with-uv#49160e34ec31ae94cb41accbc0c83929906b7093" }
+source = { git = "https://github.com/l8556/VBoxWrapper.git?subdirectory=vendor%2Fvboxapi&branch=feature%2Finstall-vboxapi-with-uv#811dee5a6dfc076028f53353de3c6c75190fafa9" }
 dependencies = [
     { name = "packaging" },
     { name = "pywin32", marker = "sys_platform == 'win32'" },
@@ -1420,7 +1420,7 @@ dependencies = [
 [[package]]
 name = "vboxwrapper"
 version = "0.1.0"
-source = { git = "https://github.com/l8556/VBoxWrapper.git?branch=feature%2Finstall-vboxapi-with-uv#49160e34ec31ae94cb41accbc0c83929906b7093" }
+source = { git = "https://github.com/l8556/VBoxWrapper.git?branch=feature%2Finstall-vboxapi-with-uv#811dee5a6dfc076028f53353de3c6c75190fafa9" }
 dependencies = [
     { name = "rich" },
     { name = "vboxapi" },

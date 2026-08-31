@@ -17,6 +17,8 @@ from frameworks.test_data.paths import LocalPaths
 class VboxUtilsWindows:
     _cmd = "cmd.exe"
     _powershell = "powershell.exe"
+    # Cheapest command every shell of every guest understands, used to check the guest answers.
+    _ready_probe = "echo ready"
     # A full conversion run returns tens of megabytes of log. Only the last lines are shown, the
     # whole log is written to a file instead.
     _log_console_lines = 300
@@ -39,6 +41,41 @@ class VboxUtilsWindows:
     def create_test_dirs(self, test_dirs: list, try_num: int = 10, interval: int = 1):
         for test_dir in test_dirs:
             self._create_dir(test_dir, try_num=try_num, interval=interval)
+
+    def wait_guest_ready(self, timeout: int = 300, interval: int = 5) -> bool:
+        """
+        Wait until the guest control service of the Guest Additions accepts processes.
+
+        A user is logged in a while before VBoxService is ready to start anything, so the first
+        upload after a boot fails with "The guest execution service is not ready (yet)".
+        :param timeout: How long to wait in seconds.
+        :param interval: Pause between the attempts in seconds.
+        :return: True when the guest answered, False when the time ran out.
+        """
+        diag = diagnostics()
+        deadline = time.monotonic() + timeout
+        attempt = 0
+
+        while True:
+            attempt += 1
+            out = self._run_cmd(self._ready_probe, status_bar=False, stdout=False, stderr=False)
+            if out.returncode == 0:
+                diag.log(f'guest execution service ready after {attempt} attempt(s)')
+                return True
+
+            if time.monotonic() >= deadline:
+                diag.warning(f'guest execution service not ready after {timeout}s: {out.stderr}')
+                print(
+                    f"[bold yellow]|WARNING|{self.file.vm.name}| The guest execution service is "
+                    f"not ready after {timeout}s, continuing anyway"
+                )
+                return False
+
+            print(
+                f"[green]|INFO|{self.file.vm.name}| Waiting for the guest execution service, "
+                f"attempt {attempt}"
+            )
+            time.sleep(interval)
 
     def run_script_on_vm(self, status_bar: bool, try_num: int = 10, interval: int = 3):
         diag = diagnostics()
@@ -154,6 +191,10 @@ class VboxUtilsWindows:
         retryable_patterns = [
             'File copy failed',
             'Guest Additions are not installed or not ready',
+            # Guest Additions answer this for a while after the boot, before the guest control
+            # service of VBoxService accepts processes.
+            'guest execution service is not ready',
+            'VERR_NOT_READY',
             'VERR_DUPLICATE',
             'not able to logon',
             'VERR_ACCESS_DENIED',

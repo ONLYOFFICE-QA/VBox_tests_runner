@@ -39,6 +39,9 @@ class VBoxGuestTestTools(TestTools):
     def run_test_on_vm(self,  upload_files: list, create_test_dir: list):
         diag = diagnostics()
 
+        with diag.phase("wait_guest_ready"):
+            self.vbox_utils.wait_guest_ready()
+
         with diag.phase("create_test_dirs"):
             self.vbox_utils.create_test_dirs(create_test_dir)
 
