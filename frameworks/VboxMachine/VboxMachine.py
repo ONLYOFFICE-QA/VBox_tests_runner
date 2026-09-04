@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 import re
+
+from host_tools import HostInfo
 from vboxwrapper import VirtualMachine
 
-from frameworks.decorators import vm_is_turn_on, class_cache
-from .vm_data import VmData
+from frameworks.decorators import class_cache, vm_is_turn_on
+
 from .configs import VmConfig
-from host_tools import HostInfo
+from .guest_ip import GuestIp
+from .vm_data import VmData
 
 
 @class_cache
@@ -28,6 +31,7 @@ class VboxMachine:
         self.name = name
         self.vm_config = VmConfig(vm_name=name, config_path=config_path)
         self.vm = VirtualMachine(name)
+        self.guest_ip = GuestIp(vm=self.vm, vm_config=self.vm_config)
         self.data = None
         self.__os_type = None
         self.__adapter_name = None
@@ -43,7 +47,7 @@ class VboxMachine:
 
         :raises ValueError: If IP address or logged user is not available
         """
-        ip = self.vm.network.get_ip()
+        ip = self.guest_ip.get()
         if ip is None:
             raise ValueError("IP address is not available")
 
@@ -148,6 +152,8 @@ class VboxMachine:
         self.vm.run(headless=headless)
         self.vm.network.wait_up(status_bar=status_bar, timeout=timeout)
         self.vm.wait_logged_user(status_bar=status_bar, timeout=timeout)
+        if self.guest_ip.hostonly:
+            self.guest_ip.wait_reachable(timeout=timeout)
         self.create_data()
 
     def configurate(self):
