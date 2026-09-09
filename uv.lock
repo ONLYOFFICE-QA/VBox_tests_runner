@@ -11,15 +11,6 @@ resolution-markers = [
 ]
 
 [[package]]
-name = "aenum"
-version = "3.1.16"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/09/7a/61ed58e8be9e30c3fe518899cc78c284896d246d51381bab59b5db11e1f3/aenum-3.1.16.tar.gz", hash = "sha256:bfaf9589bdb418ee3a986d85750c7318d9d2839c1b1a1d6fe8fc53ec201cf140", size = 137693, upload-time = "2026-01-12T22:34:38.819Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e3/52/6ad8f63ec8da1bf40f96996d25d5b650fdd38f5975f8c813732c47388f18/aenum-3.1.16-py3-none-any.whl", hash = "sha256:9035092855a98e41b66e3d0998bd7b96280e85ceb3a04cc035636138a1943eaf", size = 165627, upload-time = "2025-04-25T03:17:58.89Z" },
-]
-
-[[package]]
 name = "aiohappyeyeballs"
 version = "2.6.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1295,17 +1286,17 @@ dependencies = [
 
 [[package]]
 name = "reportportal-client"
-version = "5.6.5"
+version = "5.7.10"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "aenum" },
     { name = "aiohttp" },
     { name = "certifi" },
     { name = "requests" },
+    { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c6/ba/b5c68832fdc31f6a6a42fb0081bc6ab2421ef952355fdee97ccd458859b3/reportportal_client-5.6.5.tar.gz", hash = "sha256:c927f745e3e4b9f1e146207adf9709651318fcf05e577ffdddb00998262704be", size = 61192, upload-time = "2025-05-05T10:26:09.533Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/40/85/f0cfd61faa1778cebc30a3ccae4dbd5ea6cb5d197b70d62a0a51ffcfe02e/reportportal_client-5.7.10.tar.gz", hash = "sha256:3ee9b12a3aebd4af09f305b0cba1610b27ff4e86622a27a6b73ee37b2dece6af", size = 73138, upload-time = "2026-08-05T12:44:07.075Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/54/db/34d03623a1cc571f207cb5baa706f4360d5f26e06ba1f1aa057ba256a4b0/reportportal_client-5.6.5-py2.py3-none-any.whl", hash = "sha256:b3cc3c71c3748f1759b9893ee660176134f34650d1733fed45a5920806d239fe", size = 80896, upload-time = "2025-05-05T10:26:08.438Z" },
+    { url = "https://files.pythonhosted.org/packages/3b/50/070f9e69a3414d57ff0317987c2fe819c53f9986fe9e4a9956884a1896d9/reportportal_client-5.7.10-py2.py3-none-any.whl", hash = "sha256:08604295bd7590e7b0ba975c58b6b9c79b2ee0c69f795fd9912b88c452bcd07b", size = 88689, upload-time = "2026-08-05T12:44:06.125Z" },
 ]
 
 [[package]]
