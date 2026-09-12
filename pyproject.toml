@@ -19,7 +19,7 @@ dependencies = [
     "aiohttp>=3.14.3",
     "host-tools",
     "telegram",
-    "vboxwrapper",
+    "vboxwrapper[api]",
     "ssh-wrapper",
     "report-portal",
     "s3wrapper",
