@@ -1606,7 +1606,7 @@ dependencies = [
     { name = "s3wrapper" },
     { name = "ssh-wrapper" },
     { name = "telegram" },
-    { name = "vboxwrapper" },
+    { name = "vboxwrapper", extra = ["api"] },
 ]
 
 [package.metadata]
@@ -1629,15 +1629,29 @@ requires-dist = [
     { name = "s3wrapper", git = "https://github.com/l8556/S3Wrapper.git?branch=master" },
     { name = "ssh-wrapper", git = "https://github.com/l8556/SshWrapper.git?branch=master" },
     { name = "telegram", git = "https://github.com/l8556/TelegramApi.git?branch=master" },
-    { name = "vboxwrapper", git = "https://github.com/l8556/VBoxWrapper.git?branch=master" },
+    { name = "vboxwrapper", extras = ["api"], git = "https://github.com/l8556/VBoxWrapper.git?branch=feature%2Finstall-vboxapi-with-uv" },
+]
+
+[[package]]
+name = "vboxapi"
+version = "1.0"
+source = { git = "https://github.com/l8556/VBoxWrapper.git?subdirectory=vendor%2Fvboxapi&branch=feature%2Finstall-vboxapi-with-uv#4760f2eeec7ae0fee7cd70348610a45092f4964e" }
+dependencies = [
+    { name = "packaging" },
+    { name = "pywin32", marker = "sys_platform == 'win32'" },
 ]
 
 [[package]]
 name = "vboxwrapper"
 version = "0.1.0"
-source = { git = "https://github.com/l8556/VBoxWrapper.git?branch=master#a5518d3bc6b6ebc8ced8a705947d2addff9172a9" }
+source = { git = "https://github.com/l8556/VBoxWrapper.git?branch=feature%2Finstall-vboxapi-with-uv#4760f2eeec7ae0fee7cd70348610a45092f4964e" }
 dependencies = [
     { name = "rich" },
+]
+
+[package.optional-dependencies]
+api = [
+    { name = "vboxapi" },
 ]
 
 [[package]]

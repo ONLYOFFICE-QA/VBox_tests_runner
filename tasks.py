@@ -217,7 +217,7 @@ def desktop_test(
             if isinstance(names, list):
                 data.vm_names = names
             data.status_bar = False
-            multiprocess.run(DesktopTest, data, num_processes, 10, headless)
+            multiprocess.run(DesktopTest, data, num_processes, 5, headless)
         else:
             data.status_bar = True
             for vm in Vbox().check_vm_names(names if isinstance(names, list) else [names] if names else data.vm_names):
@@ -226,7 +226,6 @@ def desktop_test(
         report.get_full(data.version)
 
 
-    reset_vbox(c, soft=True)
     if only_portal and not isfile(data.full_report_path):
         raise FileNotFoundError(f"Report file {data.full_report_path} not found")
 
@@ -301,7 +300,6 @@ def builder_test(
             for vm in vms:
                 BuilderTests(vm, data).run(headless=headless)
 
-    reset_vbox(c, soft=True)
     data.report.get_full()
 
     if only_portal and not isfile(report_path):
