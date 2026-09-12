@@ -21,6 +21,9 @@ class PortalManager:
     _START_RETRIES = 30
     _START_RETRY_DELAY = 2
     _skipped_report_lock = threading.Lock()
+    # requests.Session is not thread safe, and a single one is shared by the whole launch,
+    # so concurrent calls corrupt the connection pool ("Response ended prematurely")
+    _rp_lock = threading.RLock()
 
     def __init__(self,
             project_name: str,
@@ -51,8 +54,9 @@ class PortalManager:
 
         :return: List of suite items from Report Portal
         """
-        if self.__suites is None:
-            self.__suites = self.rp.get_suite().get_items_by_type()
+        with self._rp_lock:
+            if self.__suites is None:
+                self.__suites = self.rp.get_suite().get_items_by_type()
         return self.__suites
 
     @property
@@ -73,8 +77,9 @@ class PortalManager:
 
         :return: List of step items from Report Portal
         """
-        if self.__steps_items is None:
-            self.__steps_items = self.rp.get_step().get_items_by_type()
+        with self._rp_lock:
+            if self.__steps_items is None:
+                self.__steps_items = self.rp.get_step().get_items_by_type()
         return self.__steps_items
 
     def __enter__(self):
@@ -119,9 +124,10 @@ class PortalManager:
         :param suite_uuid: UUID of the parent suite
         :param status: Optional status override
         """
-        step = self.rp.get_step()
-        suite_id = self.rp.launch.rp_client.get_id(item_type='suite', uuid=suite_uuid, cache=True)
-        exist_step = self.get_exist_item(self.steps_items, test_name, suite_id)
+        with self._rp_lock:
+            step = self.rp.get_step()
+            suite_id = self.rp.launch.rp_client.get_id(item_type='suite', uuid=suite_uuid, cache=True)
+            exist_step = self.get_exist_item(self.steps_items, test_name, suite_id)
 
         step_uuid = self._start_step_with_retry(step, test_name, suite_uuid, exist_step)
 
@@ -130,21 +136,22 @@ class PortalManager:
             self._save_skipped_test(test_name)
             return
 
-        step.send_log(
-            message=f"Test {test_name} started at {time.strftime('%Y-%m-%d %H:%M:%S')}",
-            level="INFO",
-            item_uuid=step_uuid
-        )
-
-        if log_message and str(log_message).lower() != 'nan':
+        with self._rp_lock:
             step.send_log(
-                message=log_message,
-                level="ERROR" if return_code != 0 else "WARN",
-                item_uuid=step_uuid,
-                print_output=False
+                message=f"Test {test_name} started at {time.strftime('%Y-%m-%d %H:%M:%S')}",
+                level="INFO",
+                item_uuid=step_uuid
             )
 
-        step.finish(return_code=return_code, status=status)
+            if log_message and str(log_message).lower() != 'nan':
+                step.send_log(
+                    message=log_message,
+                    level="ERROR" if return_code != 0 else "WARN",
+                    item_uuid=step_uuid,
+                    print_output=False
+                )
+
+            step.finish(return_code=return_code, status=status)
 
     def _start_step_with_retry(
             self,
@@ -164,12 +171,14 @@ class PortalManager:
         """
         for attempt in range(1, self._START_RETRIES + 1):
             try:
-                uuid = step.start(
-                    name=test_name,
-                    parent_item_id=suite_uuid,
-                    retry=True if exist_step else False,
-                    uuid=exist_step["uuid"] if exist_step else None
-                )
+                # The lock is not held across the retry delay to keep other threads reporting
+                with self._rp_lock:
+                    uuid = step.start(
+                        name=test_name,
+                        parent_item_id=suite_uuid,
+                        retry=True if exist_step else False,
+                        uuid=exist_step["uuid"] if exist_step else None
+                    )
                 if uuid:
                     return uuid
 
@@ -211,21 +220,22 @@ class PortalManager:
         :param parent_suite_uuid: Optional UUID of parent suite
         :return: Suite UUID
         """
-        cache_key = f"{suite_name}_{parent_suite_uuid or self.rp.launch.uuid}"
+        with self._rp_lock:
+            cache_key = f"{suite_name}_{parent_suite_uuid or self.rp.launch.uuid}"
 
-        if cache_key not in self._suite_cache:
-            suite = self.rp.get_suite()
-            parent_id = suite.get_id(parent_suite_uuid) if parent_suite_uuid else None
-            exists_suite = self.get_exist_item(self.suites, suite_name, parent_id)
+            if cache_key not in self._suite_cache:
+                suite = self.rp.get_suite()
+                parent_id = suite.get_id(parent_suite_uuid) if parent_suite_uuid else None
+                exists_suite = self.get_exist_item(self.suites, suite_name, parent_id)
 
-            if exists_suite:
-                self._suite_cache[cache_key] = exists_suite["uuid"]
-            else:
-                self._suite_cache[cache_key] = suite.create(
-                    name=suite_name, parent_item_id=parent_suite_uuid
-                )
+                if exists_suite:
+                    self._suite_cache[cache_key] = exists_suite["uuid"]
+                else:
+                    self._suite_cache[cache_key] = suite.create(
+                        name=suite_name, parent_item_id=parent_suite_uuid
+                    )
 
-        return self._suite_cache[cache_key]
+            return self._suite_cache[cache_key]
 
     @staticmethod
     def get_exist_item(items: list, target_name: str, parent_id: Optional[str] = None) -> Optional[dict]:
