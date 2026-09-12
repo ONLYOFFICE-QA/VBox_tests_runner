@@ -11,7 +11,7 @@ dependencies = [
     "paramiko>=5",
     "pandas>=3.0.5",
     "elevate>=0.1.3",
-    "ruff>=0.16.3",
+    "ruff>=0.16.7",
     "pydantic>=2.13.4",
     "pyppmd>=1.2.0",
     "inflate64>=1.0.3",
@@ -34,3 +34,8 @@ vboxwrapper = { git = "https://github.com/l8556/VBoxWrapper.git", branch = "mast
 ssh-wrapper = { git = "https://github.com/l8556/SshWrapper.git", branch = "master" }
 report-portal = { git = "https://github.com/l8556/report_portal.git", branch = "master" }
 s3wrapper = { git = "https://github.com/l8556/S3Wrapper.git", branch = "master" }
+
+[tool.ruff.lint]
+# Ruff 0.16 grew its implicit default set from 59 to 413 rules, so the selection
+# is pinned here instead of relying on whatever the installed version defaults to.
+select = ["E4", "E7", "E9", "F"]
