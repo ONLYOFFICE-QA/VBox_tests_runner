@@ -26,6 +26,18 @@
         }
       ]
     },
+    "Debian11": {
+      "network": [
+        {
+          "adapter_number": 1,
+          "connect_type": "nat"
+        },
+        {
+          "adapter_number": 2,
+          "connect_type": "hostonly"
+        }
+      ]
+    },
     "Windows11": {
       "network": [
         {
