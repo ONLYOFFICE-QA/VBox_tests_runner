@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 from vboxwrapper import VirtualMachinException
 from frameworks.decorators import retry, vm_data_created
+from frameworks.diagnostics import diagnostics
 
 from .vbox_utils import VboxUtilsVista, VboxUtilsWindows
 from .test_tools import TestTools, VboxMachine
 from frameworks.test_data import TestData
 
 
-class TestToolsWindows(TestTools):
+class VBoxGuestTestTools(TestTools):
+    """
+    Run tests on a guest via VirtualBox guestcontrol (FileUtils / VboxUtils).
+    """
 
     def __init__(self, vm: VboxMachine, test_data: TestData):
         super().__init__(vm=vm, test_data=test_data)
@@ -18,7 +22,13 @@ class TestToolsWindows(TestTools):
 
     @retry(max_attempts=2, exception_type=VirtualMachinException)
     def run_vm(self, headless: bool = False) -> None:
-        self.vm.run(headless=False, status_bar=self.data.status_bar)
+        self.vm.run(
+            headless=False if 'windows' in self.vm.os_type.lower() else headless,
+            status_bar=self.data.status_bar,
+            restore_snapshot=self.data.restore_snapshot,
+            snapshot_name=self.data.snapshot_name,
+            configurate=self.data.configurate
+        )
 
     def initialize_libs(self, report, paths) -> None:
         self.report = report
@@ -27,9 +37,19 @@ class TestToolsWindows(TestTools):
 
     @vm_data_created
     def run_test_on_vm(self,  upload_files: list, create_test_dir: list):
-        self.vbox_utils.create_test_dirs(create_test_dir)
-        self.vbox_utils.upload_test_files(upload_files)
-        self.vbox_utils.run_script_on_vm(status_bar=self.data.status_bar)
+        diag = diagnostics()
+
+        with diag.phase("wait_guest_ready"):
+            self.vbox_utils.wait_guest_ready()
+
+        with diag.phase("create_test_dirs"):
+            self.vbox_utils.create_test_dirs(create_test_dir)
+
+        with diag.phase("upload_test_files"):
+            self.vbox_utils.upload_test_files(upload_files)
+
+        with diag.phase("run_script_on_vm"):
+            self.vbox_utils.run_script_on_vm(status_bar=self.data.status_bar)
 
     def download_report(self, path_from: str, path_to: str):
         return self.vbox_utils.download_report(path_from, path_to)
