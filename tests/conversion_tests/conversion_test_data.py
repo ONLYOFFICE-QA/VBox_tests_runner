@@ -146,7 +146,5 @@ class ConversionTestData(TestData):
 
         if self.errors_only is False:
             args.append("--no-errors-only")
-        else:
-            args.append("--errors-only")
 
         return " ".join(args)
