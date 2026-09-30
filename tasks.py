@@ -46,6 +46,7 @@ def conversion_test(
     quick_check: bool = False,
     x2t_limits: Optional[int] = None,
     headless: bool = False,
+    errors_only: bool = True,
     ):
     """
     Run conversion tests.
@@ -60,6 +61,8 @@ def conversion_test(
     :param env_off: Disable environment setup
     :param quick_check: Run quick check mode
     :param x2t_limits: X2T process limits
+    :param errors_only: x2ttester reports only failed conversions;
+        --no-errors-only reports every conversion and sends the full report zipped
     """
     test_data = ConversionTestData(
         version=version,
@@ -73,6 +76,7 @@ def conversion_test(
         x2t_limits=x2t_limits,
         check_error=True,
         out_x2ttester_param=True,
+        errors_only=errors_only,
     )
     test_data.status_bar = True
 

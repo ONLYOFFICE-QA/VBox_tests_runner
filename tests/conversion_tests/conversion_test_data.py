@@ -24,6 +24,7 @@ class ConversionTestData(TestData):
     :param x2t_limits: X2T process limits
     :param check_error: Check for errors mode
     :param out_x2ttester_param: Additional x2ttester output parameters
+    :param errors_only: x2ttester reports only failed conversions (False passes --no-errors-only)
     """
     version: str
     config_path: str
@@ -36,6 +37,7 @@ class ConversionTestData(TestData):
     x2t_limits: Optional[int] = None
     check_error: bool = False
     out_x2ttester_param: bool = False
+    errors_only: bool = True
     __status_bar: bool | None = None
     __config = None
     __restore_snapshot: bool = True
@@ -141,5 +143,8 @@ class ConversionTestData(TestData):
 
         if self.out_x2ttester_param:
             args.append("--out-x2ttester-param")
+
+        if self.errors_only is False:
+            args.append("--no-errors-only")
 
         return " ".join(args)
