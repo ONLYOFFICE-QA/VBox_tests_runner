@@ -144,8 +144,9 @@ class ConversionTestData(TestData):
         if self.out_x2ttester_param:
             args.append("--out-x2ttester-param")
 
-        if not self.errors_only:
+        if self.errors_only is False:
             args.append("--no-errors-only")
-        
+        else:
+            args.append("--errors-only")
 
         return " ".join(args)
