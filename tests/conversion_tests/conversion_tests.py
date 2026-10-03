@@ -1,16 +1,24 @@
 # -*- coding: utf-8 -*-
+import os
+import re
+import sys
 import time
+from datetime import datetime
+from os.path import dirname, join
 from pathlib import Path
+from tempfile import gettempdir
 from typing import Optional
 
 from host_tools import File, HostInfo
 from rich import print
+from telegram import Telegram
 
 from frameworks import PackageURLChecker, VersionHandler
 from frameworks.VboxMachine import VboxMachine
 from frameworks.decorators import vm_data_created
+from frameworks.diagnostics import diagnostics, install_vbox_probe
 from frameworks.package_checker.report import CSVReport
-from frameworks.test_tools import TestToolsLinux, TestTools
+from frameworks.test_tools import VBoxGuestTestTools, TestTools
 from tests.conversion_tests.conversion_paths.conversion_local_paths import ConversionLocalPaths
 
 from .conversion_paths import ConversionPaths
@@ -43,17 +51,38 @@ class ConversionTests:
         :param max_attempts: Maximum number of attempts to run the tests.
         :param interval: Interval between attempts in seconds.
         """
-        if not self.check_package_exists():
-            return
+        diag = diagnostics()
+        diag.start(f"conversion_{self.vm.name}")
+        install_vbox_probe(diag)
+        print(f"[green]|INFO|{self.vm.name}| Diagnostics log: [cyan]{diag.log_path}[/]")
+
+        try:
+            self._run(headless=headless, max_attempts=max_attempts, interval=interval)
+        finally:
+            diag.stop()
+
+    def _run(self, headless: bool, max_attempts: int, interval: int) -> None:
+        """
+        Runs the conversion tests, retrying the whole test when it fails.
+        :param headless: Whether to run the tests in headless mode.
+        :param max_attempts: Maximum number of attempts to run the tests.
+        :param interval: Interval between attempts in seconds.
+        """
+        diag = diagnostics()
+
+        with diag.phase("check_package_exists"):
+            if not self.check_package_exists():
+                return
 
         attempt = 0
         while attempt < max_attempts:
             try:
                 attempt += 1
-                if self.is_host_tests():
-                    self._run_test_on_host()
-                else:
-                    self._run_test_on_vm(headless=headless)
+                with diag.phase(f"attempt_{attempt}_of_{max_attempts}"):
+                    if self.is_host_tests():
+                        self._run_test_on_host()
+                    else:
+                        self._run_test_on_vm(headless=headless)
                 break
 
             except KeyboardInterrupt:
@@ -70,7 +99,14 @@ class ConversionTests:
 
             finally:
                 if not self.is_host_tests():
-                    self.test_tools.stop_vm()
+                    try:
+                        with diag.phase("stop_vm"):
+                            self.test_tools.stop_vm()
+                    except Exception as stop_error:
+                        print(
+                            f"[bold yellow]|WARNING|{self.vm.name}| "
+                            f"stop_vm after attempt failed: {stop_error}"
+                        )
 
     def is_host_tests(self) -> bool:
         return (
@@ -113,9 +149,16 @@ class ConversionTests:
         Runs a single test on the virtual machine.
         :param headless: Whether to run the test in headless mode.
         """
-        self.test_tools.run_vm(headless=headless)
-        self._initialize_libs()
-        self.test_tools.run_test_on_vm(upload_files=self.get_upload_files(), create_test_dir=[])
+        diag = diagnostics()
+
+        with diag.phase("run_vm"):
+            self.test_tools.run_vm(headless=headless)
+
+        with diag.phase("initialize_libs"):
+            self._initialize_libs()
+
+        with diag.phase("run_test_on_vm"):
+            self.test_tools.run_test_on_vm(upload_files=self.get_upload_files(), create_test_dir=[])
 
     def _run_test_on_host(self) -> None:
         """
@@ -132,7 +175,84 @@ class ConversionTests:
 
         executer = "powershell.exe " if self.host.is_windows else ""
         command = f"cd {local_paths.x2ttesting_dir} && {executer}{self.data.generate_run_command()}"
-        sb.call(command, shell=True)
+        log_path = self._get_host_run_log_path()
+        return_code = self._run_with_log(command, log_path)
+
+        if return_code != 0:
+            print(
+                f"[bold red]|ERROR|{self.vm.name}| Conversion tests failed with exit code {return_code}. "
+                f"Log: [cyan]{log_path}[/]"
+            )
+            self._send_host_failure_to_tg(return_code, log_path)
+
+    def _get_host_run_log_path(self) -> str:
+        """
+        Returns the path of the log file for the conversion run on the host.
+        :return: Path to the log file next to the diagnostics log, or in the temp directory.
+        """
+        log_dir = dirname(diagnostics().log_path) if diagnostics().log_path else gettempdir()
+        return join(log_dir, f"conversion_{self.vm.name}_{datetime.now():%Y%m%d_%H%M%S}_output.log")
+
+    @staticmethod
+    def _run_with_log(command: str, log_path: str) -> int:
+        """
+        Runs the command, streaming its output to the console and saving it to the log file.
+        :param command: Command to run.
+        :param log_path: Path to the log file.
+        :return: Exit code of the command.
+        """
+        env = {**os.environ, "PYTHONUTF8": "1", "FORCE_COLOR": "1", "TTY_COMPATIBLE": "1"}
+        with open(log_path, 'wb') as log, sb.Popen(
+                command, shell=True, stdout=sb.PIPE, stderr=sb.STDOUT, env=env
+        ) as process:
+            while chunk := process.stdout.read1(4096):
+                sys.stdout.buffer.write(chunk)
+                sys.stdout.buffer.flush()
+                log.write(chunk)
+            return_code = process.wait()
+
+        with open(log_path, 'r', encoding='utf-8', errors='replace') as log:
+            text = re.sub(r'\x1b\[[0-9;?]*[A-Za-z]', '', log.read())
+        with open(log_path, 'w', encoding='utf-8') as log:
+            log.write(text)
+
+        return return_code
+
+    def _send_host_failure_to_tg(self, return_code: int, log_path: str) -> None:
+        """
+        Sends a message about the failed conversion run with the log to Telegram.
+        :param return_code: Exit code of the conversion run.
+        :param log_path: Path to the log file.
+        """
+        if not self.data.telegram:
+            return
+
+        caption = (
+            f"Conversion tests failed on version: `{self.data.version}`\n\n"
+            f"VM: `{self.vm.name}`\n"
+            f"Exit code: `{return_code}`\n"
+            f"Error: `{self._get_last_error(log_path)}`\n"
+            f"Host: `{self.host.name(pretty=True)} {self.host.arch}`"
+        )
+        try:
+            Telegram(token=self.data.tg_token, chat_id=self.data.tg_chat_id).send_document(log_path, caption=caption)
+        except Exception as e:
+            print(f"[bold red]|ERROR|{self.vm.name}| Failed to send the conversion failure to Telegram: {e}")
+
+    @staticmethod
+    def _get_last_error(log_path: str, max_length: int = 500) -> str:
+        """
+        Returns the last error line from the log file.
+        :param log_path: Path to the log file.
+        :param max_length: Maximum length of the returned line.
+        :return: The last exception line, or the last non-empty line if there is none.
+        """
+        with open(log_path, 'r', encoding='utf-8', errors='replace') as log:
+            lines = [line.strip() for line in log if line.strip()]
+
+        errors = [line for line in lines if re.match(r'^[\w.]+(Error|Exception)\b', line)]
+        error = (errors or lines or ['Unknown error'])[-1]
+        return error.replace('`', "'")[:max_length]
 
     def _initialize_libs(self) -> None:
         """
@@ -160,7 +280,7 @@ class ConversionTests:
         """
         self.data.restore_snapshot = False
         self.data.configurate = False
-        return TestToolsLinux(vm=self.vm, test_data=self.data)
+        return VBoxGuestTestTools(vm=self.vm, test_data=self.data)
 
     @vm_data_created
     def get_upload_files(self) -> list[tuple[str, str]]:
