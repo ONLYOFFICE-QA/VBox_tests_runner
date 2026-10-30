@@ -1588,7 +1588,7 @@ dependencies = [
 
 [[package]]
 name = "reportportal-client"
-version = "5.7.11"
+version = "5.7.12"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -1596,9 +1596,9 @@ dependencies = [
     { name = "requests" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/47/a6/494e50c44890434b22753fe4025342f9f4a38edd0e7258010d61fc288f98/reportportal_client-5.7.11.tar.gz", hash = "sha256:26b62e7c2a9d377745d5a3bcb5bc9a44b914bf23e06c405582436129533f076f", size = 73232, upload-time = "2026-10-20T09:05:49.77Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/26/d1/1215b1dca288dfbeda4db036b037135f70c9fd1354e90afb7dee84d277fa/reportportal_client-5.7.12.tar.gz", hash = "sha256:a8b5688f94d53955522393e969ecad2ae37a9603fa301d984a696bae7cb16134", size = 73228, upload-time = "2026-10-26T10:48:53.306Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0e/d8/1455a9fe287f6549af24ff9a29a9d71d23918a5bd25d2b778ad28084782d/reportportal_client-5.7.11-py2.py3-none-any.whl", hash = "sha256:e124f32f6e3939b8284bf7014d4fd49924deee8c031691338566e7c9c6ce7506", size = 88701, upload-time = "2026-10-20T09:05:48.609Z" },
+    { url = "https://files.pythonhosted.org/packages/27/ff/2ca9fb4623622c5c02dc6fe4464c7290b8fbdd9d8129bcc84dce22734803/reportportal_client-5.7.12-py2.py3-none-any.whl", hash = "sha256:fac257139e983af713cbc03cc52c705237f7e736a8631aa48fdf3967d69a01c6", size = 88709, upload-time = "2026-10-26T10:48:52.299Z" },
 ]
 
 [[package]]
