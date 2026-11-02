@@ -10,7 +10,10 @@ from .ssh_connection import SSHConnection, LinuxScriptDemon
 from frameworks.test_data import TestData
 
 
-class TestToolsLinux(TestTools):
+class SshTestTools(TestTools):
+    """
+    Run tests on a guest via SSH/SFTP and a systemd helper service.
+    """
 
     def __init__(self, vm: VboxMachine, test_data: TestData):
         super().__init__(vm=vm, test_data=test_data)

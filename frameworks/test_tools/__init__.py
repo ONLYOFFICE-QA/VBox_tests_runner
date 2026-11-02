@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from .test_tools_linux import TestToolsLinux
-from .test_tools_windows import TestToolsWindows
+from .ssh_test_tools import SshTestTools
+from .vbox_guest_test_tools import VBoxGuestTestTools
 from .test_tools import TestTools
 
-__all__ = ["TestToolsLinux", "TestToolsWindows", "TestTools"]
+__all__ = ["SshTestTools", "VBoxGuestTestTools", "TestTools"]

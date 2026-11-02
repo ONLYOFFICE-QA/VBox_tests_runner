@@ -27,4 +27,7 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run pytest ./tests/unit
+          # vboxapi is built from the SDK of a locally installed VirtualBox, which the runner
+          # has none of. The unit tests never reach the VirtualBox API, so it is left out.
+          uv sync --locked --no-install-package vboxapi
+          uv run --no-sync pytest ./tests/unit
