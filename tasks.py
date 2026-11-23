@@ -30,7 +30,11 @@ from tests import (
     DesktopTest,
     DesktopTestData,
     ConversionTestData,
-    ConversionTests
+    ConversionTests,
+    DesktopPuppeteerTest,
+    PuppeteerTestData,
+    PuppeteerRepo,
+    PuppeteerReport,
 )
 
 @task
@@ -248,6 +252,85 @@ def desktop_test(
     if len(error_vms) > 0:
         print(f"[red]|ERROR| Tests for the following VMs have errors: {error_vms}")
     else:
+        print("[green]All tests passed![/]")
+
+
+@task
+def desktop_pp_test(
+    c,
+    version: Optional[str] = None,
+    name: Optional[str | List[str]] = None,
+    processes: Optional[int] = None,
+    suite: Optional[str] = None,
+    test_path: Optional[str] = None,
+    headless: bool = False,
+    telegram: bool = False,
+    only_report: bool = False,
+):
+    """
+    Run Dep.Tests/puppeteer tests on DesktopEditors (run.py --host native) on VMs and collect the report.
+
+    :param c: Context (invoke requirement)
+    :param version: Desktop Editors build to test, e.g. 10.0.3.15 (downloaded by run.py on each VM)
+    :param name: VM name or a list of names like "['Windows10','Ubuntu22']" (optional)
+    :param processes: Number of parallel processes
+    :param suite: Suite of test-suites/native/ (daily, hourly); default from config
+    :param test_path: Test file or folder relative to puppeteer/tests, instead of a suite
+    :param headless: Run Linux VMs in headless mode
+    :param telegram: Send the report to Telegram
+    :param only_report: Do not run tests, only merge the VM reports and send them
+    """
+    num_processes = int(processes) if processes else 1
+    names = _parse_names(name)
+
+    data = PuppeteerTestData(
+        version=version or Prompt.ask("[red]Please enter version"),
+        config_path=join(getcwd(), "desktop_puppeteer_tests_config.json"),
+        suite=suite,
+        test_path=test_path,
+        telegram=telegram,
+    )
+    if names:
+        data.vm_names = names if isinstance(names, list) else [names]
+
+    if not only_report:
+        data.vm_names = list(Vbox().check_vm_names(data.vm_names))
+        PuppeteerRepo(
+            dep_test_repo=data.dep_test_repo,
+            pp_files_repo=data.pp_files_repo,
+            document_formats_repo=data.document_formats_repo,
+        ).prepare(
+            dep_test_branch=data.dep_test_branch,
+            pp_files_branch=data.pp_files_branch,
+            document_formats_branch=data.document_formats_branch,
+        )
+
+        if num_processes > 1 and len(data.vm_names) > 1:
+            data.status_bar = False
+            multiprocess.run(DesktopPuppeteerTest, data, num_processes, 10, headless)
+        else:
+            data.status_bar = True
+            for vm in data.vm_names:
+                try:
+                    DesktopPuppeteerTest(vm, data).run(headless=headless)
+                except Exception as e:
+                    print(f"[red]|ERROR|{vm}| {e}")
+
+    report = PuppeteerReport(data.full_report_path)
+    if not report.get_full(str(data.version)):
+        return
+
+    print(f"[green]|INFO| Full report: [cyan]{report.path}[/]")
+    if telegram:
+        report.send_to_tg(data=data)
+
+    error_vms = report.get_error_vm_list()
+    missing_vm_names = report.get_missing_vm_names(data.vm_names)
+    if missing_vm_names:
+        print(f"[red]|ERROR| The following VMs are missing in the report: {missing_vm_names}")
+    if error_vms:
+        print(f"[red]|ERROR| Tests for the following VMs have errors: {error_vms}")
+    elif not missing_vm_names:
         print("[green]All tests passed![/]")
 
 

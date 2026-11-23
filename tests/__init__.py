@@ -10,6 +10,11 @@ from .desktop_tests import DesktopReport
 from .conversion_tests import ConversionTests
 from .conversion_tests import ConversionTestData
 
+from .desktop_puppeteer_tests import DesktopPuppeteerTest
+from .desktop_puppeteer_tests import PuppeteerTestData
+from .desktop_puppeteer_tests import PuppeteerRepo
+from .desktop_puppeteer_tests import PuppeteerReport
+
 __all__ = [
     "BuilderTests",
     "BuilderTestData",
@@ -19,4 +24,8 @@ __all__ = [
     "DesktopReport",
     "ConversionTests",
     "ConversionTestData",
+    "DesktopPuppeteerTest",
+    "PuppeteerTestData",
+    "PuppeteerRepo",
+    "PuppeteerReport",
 ]
