@@ -94,7 +94,9 @@ class VboxUtilsWindows:
             return self.paths.remote.script_path
 
         if self.paths.remote.run_script_name.endswith(".ps1"):
-            return f"-ExecutionPolicy Bypass -File '{self.paths.remote.script_path}'"
+            # vboxwrapper runs `powershell.exe "<cmd>"` inside powershell.exe, so the guest parses
+            # `powershell.exe <cmd>`: <cmd> holds the arguments of a nested powershell.exe.
+            return f"-ExecutionPolicy Bypass -File '{self.paths.remote.script_path}'; exit $LASTEXITCODE"
 
         raise ValueError("Unsupported script type.")
 

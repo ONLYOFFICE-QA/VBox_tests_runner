@@ -95,7 +95,9 @@ class RunScript:
         drives the Desktop Editors app (run.py sets it only after its own npm install).
         PYTHONIOENCODING=utf-8 and, in PowerShell, a UTF-8 console: the output of run.py reaches the log as
         UTF-8 whatever the code page of the VM (PowerShell decodes native output with the console encoding).
-        On Linux the app needs the desktop session of the logged user: the script runs as a systemd service.
+        On Linux the app needs the desktop session of the logged user: the script runs as a systemd service, so
+        XDG_RUNTIME_DIR and the X authority file of the session are found here (``~/.Xauthority``, GDM, Xwayland
+        of GNOME, SDDM).
         """
         env = {'CI': 'true', 'PUPPETEER_SKIP_DOWNLOAD': 'true', 'PYTHONIOENCODING': 'utf-8'}
         if self.is_ps1:
@@ -106,7 +108,13 @@ class RunScript:
         return [
             *[f"export {name}={value}" for name, value in env.items()],
             "export DISPLAY=${DISPLAY:-:0}",
-            'if [ -z "${XAUTHORITY:-}" ] && [ -f "$HOME/.Xauthority" ]; then export XAUTHORITY="$HOME/.Xauthority"; fi',
+            'uid=$(id -u)',
+            'if [ -z "${XDG_RUNTIME_DIR:-}" ] && [ -d "/run/user/$uid" ]; then export XDG_RUNTIME_DIR="/run/user/$uid"; fi',
+            'if [ -z "${XAUTHORITY:-}" ]; then',
+            'for auth in "$HOME/.Xauthority" "/run/user/$uid/gdm/Xauthority" /run/user/$uid/.mutter-Xwaylandauth.* /tmp/xauth_*; do',
+            'if [ -f "$auth" ] && [ -O "$auth" ]; then export XAUTHORITY="$auth"; break; fi',
+            'done',
+            'fi',
         ]
 
     def get_run_tests_commands(self) -> list[str]:
