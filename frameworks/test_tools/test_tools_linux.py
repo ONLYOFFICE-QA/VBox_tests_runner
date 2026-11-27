@@ -5,6 +5,7 @@ from ssh_wrapper import Ssh, Sftp, ServerData
 
 from frameworks.decorators import retry, vm_data_created
 
+from .exceptions import VirtualMachinePoweredOff
 from .test_tools import TestTools, VboxMachine
 from .ssh_connection import SSHConnection, LinuxScriptDemon
 from frameworks.test_data import TestData
@@ -36,8 +37,11 @@ class TestToolsLinux(TestTools):
         self.paths = paths
         self._initialize_linux_demon()
 
-    @retry(max_attempts=3, interval=10)
+    # A VM that stopped running (VirtualMachinePoweredOff) ends the retries at once: every SSH attempt to it would
+    # wait out the connection timeout of ssh_wrapper (300 s) in vain; the test's attempt loop starts it again.
+    @retry(max_attempts=3, interval=10, abort_on=(VirtualMachinePoweredOff,))
     def run_test_on_vm(self, upload_files: list, create_test_dir: list):
+        self.ensure_vm_running()
         self._clean_known_hosts(self.vm.data.ip)
 
         with Ssh(self.server) as ssh, Sftp(self.server, ssh.connection) as sftp:
@@ -46,10 +50,15 @@ class TestToolsLinux(TestTools):
             connect.create_test_dirs(self._get_create_dir(create_test_dir))
             connect.upload_test_files(self._get_linux_upload_files(upload_files))
             connect.start_my_service(self.linux_demon.start_demon_commands())
-            connect.wait_execute_service(status_bar=self.data.status_bar, interval=60 if not self.data.status_bar else 1)
+            connect.wait_execute_service(
+                status_bar=self.data.status_bar,
+                interval=60 if not self.data.status_bar else 1,
+                vm_is_running=self.is_vm_running
+            )
 
-    @retry(max_attempts=3, interval=10)
+    @retry(max_attempts=3, interval=10, abort_on=(VirtualMachinePoweredOff,))
     def download_report(self, path_from: str, path_to: str) -> bool:
+        self.ensure_vm_running()
         with Ssh(self.server) as ssh, Sftp(self.server, ssh.connection) as sftp:
             return SSHConnection(ssh=ssh, sftp=sftp).download_report(path_from, path_to)
 

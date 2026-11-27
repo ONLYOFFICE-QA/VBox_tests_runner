@@ -274,9 +274,9 @@ def desktop_pp_test(
     :param version: Desktop Editors build to test, e.g. 10.0.3.15 (downloaded by run.py on each VM)
     :param name: VM name or a list of names like "['Windows10','Ubuntu22']" (optional)
     :param processes: Number of parallel processes
-    :param suite: Suite of test-suites/native/ (daily, hourly); default from config
+    :param suite: Suite of test-suites/native/ (daily, hourly): run.py --host native --suite <suite>; default from config
     :param test_path: Test file or folder relative to puppeteer/tests, instead of a suite
-    :param headless: Run Linux VMs in headless mode
+    :param headless: Run Linux VMs without a VirtualBox window (Windows VMs always show one)
     :param telegram: Send the report to Telegram
     :param only_report: Do not run tests, only merge the VM reports and send them
     """
@@ -303,6 +303,7 @@ def desktop_pp_test(
             dep_test_branch=data.dep_test_branch,
             pp_files_branch=data.pp_files_branch,
             document_formats_branch=data.document_formats_branch,
+            suite=None if data.test_path else data.suite,
         )
 
         if num_processes > 1 and len(data.vm_names) > 1:

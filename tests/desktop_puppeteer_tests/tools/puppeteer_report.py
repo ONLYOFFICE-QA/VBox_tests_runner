@@ -129,7 +129,8 @@ class PuppeteerReport:
 
     def send_to_tg(self, data) -> None:
         """
-        Send the merged report to Telegram with a per-VM summary in the caption, and the failed tests apart.
+        Send one message to each chat: the merged report and, when tests failed, the failed tests only, as one
+        group of files with a per-VM summary in the caption. A report chat that is the main chat gets it once.
 
         :param data: PuppeteerTestData
         """
@@ -138,12 +139,13 @@ class PuppeteerReport:
 
         caption = self.get_caption(data)
         errors_report = self._write_errors_only()
-        chat_ids = [data.tg_chat_id] + ([data.tg_report_chat_id] if data.tg_report_chat_id else [])
-        for chat_id in chat_ids:
+        files = [self.path] + ([errors_report] if errors_report else [])
+        for chat_id in dict.fromkeys(filter(None, (data.tg_chat_id, data.tg_report_chat_id))):
             tg = Telegram(token=data.tg_token, chat_id=chat_id)
-            tg.send_document(self.path, caption=caption)
-            if errors_report:
-                tg.send_document(errors_report, caption=f"Failed tests on version: `{data.version}`")
+            if len(files) > 1:
+                tg.send_media_group(list(files), caption=caption)
+            else:
+                tg.send_document(self.path, caption=caption)
 
     def get_caption(self, data) -> str:
         df = self.read()

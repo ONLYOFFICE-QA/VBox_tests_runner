@@ -13,6 +13,8 @@ from frameworks import MyConsole
 
 from frameworks.VboxMachine import VboxMachine
 
+from .exceptions import VirtualMachinePoweredOff
+
 console = MyConsole().console
 print = console.print
 
@@ -98,6 +100,25 @@ class TestTools(ABC):
         Stop the virtual machine.
         """
         self.vm.stop()
+
+    def is_vm_running(self) -> bool:
+        """
+        Check that the VM still runs: a VM whose VirtualBox process crashed is 'aborted'.
+
+        :return: True if the VM is running, False otherwise
+        """
+        return self.vm.vm.power_status()
+
+    def ensure_vm_running(self) -> None:
+        """
+        Raise VirtualMachinePoweredOff when the VM no longer runs, so that a step does not wait on it.
+
+        :raises VirtualMachinePoweredOff: If the VM is not running
+        """
+        if not self.is_vm_running():
+            raise VirtualMachinePoweredOff(
+                f"|ERROR|{self.vm_name}| The virtual machine is not running: {self.vm.vm.get_parameter('VMState')}"
+            )
 
     @property
     def is_windows(self) -> bool:

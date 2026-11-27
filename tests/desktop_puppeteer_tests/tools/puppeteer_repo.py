@@ -3,7 +3,7 @@ import os
 import shutil
 import stat
 import subprocess
-from os.path import isfile, isdir, join
+from os.path import isfile, isdir, join, splitext
 from tempfile import mkdtemp
 from typing import Optional
 
@@ -39,6 +39,7 @@ class PuppeteerRepo:
             dep_test_branch: Optional[str] = None,
             pp_files_branch: Optional[str] = None,
             document_formats_branch: Optional[str] = None,
+            suite: Optional[str] = None,
     ) -> str:
         """
         Clone, assemble and compress Dep.Tests for the VMs.
@@ -46,6 +47,8 @@ class PuppeteerRepo:
         :param dep_test_branch: Branch of Dep.Tests, the default branch when None
         :param pp_files_branch: Branch of pp-files, the default branch when None
         :param document_formats_branch: Branch of document-formats, the default branch when None
+        :param suite: Suite the run starts (``run.py --host native --suite <suite>``): checked in the clone, so a
+            wrong name fails here and not on every VM after its start
         :return: Path to the created archive
         """
         work_dir = mkdtemp(prefix='puppeteer_')
@@ -54,6 +57,8 @@ class PuppeteerRepo:
         document_formats_path = join(work_dir, 'document-formats')
         try:
             self._clone(self.dep_test_repo, dep_test_path, dep_test_branch)
+            if suite:
+                self.check_suite(join(dep_test_path, 'puppeteer'), suite)
             self._remove_tree(pp_files_path)
             self._clone(self.pp_files_repo, pp_files_path, pp_files_branch)
             self._clone(self.document_formats_repo, document_formats_path, document_formats_branch)
@@ -64,6 +69,23 @@ class PuppeteerRepo:
         finally:
             self._remove_tree(work_dir)
         return self.local_path.dep_test_archive
+
+    @staticmethod
+    def check_suite(puppeteer_path: str, suite: str) -> None:
+        """
+        The native host reads a suite from ``test-suites/native/<suite>.json`` (``daily``, ``hourly``).
+
+        :raises ValueError: No such suite; the message lists the suites there are
+        """
+        suites_dir = join(puppeteer_path, 'test-suites', 'native')
+        if isfile(join(suites_dir, f"{suite}.json")):
+            return
+        names = sorted(splitext(name)[0] for name in os.listdir(suites_dir) if name.endswith('.json')) \
+            if isdir(suites_dir) else []
+        raise ValueError(
+            f"[red]|ERROR| No suite '{suite}' in test-suites/native of Dep.Tests, "
+            f"there are: {', '.join(names) or 'none'}"
+        )
 
     def _clone(self, repo: str, path: str, branch: Optional[str]) -> None:
         print(f"[green]|INFO| Cloning [cyan]{repo}[/] {('branch ' + branch) if branch else ''} to [cyan]{path}[/]")
