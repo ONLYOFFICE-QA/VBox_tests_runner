@@ -11,7 +11,7 @@
   "config_params": [],
   "token_file": "",
   "chat_id_file": "test",
-  "report_chat_id_file": "test",
+  "report_chat_id_file": "desktop_chat",
   "password": "",
   "report_portal": {
     "project_name": "desktopeditors"
