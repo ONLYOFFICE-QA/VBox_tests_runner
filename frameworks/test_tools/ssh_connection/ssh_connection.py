@@ -3,10 +3,12 @@ import contextlib
 import time
 
 from tempfile import gettempdir
+from typing import Callable, Optional
 from ssh_wrapper import Ssh, Sftp, SshException
 
 from frameworks.console import MyConsole
 from posixpath import join
+from ..exceptions import VirtualMachinePoweredOff
 from .linux_script_demon import LinuxScriptDemon
 
 console = MyConsole().console
@@ -19,10 +21,15 @@ class SSHConnection:
     my_service_path = join(services_dir, my_service_name)
     log_path = LinuxScriptDemon.log_path
 
+    keepalive_interval: int = 15
+
     def __init__(self, ssh: Ssh, sftp: Sftp):
         self.ssh = ssh
         self.sftp = sftp
         self.tmp_dir = gettempdir()
+        transport = self.ssh.connection.client.get_transport()
+        if transport is not None:
+            transport.set_keepalive(self.keepalive_interval)
 
     def upload_test_files(self, upload_files: list[(str, str)]):
         for local, remote in upload_files:
@@ -52,19 +59,50 @@ class SSHConnection:
         """Clean the script output log file before starting a new service run."""
         self.exec_cmd(f"sudo rm -f {self.log_path}")
 
-    def wait_execute_service(self, timeout: int = None, status_bar: bool = False, interval: int = 1):
+    def wait_execute_service(
+            self,
+            timeout: int = None,
+            status_bar: bool = False,
+            interval: int = 1,
+            vm_is_running: Optional[Callable[[], bool]] = None
+    ):
+        """
+        Wait until the service of the test script ends.
+
+        :param timeout: Seconds to wait at most, None to wait as long as the service runs
+        :param status_bar: Show the tail of the script log in a status bar
+        :param interval: Seconds between two checks of the service
+        :param vm_is_running: Tells whether the VM still runs; when it does not - its VirtualBox process crashed,
+            or it was powered off - the wait ends at once with VirtualMachinePoweredOff instead of the SSH errors
+            of a host that is gone
+        :raises VirtualMachinePoweredOff: If the VM stopped running
+        :raises SshException: If the timeout expired
+        """
         service_name = self.my_service_name
         server_info = f"{self.ssh.server.custom_name}|{self.ssh.server.ip}"
         msg = f"[cyan]|INFO|{server_info}| Waiting for execution of {service_name}"
 
         print(f"[bold cyan]{'-' * 90}\n|INFO|{server_info}| Waiting for script execution on VM with interval {interval} seconds\n{'-' * 90}")
 
+        def ensure_vm_running(error: Optional[BaseException] = None) -> None:
+            if vm_is_running is not None and not vm_is_running():
+                raise VirtualMachinePoweredOff(
+                    f"|ERROR|{server_info}| The VM stopped running while {service_name} was executing"
+                ) from error
+
         with console.status(msg) if status_bar else contextlib.nullcontext() as status:
             print(msg) if not status_bar else None
             start_time = time.time()
-            while self.service_is_active(service_name=service_name):
-                status.update(f"{msg}\n{self.get_my_service_log(stdout=False)}") if status_bar else None
+            while True:
+                try:
+                    if not self.service_is_active(service_name=service_name):
+                        break
+                    status.update(f"{msg}\n{self.get_my_service_log(stdout=False)}") if status_bar else None
+                except Exception as error:
+                    ensure_vm_running(error)
+                    raise
                 time.sleep(interval)
+                ensure_vm_running()
 
                 if isinstance(timeout, int) and (time.time() - start_time) >= timeout:
                     raise SshException(

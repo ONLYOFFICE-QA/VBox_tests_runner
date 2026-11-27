@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import subprocess
 from vboxwrapper import VirtualMachine
 
 from frameworks.decorators import vm_is_turn_on, class_cache
@@ -16,6 +17,11 @@ class VboxMachine:
     This class provides a simplified interface for managing VirtualBox VMs with
     automatic configuration, network setup, and data management capabilities.
     """
+
+    stale_guest_properties = (
+        '/VirtualBox/GuestInfo/Net/0/V4/IP',          # vboxwrapper Network.get_ip / wait_up
+        '/VirtualBox/GuestInfo/OS/LoggedInUsersList',  # vboxwrapper VirtualMachine.get_logged_user / wait_logged_user
+    )
 
     def __init__(self, name: str, config_path: str = None):
         """
@@ -144,10 +150,31 @@ class VboxMachine:
         if configurate:
             self.configurate()
 
+        resumes_saved_state = (self.vm.get_parameter('VMState') or '').lower() == 'saved'
         self.vm.run(headless=headless)
+        if not resumes_saved_state:
+            # a guest resumed from a saved state is up already: its properties are current and are not published
+            # again, deleting them would leave the waits below nothing to wait for
+            self.clear_guest_info()
         self.vm.network.wait_up(status_bar=status_bar, timeout=timeout)
         self.vm.wait_logged_user(status_bar=status_bar, timeout=timeout)
         self.create_data()
+
+    def clear_guest_info(self) -> None:
+        """
+        Delete the guest properties the VM was started with, so that the waits for the network and the logged user
+        get what this boot of the guest reports.
+
+        A snapshot keeps the guest properties of the moment it was taken: right after the start the VM answers
+        with the IP it had then - by now maybe the address of another VM of the network (Kubuntu22 started with
+        192.168.0.120 of Ubuntu20 and reported its own 192.168.0.121 20 s later) - and with its logged user
+        before the guest has even booted. The Guest Additions publish both again once the guest is up.
+        """
+        for prop in self.stale_guest_properties:
+            subprocess.run(
+                ['vboxmanage', 'guestproperty', 'delete', self.name, prop],
+                capture_output=True, text=True, check=False
+            )
 
     def configurate(self):
         """

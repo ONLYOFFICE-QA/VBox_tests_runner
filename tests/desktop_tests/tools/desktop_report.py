@@ -226,8 +226,9 @@ class DesktopReport:
         tg = Telegram(token=data.tg_token, chat_id=data.tg_chat_id)
         tg.send_document(self.path, caption=caption)
 
-        if data.tg_report_chat_id:
-            Telegram(token=data.tg_token, chat_id=data.tg_report_chat_id).send_document(self.path, caption=caption)
+        report_chat_id = data.tg_report_chat_id
+        if report_chat_id:
+            Telegram(token=data.tg_token, chat_id=report_chat_id).send_document(self.path, caption=caption)
 
     def send_screenshots_to_tg(self, data) -> None:
         """

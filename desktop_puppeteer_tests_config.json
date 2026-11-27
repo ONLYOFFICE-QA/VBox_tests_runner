@@ -1,0 +1,52 @@
+{
+  "title": "ONLYOFFICE",
+  "dep_test_repo": "git@git.onlyoffice.com:ONLYOFFICE-QA/Dep.Tests.git",
+  "dep_test_branch": "",
+  "pp_files_repo": "git@github.com:ONLYOFFICE-data/pp-files.git",
+  "pp_files_branch": "",
+  "document_formats_repo": "git@git.onlyoffice.com:ONLYOFFICE/document-formats.git",
+  "document_formats_branch": "",
+  "suite": "hourly",
+  "run_options": [],
+  "config_params": [],
+  "token_file": "",
+  "chat_id_file": "test",
+  "report_chat_id_file": "desktop_chat",
+  "password": "",
+  "report_portal": {
+    "project_name": "desktopeditors"
+  },
+  "hosts_arm64": [
+    "Windows11_arm64",
+    "Debian12_arm64",
+    "OpenSuseLeap15_arm64"
+  ],
+  "hosts": [
+    "Windows10",
+    "Debian10",
+    "Debian11",
+    "Debian12",
+    "Ubuntu16",
+    "Ubuntu18",
+    "Ubuntu20",
+    "Windows11",
+    "Ubuntu22",
+    "Ubuntu24",
+    "CentOs9",
+    "Windows7",
+    "CentOs7",
+    "Fedora37",
+    "Fedora38",
+    "Fedora39",
+    "Fedora41",
+    "Fedora42",
+    "Kubuntu22",
+    "Mint21",
+    "PopOs22",
+    "OpenSUSE15",
+    "Windows8.1",
+    "Ubuntu25.04",
+    "AlmaLinux9.6",
+    "MXLinux23.6"
+  ]
+}

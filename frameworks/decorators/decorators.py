@@ -65,7 +65,8 @@ def retry(
         interval: int | float = 0,
         stdout: bool = True,
         exception: bool = True,
-        exception_type: object | tuple = None
+        exception_type: object | tuple = None,
+        abort_on: tuple = ()
 ):
     """
     Decorator to retry function execution on exception with configurable parameters.
@@ -73,25 +74,31 @@ def retry(
     :param max_attempts: Maximum number of retry attempts
     :param interval: Interval between retry attempts in seconds
     :param stdout: Whether to print exception messages to stdout
-    :param exception: Whether to raise exception after max attempts
+    :param exception: Whether to raise the last exception after max attempts
     :param exception_type: Specific exception type(s) to catch
+    :param abort_on: Exception types that end the retries at once and are raised as they are, e.g. a VM that
+        is not running any more: another attempt cannot reach it
     :return: Decorated function with retry logic
     """
     def wrapper(func):
         @wraps(func)
         def inner(*args, **kwargs):
+            last_error = None
             for i in range(max_attempts):
                 try:
-                    result = func(*args, **kwargs)
+                    return func(*args, **kwargs)
+                except abort_on:
+                    raise
                 except exception_type if exception_type else Exception as e:
+                    last_error = e
                     print(f"[cyan] |INFO| Exception when '{func.__name__}'. Try: {i + 1} of {max_attempts}.")
                     print(f"[red]|WARNING| Error: {e}[/]") if stdout else ...
-                    sleep(interval)
-                else:
-                    return result
+                    if i < max_attempts - 1:
+                        sleep(interval)
             print(f"[bold red]|ERROR| The function: '{func.__name__}' failed in {max_attempts} attempts.")
-            if exception:
-                raise
+            if exception and last_error is not None:
+                raise last_error
+            return None
 
         return inner
 
