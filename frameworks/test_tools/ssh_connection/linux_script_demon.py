@@ -26,6 +26,8 @@ class LinuxScriptDemon:
     def generate(self) -> str:
         """
         Generate the content of the systemd service file.
+        The output goes to the log by a shell redirect: StandardOutput=file: needs systemd 236+,
+        systemd 219 of CentOS 7 ignores it and the log is never written.
 
         :return: A string representing the content of the systemd service file.
         """
@@ -35,13 +37,11 @@ class LinuxScriptDemon:
 
     [Service]
     Type=simple
-    ExecStart=/bin/bash --norc --noprofile {self.exec_script_path}
+    ExecStart=/bin/bash -c "exec /bin/bash --norc --noprofile {self.exec_script_path} > {self.log_path} 2>&1"
     User={self.user}
     Nice=-5
     IOSchedulingClass=best-effort
     IOSchedulingPriority=0
-    StandardOutput=file:{self.log_path}
-    StandardError=file:{self.log_path}
     Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/{self.user}/.local/bin"
     Environment="HOME=/home/{self.user}"
     Environment="SHELL=/bin/bash"

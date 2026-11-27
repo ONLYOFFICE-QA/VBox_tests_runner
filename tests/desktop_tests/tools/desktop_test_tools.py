@@ -57,8 +57,8 @@ class DesktopTestTools:
         self.initialize_libs()
         self.test_tools.run_test_on_vm(upload_files=self.get_upload_files(), create_test_dir=self.get_test_dirs())
         self.test_tools.download_report(path_from=self._get_remote_report_path(), path_to=self.report.dir)
-        if not self.report.exists() and self.report.column_is_empty("Os"):
-            raise VirtualMachinException
+        if not self.report.exists() or self.report.column_is_empty("Os"):
+            raise VirtualMachinException(f"|ERROR|{self.vm.name}| The test on the VM produced no report: {self.report.path}")
         self.report.insert_vm_name(self.vm.name)
         if self.data.send_screenshots:
             self.report.send_screenshots_to_tg(data=self.data)
