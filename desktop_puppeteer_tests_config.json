@@ -6,7 +6,7 @@
   "pp_files_branch": "",
   "document_formats_repo": "git@git.onlyoffice.com:ONLYOFFICE/document-formats.git",
   "document_formats_branch": "",
-  "suite": "daily",
+  "suite": "hourly",
   "run_options": [],
   "config_params": [],
   "token_file": "",
