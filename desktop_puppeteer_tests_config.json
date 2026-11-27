@@ -21,9 +21,30 @@
   ],
   "hosts": [
     "Windows10",
+    "Debian10",
+    "Debian11",
+    "Debian12",
+    "Ubuntu16",
+    "Ubuntu18",
+    "Ubuntu20",
     "Windows11",
     "Ubuntu22",
     "Ubuntu24",
-    "Debian12"
+    "CentOs9",
+    "Windows7",
+    "CentOs7",
+    "Fedora37",
+    "Fedora38",
+    "Fedora39",
+    "Fedora41",
+    "Fedora42",
+    "Kubuntu22",
+    "Mint21",
+    "PopOs22",
+    "OpenSUSE15",
+    "Windows8.1",
+    "Ubuntu25.04",
+    "AlmaLinux9.6",
+    "MXLinux23.6"
   ]
 }
